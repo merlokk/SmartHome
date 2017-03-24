@@ -3,6 +3,7 @@
 */
 
 #include <ESP8266WiFi.h>    // https://github.com/esp8266/Arduino
+#include <DNSServer.h>      //Local DNS Server used for redirecting all requests to the configuration portal
 #include <WiFiManager.h>    // https://github.com/tzapu/WiFiManager
 #include <PubSubClient.h>   // https://github.com/knolleary/pubsubclient/releases/tag/v2.6
 #include <Ticker.h>
@@ -46,6 +47,50 @@ Ticker        ticker;
 WiFiClient    wifiClient;
 PubSubClient  mqttClient(wifiClient);
 
+
+///////////////////////////////////////////////////////////////////////////
+//   MQTT
+///////////////////////////////////////////////////////////////////////////
+
+/*
+  Function called to publish the state of 
+*/
+void mqttPublishState() {
+  if (mqttClient.publish(MQTT_STATE_TOPIC, MQTT_ON_PAYLOAD, true)) {
+    DEBUG_PRINT(F("INFO: MQTT message publish succeeded. Topic: "));
+    DEBUG_PRINT(MQTT_STATE_TOPIC);
+    DEBUG_PRINT(F(". Payload: "));
+    DEBUG_PRINTLN(MQTT_ON_PAYLOAD);
+  } else {
+    DEBUG_PRINTLN(F("ERROR: MQTT message publish failed, either connection lost, or message too large"));
+  }
+
+}
+
+/*
+  Function called to connect/reconnect to the MQTT broker
+*/
+void reconnect() {
+  uint8_t i = 0;
+  while (!mqttClient.connected()) {
+    if (mqttClient.connect(MQTT_CLIENT_ID, settings.mqttUser, settings.mqttPassword)) {
+      DEBUG_PRINTLN(F("INFO: The client is successfully connected to the MQTT broker"));
+    } else {
+      DEBUG_PRINTLN(F("ERROR: The connection to the MQTT broker failed"));
+      DEBUG_PRINT(F("Username: "));
+      DEBUG_PRINTLN(settings.mqttUser);
+      DEBUG_PRINT(F("Password: "));
+      DEBUG_PRINTLN(settings.mqttPassword);
+      DEBUG_PRINT(F("Broker: "));
+      DEBUG_PRINTLN(settings.mqttServer);
+      delay(1000);
+      if (i == 3) {
+        reset();
+      }
+      i++;
+    }
+  }
+}
 
 ///////////////////////////////////////////////////////////////////////////
 //   WiFiManager
@@ -152,17 +197,27 @@ void setup() {
   mqttClient.setServer(settings.mqttServer, atoi(settings.mqttPort));
 
   // connect to the MQTT broker
-//  reconnect();
+  reconnect();
 
   ArduinoOTA.setHostname(MQTT_CLIENT_ID);
   ArduinoOTA.begin();
 
   ticker.detach();
+
+  mqttPublishState();
 }
 
 // the loop function runs over and over again forever
 void loop() {
   ArduinoOTA.handle();
+
+  yield();
+
+  // keep the MQTT client connected to the broker
+  if (!mqttClient.connected()) {
+    reconnect();
+  }
+  mqttClient.loop();
 
   yield();
 
