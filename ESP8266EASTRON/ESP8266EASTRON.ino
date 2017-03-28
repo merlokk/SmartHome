@@ -12,8 +12,9 @@
 
 #include "eastron.h"
 
-#define               DEBUG                       // enable debugging
-#define               STRUCT_CHAR_ARRAY_SIZE 24   // size of the arrays for MQTT username, password, etc.
+#define               DEBUG                            // enable debugging
+#define               MQTT_CFG_CHAR_ARRAY_SIZE 24      // size of the arrays for MQTT username, password, etc.
+#define               MQTT_CFG_CHAR_ARRAY_SIZE_PORT 6  // size of the arrays for MQTT port
 
 // macros for debugging
 #ifdef DEBUG
@@ -32,16 +33,16 @@
 
 // MQTT ID and topics
 char                  MQTT_CLIENT_ID[7]                                           = {0};
-char                  MQTT_STATE_TOPIC[STRUCT_CHAR_ARRAY_SIZE] = {0};
+char                  MQTT_STATE_TOPIC[MQTT_CFG_CHAR_ARRAY_SIZE] = {0};
 const char*           MQTT_ON_PAYLOAD                                             = "ON";
 const char*           MQTT_OFF_PAYLOAD                                            = "OFF";
 
 // MQTT settings
 typedef struct {
-  char                mqttUser[STRUCT_CHAR_ARRAY_SIZE]      = {0};
-  char                mqttPassword[STRUCT_CHAR_ARRAY_SIZE]  = {0};
-  char                mqttServer[STRUCT_CHAR_ARRAY_SIZE]    = {0};
-  char                mqttPort[5]                           = {0};
+  char                mqttUser[MQTT_CFG_CHAR_ARRAY_SIZE]       = {0};
+  char                mqttPassword[MQTT_CFG_CHAR_ARRAY_SIZE]   = {0};
+  char                mqttServer[MQTT_CFG_CHAR_ARRAY_SIZE]     = {0};
+  char                mqttPort[MQTT_CFG_CHAR_ARRAY_SIZE_PORT]  = {0};
 } Settings;
 
 Settings      settings;
@@ -84,7 +85,9 @@ void reconnect() {
       DEBUG_PRINT(F("Password: "));
       DEBUG_PRINTLN(settings.mqttPassword);
       DEBUG_PRINT(F("Broker: "));
-      DEBUG_PRINTLN(settings.mqttServer);
+      DEBUG_PRINT(settings.mqttServer);
+      DEBUG_PRINT(F(":"));
+      DEBUG_PRINTLN(settings.mqttPort);
       delay(1000);
       if (i == 3) {
         reset();
@@ -163,10 +166,10 @@ void setup() {
   EEPROM.get(0, settings);
   EEPROM.end();
 
-  WiFiManagerParameter custom_mqtt_user("mqtt-user", "MQTT User", settings.mqttUser, STRUCT_CHAR_ARRAY_SIZE);
-  WiFiManagerParameter custom_mqtt_password("mqtt-password", "MQTT Password", settings.mqttPassword, STRUCT_CHAR_ARRAY_SIZE, "type = \"password\"");
-  WiFiManagerParameter custom_mqtt_server("mqtt-server", "MQTT Broker IP", settings.mqttServer, STRUCT_CHAR_ARRAY_SIZE);
-  WiFiManagerParameter custom_mqtt_port("mqtt-port", "MQTT Broker Port", settings.mqttPort, 5);
+  WiFiManagerParameter custom_mqtt_user("mqtt-user", "MQTT User", settings.mqttUser, MQTT_CFG_CHAR_ARRAY_SIZE);
+  WiFiManagerParameter custom_mqtt_password("mqtt-password", "MQTT Password", settings.mqttPassword, MQTT_CFG_CHAR_ARRAY_SIZE, "type = \"password\"");
+  WiFiManagerParameter custom_mqtt_server("mqtt-server", "MQTT Broker IP", settings.mqttServer, MQTT_CFG_CHAR_ARRAY_SIZE);
+  WiFiManagerParameter custom_mqtt_port("mqtt-port", "MQTT Broker Port", settings.mqttPort, MQTT_CFG_CHAR_ARRAY_SIZE_PORT);
 
   WiFiManager wifiManager;
 
@@ -211,6 +214,7 @@ void setup() {
 
 // the loop function runs over and over again forever
 void loop() {
+  digitalWrite(LED2, LEDON);
   ArduinoOTA.handle();
 
   yield();

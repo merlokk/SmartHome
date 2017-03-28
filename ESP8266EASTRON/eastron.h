@@ -8,6 +8,11 @@ extern "C" {
 #include <Arduino.h>
 
 
+#define SDM_BAUD                            9600                                //baudrate
+#define MAX_MILLIS_TO_WAIT                  500                                 //max time to wait for response from SDM
+#define SWAPHWSERIAL                        0                                   //swap or not uart number 0 and 1
+
+
 ///////////////////////////////////////////////////////////////////////////
 //  EASTRON modbus addresses  
 //  original here https://github.com/beireken/SDM220t/blob/master/SDM.h 
@@ -35,11 +40,11 @@ extern "C" {
 #define SDM630_CURRENT1                     0x0006                              //A
 #define SDM630_CURRENT2                     0x0008                              //A
 #define SDM630_CURRENT3                     0x000A                              //A
-#define SDM630_CURRENTSUM                   0x0030                              //A
+#define SDM630_CURRENT_TOTAL                0x0030                              //A
 #define SDM630_POWER1                       0x000C                              //W
 #define SDM630_POWER2                       0x000E                              //W
 #define SDM630_POWER3                       0x0010                              //W
-#define SDM630_POWERTOTAL                   0x0034                              //W
+#define SDM630_POWER_TOTAL                  0x0034                              //W
 #define SDM630_VOLT_AMPS1                   0x0012                              //VA
 #define SDM630_VOLT_AMPS2                   0x0014                              //VA
 #define SDM630_VOLT_AMPS3                   0x0016                              //VA
@@ -68,6 +73,8 @@ extern "C" {
 
 
 class Eastron {
+  private:
+    HardwareSerial ser = HardwareSerial(0);
   public:
   bool Connected = false;
   
