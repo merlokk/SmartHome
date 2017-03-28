@@ -13,8 +13,6 @@
 #include "eastron.h"
 
 #define               DEBUG                            // enable debugging
-#define               MQTT_CFG_CHAR_ARRAY_SIZE 24      // size of the arrays for MQTT username, password, etc.
-#define               MQTT_CFG_CHAR_ARRAY_SIZE_PORT 6  // size of the arrays for MQTT port
 
 // macros for debugging
 #ifdef DEBUG
@@ -30,6 +28,10 @@
 #define LED2 14
 #define LEDON  LOW
 #define LEDOFF HIGH
+
+// MQTT defines
+#define               MQTT_CFG_CHAR_ARRAY_SIZE 24      // size of the arrays for MQTT username, password, etc.
+#define               MQTT_CFG_CHAR_ARRAY_SIZE_PORT 6  // size of the arrays for MQTT port
 
 // MQTT ID and topics
 char                  MQTT_CLIENT_ID[7]                                           = {0};
@@ -147,6 +149,7 @@ void reset() {
 ///////////////////////////////////////////////////////////////////////////
 void setup() {
   Serial.begin(74880);
+//  Serial1.setDebugOutput(true);
   
   pinMode(LED1, OUTPUT);    
   pinMode(LED2, OUTPUT);   
@@ -157,7 +160,7 @@ void setup() {
   DEBUG_PRINT(F("INFO: MQTT client ID/Hostname: "));
   DEBUG_PRINTLN(MQTT_CLIENT_ID);
 
-  sprintf(MQTT_STATE_TOPIC, "%s/power_meter/state", MQTT_CLIENT_ID);
+  sprintf(MQTT_STATE_TOPIC, "%s/power_meter/connected", MQTT_CLIENT_ID);
   DEBUG_PRINT(F("INFO: MQTT command topic: "));
   DEBUG_PRINTLN(MQTT_STATE_TOPIC);
 
@@ -239,5 +242,6 @@ void loop() {
   
   mqttPublishState();
 
+  delay(1000);
  
 }
