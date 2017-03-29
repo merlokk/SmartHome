@@ -23,7 +23,8 @@
   #define             DEBUG_PRINTLN(x)
 #endif
 
-// LEDs
+// LEDs and pins
+#define PIN_PGM 0
 #define LED1 12
 #define LED2 14
 #define LEDON  LOW
@@ -47,6 +48,10 @@ typedef struct {
   char                mqttPort[MQTT_CFG_CHAR_ARRAY_SIZE_PORT]  = {0};
 } Settings;
 
+// vars
+bool inProgrammingMode = false;
+
+// objects
 Settings      settings;
 Ticker        ticker;
 WiFiClient    wifiClient;
@@ -121,6 +126,56 @@ void configModeCallback (WiFiManager *myWiFiManager) {
   ticker.attach(0.2, tick);
 }
 
+void wifiSetup(bool withAutoConnect) {
+  shouldSaveConfig = false;
+
+  // load custom params
+  EEPROM.begin(512);
+  EEPROM.get(0, settings);
+  EEPROM.end();
+
+  WiFiManager wifiManager;
+
+  WiFiManagerParameter custom_mqtt_user("mqtt-user", "MQTT User", settings.mqttUser, MQTT_CFG_CHAR_ARRAY_SIZE);
+  WiFiManagerParameter custom_mqtt_password("mqtt-password", "MQTT Password", settings.mqttPassword, MQTT_CFG_CHAR_ARRAY_SIZE, "type = \"password\"");
+  WiFiManagerParameter custom_mqtt_server("mqtt-server", "MQTT Broker IP", settings.mqttServer, MQTT_CFG_CHAR_ARRAY_SIZE);
+  WiFiManagerParameter custom_mqtt_port("mqtt-port", "MQTT Broker Port", settings.mqttPort, MQTT_CFG_CHAR_ARRAY_SIZE_PORT);
+
+  wifiManager.addParameter(&custom_mqtt_user);
+  wifiManager.addParameter(&custom_mqtt_password);
+  wifiManager.addParameter(&custom_mqtt_server);
+  wifiManager.addParameter(&custom_mqtt_port);
+
+  wifiManager.setAPCallback(configModeCallback);
+  wifiManager.setConfigPortalTimeout(180);
+  // set config save notify callback
+  wifiManager.setSaveConfigCallback(saveConfigCallback);
+
+  if (withAutoConnect){
+    if (!wifiManager.autoConnect()) { 
+      ESP.reset();
+      delay(1000);
+    }
+  } else {
+    String ssid = "ESP" + String(ESP.getChipId());
+    if (!wifiManager.startConfigPortal(ssid.c_str())) { 
+      ESP.reset();
+      delay(1000);
+    }
+  }
+  
+  if (shouldSaveConfig) {
+    strcpy(settings.mqttServer,   custom_mqtt_server.getValue());
+    strcpy(settings.mqttPort,     custom_mqtt_port.getValue());
+    strcpy(settings.mqttUser,     custom_mqtt_user.getValue());
+    strcpy(settings.mqttPassword, custom_mqtt_password.getValue());
+
+    EEPROM.begin(512);
+    EEPROM.put(0, settings);
+    EEPROM.end();
+  }
+}
+
 ///////////////////////////////////////////////////////////////////////////
 //   ESP
 ///////////////////////////////////////////////////////////////////////////
@@ -150,11 +205,23 @@ void reset() {
 void setup() {
   Serial.begin(74880);
 //  Serial1.setDebugOutput(true);
-  
+
+  // for debug
+  delay(200);
+  DEBUG_PRINTLN(" ");
+
+  // LED init
   pinMode(LED1, OUTPUT);    
   pinMode(LED2, OUTPUT);   
   digitalWrite(LED1, LEDOFF);
   digitalWrite(LED2, LEDOFF);
+
+  // 0 = programming mode
+  pinMode(PIN_PGM, INPUT);   
+  inProgrammingMode = !digitalRead(PIN_PGM);
+  if (inProgrammingMode) {
+    DEBUG_PRINTLN(F("WARNINIG: Programming mode active!"));
+  }
 
   sprintf(MQTT_CLIENT_ID, "%06X", ESP.getChipId());
   DEBUG_PRINT(F("INFO: MQTT client ID/Hostname: "));
@@ -164,42 +231,8 @@ void setup() {
   DEBUG_PRINT(F("INFO: MQTT command topic: "));
   DEBUG_PRINTLN(MQTT_STATE_TOPIC);
 
-  // load custom params
-  EEPROM.begin(512);
-  EEPROM.get(0, settings);
-  EEPROM.end();
-
-  WiFiManagerParameter custom_mqtt_user("mqtt-user", "MQTT User", settings.mqttUser, MQTT_CFG_CHAR_ARRAY_SIZE);
-  WiFiManagerParameter custom_mqtt_password("mqtt-password", "MQTT Password", settings.mqttPassword, MQTT_CFG_CHAR_ARRAY_SIZE, "type = \"password\"");
-  WiFiManagerParameter custom_mqtt_server("mqtt-server", "MQTT Broker IP", settings.mqttServer, MQTT_CFG_CHAR_ARRAY_SIZE);
-  WiFiManagerParameter custom_mqtt_port("mqtt-port", "MQTT Broker Port", settings.mqttPort, MQTT_CFG_CHAR_ARRAY_SIZE_PORT);
-
-  WiFiManager wifiManager;
-
-  wifiManager.addParameter(&custom_mqtt_user);
-  wifiManager.addParameter(&custom_mqtt_password);
-  wifiManager.addParameter(&custom_mqtt_server);
-  wifiManager.addParameter(&custom_mqtt_port);
-
-  wifiManager.setAPCallback(configModeCallback);
-  wifiManager.setConfigPortalTimeout(180);
-  // set config save notify callback
-  wifiManager.setSaveConfigCallback(saveConfigCallback);
-
-  if (!wifiManager.autoConnect()) { 
-    ESP.reset();
-    delay(1000);
-  }
-  if (shouldSaveConfig) {
-    strcpy(settings.mqttServer,   custom_mqtt_server.getValue());
-    strcpy(settings.mqttPort,     custom_mqtt_port.getValue());
-    strcpy(settings.mqttUser,     custom_mqtt_user.getValue());
-    strcpy(settings.mqttPassword, custom_mqtt_password.getValue());
-
-    EEPROM.begin(512);
-    EEPROM.put(0, settings);
-    EEPROM.end();
-  }
+  // wifi setup with autoconnect
+  wifiSetup(true);
 
   // configure MQTT
   mqttClient.setServer(settings.mqttServer, atoi(settings.mqttPort));
@@ -217,6 +250,14 @@ void setup() {
 
 // the loop function runs over and over again forever
 void loop() {
+  // Programming pin activates setup
+  if (!inProgrammingMode && (!digitalRead(PIN_PGM))) {
+    DEBUG_PRINTLN(F("Wifi setup activated"));
+
+    wifiSetup(false);
+    delay(1000);
+  }
+  
   digitalWrite(LED2, LEDON);
   ArduinoOTA.handle();
 
@@ -231,6 +272,7 @@ void loop() {
   yield();
 
   if (!mqttClient.connected()){
+    digitalWrite(LED2, LEDOFF);
     return;
   }
 
@@ -240,8 +282,9 @@ void loop() {
     
   };
   
-  mqttPublishState();
+  //mqttPublishState();
 
   delay(1000);
  
+  digitalWrite(LED2, LEDOFF);
 }
