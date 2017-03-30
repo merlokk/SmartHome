@@ -56,11 +56,11 @@ typedef struct {
 bool inProgrammingMode = false;
 
 // objects
-EEPROM_settings      settings;
-Ticker        ticker;
-WiFiClient    wifiClient;
-PubSubClient  mqttClient(wifiClient);
-Eastron       eastron;
+EEPROM_settings  settings;
+Ticker           ticker;
+WiFiClient       wifiClient;
+PubSubClient     mqttClient(wifiClient);
+Eastron          eastron;
 
 ///////////////////////////////////////////////////////////////////////////
 //   MQTT
@@ -76,7 +76,7 @@ void mqttPublishState() {
     DEBUG_PRINT(F(". Payload: "));
     DEBUG_PRINTLN(MQTT_ON_PAYLOAD);
   } else {
-    DEBUG_PRINTLN(F("ERROR: MQTT message publish failed, either connection lost, or message too large"));
+    DEBUG_PRINTLN(F("ERROR: MQTT message publish failed"));
   }
 
 }
@@ -147,7 +147,7 @@ void wifiSetup(bool withAutoConnect) {
 
   WiFiManager wifiManager;
 
-  WiFiManagerParameter custom_mqtt_text("<br/>MQTT config. <br/>");
+  WiFiManagerParameter custom_mqtt_text("<br/>MQTT config: <br/>");
   wifiManager.addParameter(&custom_mqtt_text);
   WiFiManagerParameter custom_mqtt_user("mqtt-user", "MQTT User", settings.mqttUser, MQTT_CFG_CHAR_ARRAY_SIZE);
   wifiManager.addParameter(&custom_mqtt_user);
@@ -246,16 +246,23 @@ void setup() {
     DEBUG_PRINTLN(F("WARNINIG: Programming mode active!"));
   }
 
+  // client ID
   sprintf(MQTT_CLIENT_ID, "%06X", ESP.getChipId());
   DEBUG_PRINT(F("INFO: MQTT client ID/Hostname: "));
   DEBUG_PRINTLN(MQTT_CLIENT_ID);
 
-  sprintf(MQTT_STATE_TOPIC, "%s/power_meter/connected", MQTT_CLIENT_ID);
+  // wifi setup with autoconnect
+  wifiSetup(true);
+
+  // configure mqtt topic
+  if (settings.mqttPath[0] == 0x00) {
+    sprintf(MQTT_STATE_TOPIC, "%s/power_meter/", MQTT_CLIENT_ID);
+  } else {
+    sprintf(MQTT_STATE_TOPIC, "%s/", settings.mqttPath);
+  }
   DEBUG_PRINT(F("INFO: MQTT command topic: "));
   DEBUG_PRINTLN(MQTT_STATE_TOPIC);
 
-  // wifi setup with autoconnect
-  wifiSetup(true);
 
   // configure MQTT
   mqttClient.setServer(settings.mqttServer, atoi(settings.mqttPort));
@@ -299,7 +306,7 @@ void loop() {
     return;
   }
 
-  eastron.Poll();
+  eastron.Poll(POLL_ALL);
 
   if (eastron.Connected) {
     
