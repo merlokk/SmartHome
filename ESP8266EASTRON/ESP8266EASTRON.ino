@@ -57,8 +57,11 @@ typedef struct {
 // vars
 bool inProgrammingMode = false;
 
-// objects
+// global vars
 EEPROM_settings  settings;
+int              lastPollTime;
+
+// objects
 Ticker           ticker;
 WiFiClient       wifiClient;
 PubSubClient     mqttClient(wifiClient);
@@ -71,10 +74,16 @@ Eastron          eastron;
 /*
   Function called to publish the state of 
 */
-void mqttPublishState() {
+void mqttPublishInitialState() {
   mqttPublishState("HardwareId", HARDWARE_ID);  
   mqttPublishState("Version", PROGRAM_VERSION);  
   mqttPublishState("DeviceType", settings.deviceType);  
+
+  mqttPublishRegularState();
+}
+
+void mqttPublishRegularState() {
+  mqttPublishState("Connected", eastron.Connected ? MQTT_ON_PAYLOAD:MQTT_OFF_PAYLOAD);
   String v = String(millis() / 1000);
   mqttPublishState("Uptime", v.c_str()); 
 }
@@ -262,8 +271,8 @@ void setupArduinoOTA() {
 //   Setup() and loop()
 ///////////////////////////////////////////////////////////////////////////
 void setup() {
+//  Serial.setDebugOutput(false);
   Serial.begin(115200); //74880
-//  Serial1.setDebugOutput(true);
 
   // for debug
   delay(200);
@@ -306,20 +315,18 @@ void setup() {
   DEBUG_PRINT(F("INFO: MQTT command topic: "));
   DEBUG_PRINTLN(MQTT_STATE_TOPIC);
 
-
   // configure MQTT
   mqttClient.setServer(settings.mqttServer, atoi(settings.mqttPort));
 
   // connect to the MQTT broker
   reconnect();
 
-
   // ArduinoOTA
   setupArduinoOTA();
 
   ticker.detach();
 
-  mqttPublishState();
+  mqttPublishInitialState();
 }
 
 // the loop function runs over and over again forever
@@ -350,15 +357,19 @@ void loop() {
     return;
   }
 
-  eastron.Poll(POLL_ALL);
+  if (millis() > lastPollTime + 15000) {
+    eastron.Poll(POLL_ALL);
 
-  if (eastron.Connected) {
+    // publish some system vars
+    mqttPublishRegularState();
     
-  };
+    if (eastron.Connected) {
+    
+    };
   
-  //mqttPublishState();
-
-  delay(10000);
- 
+    lastPollTime = millis();
+  }
+  
   digitalWrite(LED2, LEDOFF);
+  delay(500);
 }
