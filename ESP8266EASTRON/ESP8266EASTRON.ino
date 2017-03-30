@@ -220,10 +220,39 @@ void reset() {
 }
 
 ///////////////////////////////////////////////////////////////////////////
+//   ArduinoOTA
+///////////////////////////////////////////////////////////////////////////
+
+void setupArduinoOTA() {
+  ArduinoOTA.onError([](ota_error_t error) {
+    DEBUG_PRINT(F("ERROR: OTA error: "));
+    DEBUG_PRINTLN(error);
+    switch (error) {
+      case OTA_AUTH_ERROR:    DEBUG_PRINTLN(F("OTA ERROR: Auth Failed")); break;
+      case OTA_BEGIN_ERROR:   DEBUG_PRINTLN(F("OTA ERROR: Begin Failed")); break;
+      case OTA_CONNECT_ERROR: DEBUG_PRINTLN(F("OTA ERROR: Connect Failed")); break;
+      case OTA_RECEIVE_ERROR: DEBUG_PRINTLN(F("OTA ERROR: Receive Failed")); break;
+      case OTA_END_ERROR:     DEBUG_PRINTLN(F("OTA ERROR: End Failed")); break;
+    }
+
+    ESP.restart();
+  });
+  
+  ArduinoOTA.onStart([]() {
+    DEBUG_PRINTLN(F("INFO: Start OTA"));
+  });
+  ArduinoOTA.onEnd([]() {
+    DEBUG_PRINTLN(F("INFO: End OTA"));
+  });
+  ArduinoOTA.setHostname(MQTT_CLIENT_ID);
+  ArduinoOTA.begin();
+}
+
+///////////////////////////////////////////////////////////////////////////
 //   Setup() and loop()
 ///////////////////////////////////////////////////////////////////////////
 void setup() {
-  Serial.begin(74880);
+  Serial.begin(115200); //74880
 //  Serial1.setDebugOutput(true);
 
   // for debug
@@ -255,7 +284,7 @@ void setup() {
   wifiSetup(true);
 
   // configure mqtt topic
-  if (settings.mqttPath[0] == 0x00) {
+  if (strlen(settings.mqttPath) == 0) {
     sprintf(MQTT_STATE_TOPIC, "%s/power_meter/", MQTT_CLIENT_ID);
   } else {
     sprintf(MQTT_STATE_TOPIC, "%s/", settings.mqttPath);
@@ -270,8 +299,9 @@ void setup() {
   // connect to the MQTT broker
   reconnect();
 
-  ArduinoOTA.setHostname(MQTT_CLIENT_ID);
-  ArduinoOTA.begin();
+
+  // ArduinoOTA
+  setupArduinoOTA();
 
   ticker.detach();
 
