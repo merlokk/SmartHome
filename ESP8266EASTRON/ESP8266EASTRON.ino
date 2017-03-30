@@ -41,6 +41,7 @@ const char*           MQTT_ON_PAYLOAD                                           
 const char*           MQTT_OFF_PAYLOAD                                            = "OFF";
 
 // MQTT settings
+#define EEPROM_SALT 123321
 typedef struct {
   char                mqttUser[MQTT_CFG_CHAR_ARRAY_SIZE]        = {0};
   char                mqttPassword[MQTT_CFG_CHAR_ARRAY_SIZE]    = {0};
@@ -48,13 +49,14 @@ typedef struct {
   char                mqttPort[MQTT_CFG_CHAR_ARRAY_SIZE_PORT]   = {0};
   char                mqttPath[MQTT_CFG_CHAR_ARRAY_SIZE]        = {0};
   char                deviceType[4]                             = {0};
-} Settings;
+  int                 salt                                      = EEPROM_SALT; 
+} EEPROM_settings;
 
 // vars
 bool inProgrammingMode = false;
 
 // objects
-Settings      settings;
+EEPROM_settings      settings;
 Ticker        ticker;
 WiFiClient    wifiClient;
 PubSubClient  mqttClient(wifiClient);
@@ -137,20 +139,27 @@ void wifiSetup(bool withAutoConnect) {
   EEPROM.get(0, settings);
   EEPROM.end();
 
+  if (settings.salt != EEPROM_SALT) {
+    DEBUG_PRINTLN(F("ERROR: Invalid settings in EEPROM, settings was cleared."));
+    EEPROM_settings defaults;
+    settings = defaults;
+  }
+
   WiFiManager wifiManager;
 
+  WiFiManagerParameter custom_mqtt_text("<br/>MQTT config. <br/>");
+  wifiManager.addParameter(&custom_mqtt_text);
   WiFiManagerParameter custom_mqtt_user("mqtt-user", "MQTT User", settings.mqttUser, MQTT_CFG_CHAR_ARRAY_SIZE);
-  WiFiManagerParameter custom_mqtt_password("mqtt-password", "MQTT Password", settings.mqttPassword, MQTT_CFG_CHAR_ARRAY_SIZE, "type = \"password\"");
-  WiFiManagerParameter custom_mqtt_server("mqtt-server", "MQTT Broker Address", settings.mqttServer, MQTT_CFG_CHAR_ARRAY_SIZE);
-  WiFiManagerParameter custom_mqtt_port("mqtt-port", "MQTT Broker Port", settings.mqttPort, MQTT_CFG_CHAR_ARRAY_SIZE_PORT);
-  WiFiManagerParameter custom_mqtt_path("mqtt-path", "MQTT Path", settings.mqttPath, MQTT_CFG_CHAR_ARRAY_SIZE);
-  WiFiManagerParameter custom_device_type("device-type", "Device type", settings.deviceType, 4);
-
   wifiManager.addParameter(&custom_mqtt_user);
+  WiFiManagerParameter custom_mqtt_password("mqtt-password", "MQTT Password", settings.mqttPassword, MQTT_CFG_CHAR_ARRAY_SIZE, "type = \"password\"");
   wifiManager.addParameter(&custom_mqtt_password);
+  WiFiManagerParameter custom_mqtt_server("mqtt-server", "MQTT Broker Address", settings.mqttServer, MQTT_CFG_CHAR_ARRAY_SIZE);
   wifiManager.addParameter(&custom_mqtt_server);
+  WiFiManagerParameter custom_mqtt_port("mqtt-port", "MQTT Broker Port", settings.mqttPort, MQTT_CFG_CHAR_ARRAY_SIZE_PORT);
   wifiManager.addParameter(&custom_mqtt_port);
+  WiFiManagerParameter custom_mqtt_path("mqtt-path", "MQTT Path", settings.mqttPath, MQTT_CFG_CHAR_ARRAY_SIZE);
   wifiManager.addParameter(&custom_mqtt_path);
+  WiFiManagerParameter custom_device_type("device-type", "Device type", settings.deviceType, 4);
   wifiManager.addParameter(&custom_device_type);
 
   wifiManager.setAPCallback(configModeCallback);
