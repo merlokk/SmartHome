@@ -12,6 +12,8 @@
 
 #include "eastron.h"
 
+#define               PROGRAM_VERSION   "0.91"
+
 #define               DEBUG                            // enable debugging
 
 // macros for debugging
@@ -35,7 +37,7 @@
 #define               MQTT_CFG_CHAR_ARRAY_SIZE_PORT 6  // size of the arrays for MQTT port
 
 // MQTT ID and topics
-char                  MQTT_CLIENT_ID[7]                                           = {0};
+char                  HARDWARE_ID[7]                                           = {0};
 char                  MQTT_STATE_TOPIC[MQTT_CFG_CHAR_ARRAY_SIZE] = {0};
 const char*           MQTT_ON_PAYLOAD                                             = "ON";
 const char*           MQTT_OFF_PAYLOAD                                            = "OFF";
@@ -70,15 +72,22 @@ Eastron          eastron;
   Function called to publish the state of 
 */
 void mqttPublishState() {
-  if (mqttClient.publish(MQTT_STATE_TOPIC, MQTT_ON_PAYLOAD, true)) {
+  mqttPublishState("hardwareid", HARDWARE_ID);  
+  mqttPublishState("version", PROGRAM_VERSION);  
+  String v = String(millis() / 1000);
+  mqttPublishState("uptime", v.c_str()); 
+}
+
+void mqttPublishState(const char *topic, const char *payload) {
+  String vtopic = String(MQTT_STATE_TOPIC) + String(topic);
+  if (mqttClient.publish(vtopic.c_str(), payload, true)) {
     DEBUG_PRINT(F("INFO: MQTT message publish succeeded. Topic: "));
-    DEBUG_PRINT(MQTT_STATE_TOPIC);
+    DEBUG_PRINT(vtopic);
     DEBUG_PRINT(F(". Payload: "));
-    DEBUG_PRINTLN(MQTT_ON_PAYLOAD);
+    DEBUG_PRINTLN(payload);
   } else {
     DEBUG_PRINTLN(F("ERROR: MQTT message publish failed"));
   }
-
 }
 
 /*
@@ -87,7 +96,7 @@ void mqttPublishState() {
 void reconnect() {
   uint8_t i = 0;
   while (!mqttClient.connected()) {
-    if (mqttClient.connect(MQTT_CLIENT_ID, settings.mqttUser, settings.mqttPassword)) {
+    if (mqttClient.connect(HARDWARE_ID, settings.mqttUser, settings.mqttPassword)) {
       DEBUG_PRINTLN(F("INFO: The client is successfully connected to the MQTT broker"));
     } else {
       DEBUG_PRINTLN(F("ERROR: The connection to the MQTT broker failed"));
@@ -244,7 +253,7 @@ void setupArduinoOTA() {
   ArduinoOTA.onEnd([]() {
     DEBUG_PRINTLN(F("INFO: End OTA"));
   });
-  ArduinoOTA.setHostname(MQTT_CLIENT_ID);
+  ArduinoOTA.setHostname(HARDWARE_ID);
   ArduinoOTA.begin();
 }
 
@@ -276,18 +285,22 @@ void setup() {
   }
 
   // client ID
-  sprintf(MQTT_CLIENT_ID, "%06X", ESP.getChipId());
-  DEBUG_PRINT(F("INFO: MQTT client ID/Hostname: "));
-  DEBUG_PRINTLN(MQTT_CLIENT_ID);
+  sprintf(HARDWARE_ID, "%06X", ESP.getChipId());
+  DEBUG_PRINT(F("INFO: Hardware ID/Hostname: "));
+  DEBUG_PRINTLN(HARDWARE_ID);
 
   // wifi setup with autoconnect
   wifiSetup(true);
 
   // configure mqtt topic
   if (strlen(settings.mqttPath) == 0) {
-    sprintf(MQTT_STATE_TOPIC, "%s/power_meter/", MQTT_CLIENT_ID);
+    sprintf(MQTT_STATE_TOPIC, "%s/power_meter/", HARDWARE_ID);
   } else {
-    sprintf(MQTT_STATE_TOPIC, "%s/", settings.mqttPath);
+    if (settings.mqttPath[strlen(settings.mqttPath) - 1] == '/') {
+      sprintf(MQTT_STATE_TOPIC, "%s", settings.mqttPath);
+    } else {
+      sprintf(MQTT_STATE_TOPIC, "%s/", settings.mqttPath);
+    }
   }
   DEBUG_PRINT(F("INFO: MQTT command topic: "));
   DEBUG_PRINTLN(MQTT_STATE_TOPIC);
