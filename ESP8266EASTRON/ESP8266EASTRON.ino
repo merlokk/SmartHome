@@ -72,10 +72,11 @@ Eastron          eastron;
   Function called to publish the state of 
 */
 void mqttPublishState() {
-  mqttPublishState("hardwareid", HARDWARE_ID);  
-  mqttPublishState("version", PROGRAM_VERSION);  
+  mqttPublishState("HardwareId", HARDWARE_ID);  
+  mqttPublishState("Version", PROGRAM_VERSION);  
+  mqttPublishState("DeviceType", settings.deviceType);  
   String v = String(millis() / 1000);
-  mqttPublishState("uptime", v.c_str()); 
+  mqttPublishState("Uptime", v.c_str()); 
 }
 
 void mqttPublishState(const char *topic, const char *payload) {
@@ -294,7 +295,7 @@ void setup() {
 
   // configure mqtt topic
   if (strlen(settings.mqttPath) == 0) {
-    sprintf(MQTT_STATE_TOPIC, "%s/power_meter/", HARDWARE_ID);
+    sprintf(MQTT_STATE_TOPIC, "%s/PowerMeter/", HARDWARE_ID);
   } else {
     if (settings.mqttPath[strlen(settings.mqttPath) - 1] == '/') {
       sprintf(MQTT_STATE_TOPIC, "%s", settings.mqttPath);
