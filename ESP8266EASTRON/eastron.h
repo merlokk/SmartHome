@@ -24,6 +24,7 @@ extern "C" {
 #define MDB_FLOAT4  4
 struct mqttMapConfigS {
   const char * mqttTopicName;
+  byte command;
   word modbusAddress;
   byte valueType;
 };
@@ -107,14 +108,18 @@ class Eastron {
     ModbusDiap modbusArray[MAX_MODBUS_DIAP];
 
     int* getValueAddress(byte Command, word ModbusAddress);
-    word getWordValue(byte Command, word ModbusAddress);
-    int getIntValue(byte Command, word ModbusAddress);
   public:
   bool Connected = false;
   
   Eastron();
   int AddModbusDiap(byte Command, word StartDiap, word LengthDiap);
+  int getModbusDiapLength();
+  void getStrModbusConfig(String &str);
   void Poll(byte Command);
+
+  word getWordValue(byte Command, word ModbusAddress);
+  int getIntValue(byte Command, word ModbusAddress);
+  void getValue(String &str, byte Command, word ModbusAddress, byte valueType);
 };
 
 

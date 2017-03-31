@@ -266,6 +266,11 @@ void setupArduinoOTA() {
   ArduinoOTA.onEnd([]() {
     DEBUG_PRINTLN(F("INFO: End OTA"));
   });
+  
+  // Port defaults to 8266
+  // ArduinoOTA.setPort(8266);
+  // No authentication by default
+  // ArduinoOTA.setPassword("admin123");  
   ArduinoOTA.setHostname(HARDWARE_ID);
   ArduinoOTA.begin();
 }
@@ -333,6 +338,7 @@ void setup() {
 
   // eastron 630 small
   eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x13); 
+  eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number
   // eastron 630 full
 /*  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x58); // 1-87      = 88 registers
   eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x064, 0x08); // 101-107   = 8 registers
@@ -340,6 +346,10 @@ void setup() {
   eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x14E, 0x4E); // 335-341   = 8 registers
   eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x007, 0x04); // voltage and current
   eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number*/
+  String str;
+  eastron.getStrModbusConfig(str);
+  DEBUG_PRINTLN(F("INFO: Modbus config:"));
+  DEBUG_PRINTLN(str);
 }
 
 // the loop function runs over and over again forever
@@ -376,9 +386,15 @@ void loop() {
     // publish some system vars
     mqttPublishRegularState();
     
-    if (eastron.Connected) {
+    if (!eastron.Connected) {
+      String str;
       for(int i = 0; i < eastron630smallLen; i++) {
-        mqttPublishState(eastron630small[i].mqttTopicName, "--");        
+        eastron.getValue(
+          str,
+          eastron630small[i].command,
+          eastron630small[i].modbusAddress,
+          eastron630small[i].valueType);
+        mqttPublishState(eastron630small[i].mqttTopicName, str.c_str());        
       }    
     };
   
