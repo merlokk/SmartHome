@@ -3,6 +3,13 @@
 #include <Arduino.h>
 #include "eastron.h"
 
+mqttMapConfigS eastron220[eastron220Len] = {
+  {"Voltage",         POLL_INPUT_REGISTERS, 0x01, MDB_INT},
+  {"Current",         POLL_INPUT_REGISTERS, 0x06, MDB_INT},
+  {"PowerActive",     POLL_INPUT_REGISTERS, 0x0C, MDB_INT},
+  {"PowerVA",         POLL_INPUT_REGISTERS, 0x12, MDB_INT},
+  {"PowerVAR",        POLL_INPUT_REGISTERS, 0x18, MDB_INT}
+};
 mqttMapConfigS eastron630small[eastron630smallLen] = {
   {"Voltage1",        POLL_INPUT_REGISTERS, 0x01, MDB_INT},
   {"Voltage2",        POLL_INPUT_REGISTERS, 0x02, MDB_INT},

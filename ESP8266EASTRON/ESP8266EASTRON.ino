@@ -336,6 +336,12 @@ void setup() {
 
   mqttPublishInitialState();
 
+  // eastron 220
+/*  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x1E);   // 1-37
+  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x12);   // 71-79
+  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x156, 0x04);   // 343-345
+  eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number*/
+
   // eastron 630 small
   eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x13); 
   eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number
