@@ -8,10 +8,31 @@ extern "C" {
 #include <Arduino.h>
 
 
-#define SDM_BAUD                            9600                                //baudrate
-#define MAX_MILLIS_TO_WAIT                  500                                 //max time to wait for response from SDM
-#define SWAPHWSERIAL                        0                                   //swap or not uart number 0 and 1
+#define SDM_BAUD                    9600       //baudrate
+#define MAX_MILLIS_TO_WAIT          500        //max time to wait for response from SDM
+#define SWAPHWSERIAL                0          //swap or not uart number 0 and 1
 
+// Poll commands
+#define POLL_ALL                    0
+#define POLL_HOLDING_REGISTERS      3
+#define POLL_INPUT_REGISTERS        4
+
+// registers configuration
+#define MDB_WORD    1
+#define MDB_INT     2
+#define MDB_FLOAT2  3
+#define MDB_FLOAT4  4
+struct mqttMapConfigS {
+  const char * mqttTopicName;
+  word modbusAddress;
+  byte valueType;
+};
+
+// devices configuration
+//extern mqttMapConfigS eastron220[15];
+#define eastron630smallLen 15
+extern mqttMapConfigS eastron630small[eastron630smallLen];
+//extern mqttMapConfigS eastron630[15];
 
 ///////////////////////////////////////////////////////////////////////////
 //  EASTRON modbus addresses  
@@ -71,15 +92,29 @@ extern "C" {
 #define SDM630_TOTAL_SYSTEM_POWER_DEMAND    0x0054                              //W
 #define SDM630_MAXIMUM_TOTAL_SYSTEM_POWER   0x0056                              //W
 
+#define MAX_MODBUS_DIAP 20
+typedef struct {
+  byte Command = 0; 
+  word StartDiap = 0; 
+  word LengthDiap = 0;
+  int* Address = NULL;
+} ModbusDiap; 
 
 class Eastron {
   private:
     HardwareSerial ser = HardwareSerial(0);
+
+    ModbusDiap modbusArray[MAX_MODBUS_DIAP];
+
+    int* getValueAddress(byte Command, word ModbusAddress);
+    word getWordValue(byte Command, word ModbusAddress);
+    int getIntValue(byte Command, word ModbusAddress);
   public:
   bool Connected = false;
   
   Eastron();
-  void Poll();
+  int AddModbusDiap(byte Command, word StartDiap, word LengthDiap);
+  void Poll(byte Command);
 };
 
 

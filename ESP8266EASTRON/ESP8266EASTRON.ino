@@ -25,12 +25,15 @@
   #define             DEBUG_PRINTLN(x)
 #endif
 
+// mechanics
+#define MILLIS_TO_POLL          15000      //max time to wait for poll
+
 // LEDs and pins
-#define PIN_PGM 0
-#define LED1 12
-#define LED2 14
-#define LEDON  LOW
-#define LEDOFF HIGH
+#define PIN_PGM  0      // programming pin and jumper
+#define LED1     12     // led 1
+#define LED2     14     // led 2
+#define LEDON    LOW
+#define LEDOFF   HIGH
 
 // MQTT defines
 #define               MQTT_CFG_CHAR_ARRAY_SIZE 24      // size of the arrays for MQTT username, password, etc.
@@ -327,6 +330,16 @@ void setup() {
   ticker.detach();
 
   mqttPublishInitialState();
+
+  // eastron 630 small
+  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x13); 
+  // eastron 630 full
+/*  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x58); // 1-87      = 88 registers
+  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x064, 0x08); // 101-107   = 8 registers
+  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x0C8, 0x4E); // 201-269   = 70 registers
+  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x14E, 0x4E); // 335-341   = 8 registers
+  eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x007, 0x04); // voltage and current
+  eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number*/
 }
 
 // the loop function runs over and over again forever
@@ -357,14 +370,16 @@ void loop() {
     return;
   }
 
-  if (millis() > lastPollTime + 15000) {
+  if (millis() > lastPollTime + MILLIS_TO_POLL) {
     eastron.Poll(POLL_ALL);
 
     // publish some system vars
     mqttPublishRegularState();
     
     if (eastron.Connected) {
-    
+      for(int i = 0; i < eastron630smallLen; i++) {
+        mqttPublishState(eastron630small[i].mqttTopicName, "--");        
+      }    
     };
   
     lastPollTime = millis();
