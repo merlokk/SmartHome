@@ -30,7 +30,8 @@ struct mqttMapConfigS {
 };
 
 // devices configuration
-//extern mqttMapConfigS eastron220[15];
+#define eastron220Len 5
+extern mqttMapConfigS eastron220[eastron220Len];
 #define eastron630smallLen 15
 extern mqttMapConfigS eastron630small[eastron630smallLen];
 //extern mqttMapConfigS eastron630[15];
