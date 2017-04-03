@@ -6,11 +6,11 @@ extern "C" {
 #define __EASTRON_H__
 
 #include <Arduino.h>
+#include <SimpleModbusMaster.h> // https://github.com/angeloc/simplemodbusng/tree/master/SimpleModbusMaster
 
-
-#define SDM_BAUD                    9600       //baudrate
-#define MAX_MILLIS_TO_WAIT          500        //max time to wait for response from SDM
-#define SWAPHWSERIAL                0          //swap or not uart number 0 and 1
+#define SERIAL_BAUD                 9600       // baudrate
+#define MAX_MILLIS_TO_WAIT          500        // max time to wait for response from SDM
+#define SERIAL_RETRY_COUNT          3          // poll retry count
 
 // Poll commands
 #define POLL_ALL                    0
@@ -18,10 +18,12 @@ extern "C" {
 #define POLL_INPUT_REGISTERS        4
 
 // registers configuration
-#define MDB_WORD    1
-#define MDB_INT     2
-#define MDB_FLOAT2  3
-#define MDB_FLOAT4  4
+#define MDB_WORD       1
+#define MDB_INT        2
+#define MDB_FLOAT2     3
+#define MDB_FLOAT4     4
+#define MDB_INT_HEX    5
+#define MDB_INT64_HEX  6
 struct mqttMapConfigS {
   const char * mqttTopicName;
   byte command;
@@ -99,7 +101,7 @@ typedef struct {
   byte Command = 0; 
   word StartDiap = 0; 
   word LengthDiap = 0;
-  int* Address = NULL;
+  uint8_t* Address = NULL;
 } ModbusDiap; 
 
 class Eastron {
@@ -108,7 +110,7 @@ class Eastron {
 
     ModbusDiap modbusArray[MAX_MODBUS_DIAP];
 
-    int* getValueAddress(byte Command, word ModbusAddress);
+    uint8_t* getValueAddress(byte Command, word ModbusAddress);
   public:
   bool Connected = false;
   
@@ -116,10 +118,13 @@ class Eastron {
   int AddModbusDiap(byte Command, word StartDiap, word LengthDiap);
   int getModbusDiapLength();
   void getStrModbusConfig(String &str);
+  void ModbusSetup();
   void Poll(byte Command);
 
-  word getWordValue(byte Command, word ModbusAddress);
+  uint16_t getWordValue(byte Command, word ModbusAddress);
+  void setWordValue(uint16_t value, byte Command, word ModbusAddress);
   int getIntValue(byte Command, word ModbusAddress);
+  uint64_t getInt64Value(byte Command, word ModbusAddress);
   void getValue(String &str, byte Command, word ModbusAddress, byte valueType);
 };
 
@@ -129,3 +134,4 @@ class Eastron {
 #ifdef __cplusplus
 }
 #endif
+

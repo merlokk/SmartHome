@@ -2,10 +2,10 @@
 
 */
 
-#include <ESP8266WiFi.h>    // https://github.com/esp8266/Arduino
-#include <DNSServer.h>      //Local DNS Server used for redirecting all requests to the configuration portal
-#include <WiFiManager.h>    // https://github.com/tzapu/WiFiManager
-#include <PubSubClient.h>   // https://github.com/knolleary/pubsubclient/releases/tag/v2.6
+#include <ESP8266WiFi.h>        // https://github.com/esp8266/Arduino
+#include <DNSServer.h>          //Local DNS Server used for redirecting all requests to the configuration portal
+#include <WiFiManager.h>        // https://github.com/tzapu/WiFiManager
+#include <PubSubClient.h>       // https://github.com/knolleary/pubsubclient/releases/tag/v2.6
 #include <Ticker.h>
 #include <EEPROM.h>
 #include <ArduinoOTA.h>
@@ -18,14 +18,15 @@
 
 // macros for debugging
 #ifdef DEBUG
-  #define             DEBUG_PRINT(x)    Serial.print(x)
-  #define             DEBUG_PRINTLN(x)  Serial.println(x)
+  #define             DEBUG_PRINT(...)    Serial.print(__VA_ARGS__)
+  #define             DEBUG_PRINTLN(...)  Serial.println(__VA_ARGS__)
 #else
-  #define             DEBUG_PRINT(x)
-  #define             DEBUG_PRINTLN(x)
+  #define             DEBUG_PRINT(...)
+  #define             DEBUG_PRINTLN(...)
 #endif
 
 // mechanics
+ADC_MODE(ADC_VCC);
 #define MILLIS_TO_POLL          15000      //max time to wait for poll
 
 // LEDs and pins
@@ -287,6 +288,9 @@ void setup() {
   DEBUG_PRINTLN(F(" "));
   DEBUG_PRINTLN(F("Starting..."));
 
+  DEBUG_PRINT("VCC: ");
+  DEBUG_PRINTLN(ESP.getVcc());
+
   // LED init
   pinMode(LED1, OUTPUT);    
   pinMode(LED2, OUTPUT);   
@@ -309,6 +313,11 @@ void setup() {
 
   // wifi setup with autoconnect
   wifiSetup(true);
+
+  // pause for connecting
+  if (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+  }
 
   // configure mqtt topic
   if (strlen(settings.mqttPath) == 0) {
@@ -343,7 +352,7 @@ void setup() {
   eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number*/
 
   // eastron 630 small
-  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x13); 
+  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x14); 
   eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number
   // eastron 630 full
 /*  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x58); // 1-87      = 88 registers
@@ -356,6 +365,7 @@ void setup() {
   eastron.getStrModbusConfig(str);
   DEBUG_PRINTLN(F("INFO: Modbus config:"));
   DEBUG_PRINTLN(str);
+  eastron.ModbusSetup();
 }
 
 // the loop function runs over and over again forever
@@ -378,6 +388,11 @@ void loop() {
     reconnect();
   }
   mqttClient.loop();
+
+  // check wifi connection
+  if (WiFi.status() != WL_CONNECTED) {
+    delay(100);
+  }
 
   yield();
 
@@ -410,3 +425,4 @@ void loop() {
   digitalWrite(LED2, LEDOFF);
   delay(500);
 }
+

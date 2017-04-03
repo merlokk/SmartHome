@@ -4,14 +4,14 @@
 #include "eastron.h"
 
 mqttMapConfigS eastron220[eastron220Len] = {
-  {"Voltage",         POLL_INPUT_REGISTERS, 0x01, MDB_INT},
+  {"Voltage",         POLL_INPUT_REGISTERS, 0x00, MDB_INT},
   {"Current",         POLL_INPUT_REGISTERS, 0x06, MDB_INT},
   {"PowerActive",     POLL_INPUT_REGISTERS, 0x0C, MDB_INT},
   {"PowerVA",         POLL_INPUT_REGISTERS, 0x12, MDB_INT},
   {"PowerVAR",        POLL_INPUT_REGISTERS, 0x18, MDB_INT}
 };
 mqttMapConfigS eastron630small[eastron630smallLen] = {
-  {"Voltage1",        POLL_INPUT_REGISTERS, 0x01, MDB_INT},
+  {"Voltage1",        POLL_INPUT_REGISTERS, 0x00, MDB_INT},
   {"Voltage2",        POLL_INPUT_REGISTERS, 0x02, MDB_INT},
   {"Voltage3",        POLL_INPUT_REGISTERS, 0x04, MDB_INT},
   {"Current1",        POLL_INPUT_REGISTERS, 0x06, MDB_INT},
@@ -29,14 +29,27 @@ mqttMapConfigS eastron630small[eastron630smallLen] = {
 };
 
 Eastron::Eastron() {
-  if (SWAPHWSERIAL)
-    ser.swap();
-  ser.begin(SDM_BAUD);
+  ser.begin(SERIAL_BAUD);
   
 }
 
 void Eastron::Poll(byte Command) {
   Connected = false;
+
+  for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
+    if (modbusArray[i].Command){
+      //test
+      setWordValue(getWordValue(modbusArray[i].Command, modbusArray[i].StartDiap) + 1, modbusArray[i].Command, modbusArray[i].StartDiap);
+      setWordValue(1, modbusArray[i].Command, modbusArray[i].StartDiap + 2);
+    }
+  }
+
+/*  unsigned int connection_status = modbus_update(packets);
+  if (connection_status != TOTAL_NO_OF_PACKETS)
+  {
+    // re-enable the connection by:
+    packets[connection_status].connection = true;
+  }*/
 
 
 /*      while (sdmSer.available() > 0)  {                                         //read serial if any old data is available
@@ -66,7 +79,8 @@ int Eastron::AddModbusDiap(byte Command, word StartDiap, word LengthDiap) {
       modbusArray[i].Command = Command;
       modbusArray[i].StartDiap = StartDiap;
       modbusArray[i].LengthDiap = LengthDiap;
-      modbusArray[i].Address = (int*) new word[modbusArray[i].LengthDiap];
+      modbusArray[i].Address = new uint8_t[modbusArray[i].LengthDiap * sizeof(uint16_t)];
+      memset(modbusArray[i].Address, 0x00, modbusArray[i].LengthDiap * sizeof(uint16_t));
       
       return 0;
     }
@@ -96,32 +110,46 @@ void Eastron::getStrModbusConfig(String &str) {
   }
 }
 
-int* Eastron::getValueAddress(byte Command, word ModbusAddress) {
+uint8_t* Eastron::getValueAddress(byte Command, word ModbusAddress) {
   for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
     if (modbusArray[i].Command == Command &&
-        modbusArray[i].StartDiap >= ModbusAddress &&
-        modbusArray[i].StartDiap + modbusArray[i].LengthDiap <= ModbusAddress){
-      return modbusArray[i].Address - modbusArray[i].StartDiap + ModbusAddress;
+        modbusArray[i].StartDiap <= ModbusAddress &&
+        modbusArray[i].StartDiap + modbusArray[i].LengthDiap - 1 >= ModbusAddress){
+      return modbusArray[i].Address + (ModbusAddress - modbusArray[i].StartDiap) * 2; 
+//      return &modbusArray[i].Address[ModbusAddress - modbusArray[i].StartDiap];
     }
   }
 
   return NULL;
 }
 
-word Eastron::getWordValue(byte Command, word ModbusAddress){
-  word *w = (word*)getValueAddress(Command, ModbusAddress);
-  if (*w == NULL) {
+uint16_t Eastron::getWordValue(byte Command, word ModbusAddress){
+  uint8_t *ptr = getValueAddress(Command, ModbusAddress);
+  if (ptr == NULL) {
     return 0;
   }
-  return *w;  
+  uint16_t w;
+  memcpy(&w, ptr, 2);
+  return w;  
+}
+
+void Eastron::setWordValue(uint16_t value, byte Command, word ModbusAddress) {
+  uint8_t *ptr = getValueAddress(Command, ModbusAddress);
+  if (ptr == NULL) {
+    return;
+  }
+  memcpy(ptr, &value, 2); 
 }
 
 int Eastron::getIntValue(byte Command, word ModbusAddress) {
-  int *i = getValueAddress(Command, ModbusAddress);
-  if (*i == NULL) {
+  uint8_t *ptr = getValueAddress(Command, ModbusAddress);
+  if (ptr == NULL) {
     return 0;
   }
-  return *i;  
+
+  uint32_t ri;
+  memcpy(&ri, ptr, 4);
+  return ri;  
 }
 
 void Eastron::getValue(String &str, byte Command, word ModbusAddress, byte valueType) {
@@ -136,6 +164,12 @@ void Eastron::getValue(String &str, byte Command, word ModbusAddress, byte value
   }
 }
 
+void Eastron::ModbusSetup() {
+  
+  // Initialize modbus communication settings etc...
+//  modbus_configure(SERIAL_BAUD, MAX_MILLIS_TO_WAIT, polling, SERIAL_RETRY_COUNT, 0, packets, TOTAL_NO_OF_PACKETS);
+  
+}
 
 
 
