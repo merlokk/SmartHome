@@ -26,7 +26,7 @@
 #endif
 
 // mechanics
-ADC_MODE(ADC_VCC);
+ADC_MODE(ADC_VCC);                         // set ADC to meassure esp8266 VCC
 #define MILLIS_TO_POLL          15000      //max time to wait for poll
 
 // LEDs and pins
@@ -41,10 +41,10 @@ ADC_MODE(ADC_VCC);
 #define               MQTT_CFG_CHAR_ARRAY_SIZE_PORT 6  // size of the arrays for MQTT port
 
 // MQTT ID and topics
-char                  HARDWARE_ID[7]                                           = {0};
+char                  HARDWARE_ID[7]                             = {0};
 char                  MQTT_STATE_TOPIC[MQTT_CFG_CHAR_ARRAY_SIZE] = {0};
-const char*           MQTT_ON_PAYLOAD                                             = "ON";
-const char*           MQTT_OFF_PAYLOAD                                            = "OFF";
+const char*           MQTT_ON_PAYLOAD                            = "ON";
+const char*           MQTT_OFF_PAYLOAD                           = "OFF";
 
 // MQTT settings
 #define EEPROM_SALT 123321
@@ -88,8 +88,10 @@ void mqttPublishInitialState() {
 
 void mqttPublishRegularState() {
   mqttPublishState("Connected", eastron.Connected ? MQTT_ON_PAYLOAD:MQTT_OFF_PAYLOAD);
-  String v = String(millis() / 1000);
-  mqttPublishState("Uptime", v.c_str()); 
+  String s = String(millis() / 1000);
+  mqttPublishState("Uptime", s.c_str()); 
+  s = String(ESP.getVcc());
+  mqttPublishState("VCC", s.c_str()); 
 }
 
 void mqttPublishState(const char *topic, const char *payload) {
@@ -280,7 +282,7 @@ void setupArduinoOTA() {
 //   Setup() and loop()
 ///////////////////////////////////////////////////////////////////////////
 void setup() {
-//  Serial.setDebugOutput(false);
+  Serial.setDebugOutput(false);
   Serial.begin(115200); //74880
 
   // for debug
@@ -288,7 +290,7 @@ void setup() {
   DEBUG_PRINTLN(F(" "));
   DEBUG_PRINTLN(F("Starting..."));
 
-  DEBUG_PRINT("VCC: ");
+  DEBUG_PRINT("Module VCC: ");
   DEBUG_PRINTLN(ESP.getVcc());
 
   // LED init
@@ -361,6 +363,7 @@ void setup() {
   eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x14E, 0x4E); // 335-341   = 8 registers
   eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x007, 0x04); // voltage and current
   eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number*/
+  
   String str;
   eastron.getStrModbusConfig(str);
   DEBUG_PRINTLN(F("INFO: Modbus config:"));

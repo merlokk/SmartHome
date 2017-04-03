@@ -167,7 +167,7 @@ void Eastron::getValue(String &str, byte Command, word ModbusAddress, byte value
 void Eastron::ModbusSetup() {
   
   // Initialize modbus communication settings etc...
-//  modbus_configure(SERIAL_BAUD, MAX_MILLIS_TO_WAIT, polling, SERIAL_RETRY_COUNT, 0, packets, TOTAL_NO_OF_PACKETS);
+//  modbus_configure(SERIAL_BAUD, MODBUS_POLL_TIMEOUT, MODBUS_POLL_INTERVAL, SERIAL_RETRY_COUNT, 0, packets, TOTAL_NO_OF_PACKETS);
   
 }
 

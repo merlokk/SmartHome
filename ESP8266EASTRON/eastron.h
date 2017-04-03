@@ -9,7 +9,8 @@ extern "C" {
 #include <SimpleModbusMaster.h> // https://github.com/angeloc/simplemodbusng/tree/master/SimpleModbusMaster
 
 #define SERIAL_BAUD                 9600       // baudrate
-#define MAX_MILLIS_TO_WAIT          500        // max time to wait for response from SDM
+#define MODBUS_POLL_TIMEOUT         500        // max time to wait for response from SDM
+#define MODBUS_POLL_INTERVAL        300        // poll interval for modbus library.  
 #define SERIAL_RETRY_COUNT          3          // poll retry count
 
 // Poll commands
