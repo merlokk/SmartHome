@@ -11,66 +11,46 @@ mqttMapConfigS eastron220[eastron220Len] = {
   {"PowerVAR",        POLL_INPUT_REGISTERS, 0x18, MDB_INT}
 };
 mqttMapConfigS eastron630small[eastron630smallLen] = {
-  {"Voltage1",        POLL_INPUT_REGISTERS, 0x00, MDB_INT},
-  {"Voltage2",        POLL_INPUT_REGISTERS, 0x02, MDB_INT},
-  {"Voltage3",        POLL_INPUT_REGISTERS, 0x04, MDB_INT},
-  {"Current1",        POLL_INPUT_REGISTERS, 0x06, MDB_INT},
-  {"Current2",        POLL_INPUT_REGISTERS, 0x08, MDB_INT},
-  {"Current3",        POLL_INPUT_REGISTERS, 0x0A, MDB_INT},
-  {"PowerActive1",    POLL_INPUT_REGISTERS, 0x0C, MDB_INT},
-  {"PowerActive2",    POLL_INPUT_REGISTERS, 0x0E, MDB_INT},
-  {"PowerActive3",    POLL_INPUT_REGISTERS, 0x10, MDB_INT},
-  {"PowerVA1",        POLL_INPUT_REGISTERS, 0x12, MDB_INT},
-  {"PowerVA2",        POLL_INPUT_REGISTERS, 0x14, MDB_INT},
-  {"PowerVA3",        POLL_INPUT_REGISTERS, 0x16, MDB_INT},
-  {"PowerVAR1",       POLL_INPUT_REGISTERS, 0x18, MDB_INT},
-  {"PowerVAR2",       POLL_INPUT_REGISTERS, 0x1A, MDB_INT},
-  {"PowerVAR3",       POLL_INPUT_REGISTERS, 0x1C, MDB_INT}
+  {"Voltage1",        POLL_INPUT_REGISTERS, 0x00, MDB_FLOAT},
+  {"Voltage2",        POLL_INPUT_REGISTERS, 0x02, MDB_FLOAT},
+  {"Voltage3",        POLL_INPUT_REGISTERS, 0x04, MDB_FLOAT},
+  {"Current1",        POLL_INPUT_REGISTERS, 0x06, MDB_FLOAT},
+  {"Current2",        POLL_INPUT_REGISTERS, 0x08, MDB_FLOAT},
+  {"Current3",        POLL_INPUT_REGISTERS, 0x0A, MDB_FLOAT},
+  {"PowerActive1",    POLL_INPUT_REGISTERS, 0x0C, MDB_FLOAT},
+  {"PowerActive2",    POLL_INPUT_REGISTERS, 0x0E, MDB_FLOAT},
+  {"PowerActive3",    POLL_INPUT_REGISTERS, 0x10, MDB_FLOAT},
+  {"PowerVA1",        POLL_INPUT_REGISTERS, 0x12, MDB_FLOAT},
+  {"PowerVA2",        POLL_INPUT_REGISTERS, 0x14, MDB_FLOAT},
+  {"PowerVA3",        POLL_INPUT_REGISTERS, 0x16, MDB_FLOAT},
+  {"PowerVAR1",       POLL_INPUT_REGISTERS, 0x18, MDB_FLOAT},
+  {"PowerVAR2",       POLL_INPUT_REGISTERS, 0x1A, MDB_FLOAT},
+  {"PowerVAR3",       POLL_INPUT_REGISTERS, 0x1C, MDB_FLOAT},
+  {"Data",       POLL_INPUT_REGISTERS, 0x00, MDB_16BYTE_HEX},
+
+  {"SerialNumber",    POLL_HOLDING_REGISTERS, 0x2A, MDB_8BYTE_HEX},
 };
 
 Eastron::Eastron() {
-  ser.begin(SERIAL_BAUD);
-  
 }
 
 void Eastron::Poll(byte Command) {
   Connected = false;
 
-  for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
+ /* for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
     if (modbusArray[i].Command){
       //test
       setWordValue(getWordValue(modbusArray[i].Command, modbusArray[i].StartDiap) + 1, modbusArray[i].Command, modbusArray[i].StartDiap);
       setWordValue(1, modbusArray[i].Command, modbusArray[i].StartDiap + 2);
     }
-  }
-
-/*  unsigned int connection_status = modbus_update(packets);
-  if (connection_status != TOTAL_NO_OF_PACKETS)
-  {
-    // re-enable the connection by:
-    packets[connection_status].connection = true;
   }*/
 
-
-/*      while (sdmSer.available() > 0)  {                                         //read serial if any old data is available
-        sdmSer.read();
-      }
-
-      sdmSer.write(sdmarr, FRAMESIZE - 1);                                      //send 8 bytes
-
-      sdmSer.flush();         
-
-      resptime = millis() + MAX_MILLIS_TO_WAIT;
-
-      while (sdmSer.available() < FRAMESIZE)  {
-        if (resptime >= millis()) {
-          delay(1);
-        } else {
-          timeouterr = true;
-          break;
-        }
-
-  */
+  unsigned int connection_status = modbus_update(pck);
+  if (connection_status != MAX_MODBUS_DIAP)
+  {
+    // re-enable the connection by:
+    pck[connection_status].connection = true;
+  }
 }
 
 int Eastron::AddModbusDiap(byte Command, word StartDiap, word LengthDiap) {
@@ -79,8 +59,15 @@ int Eastron::AddModbusDiap(byte Command, word StartDiap, word LengthDiap) {
       modbusArray[i].Command = Command;
       modbusArray[i].StartDiap = StartDiap;
       modbusArray[i].LengthDiap = LengthDiap;
-      modbusArray[i].Address = new uint8_t[modbusArray[i].LengthDiap * sizeof(uint16_t)];
+//      modbusArray[i].Address = new uint8_t[modbusArray[i].LengthDiap * sizeof(uint16_t)];
+      modbusArray[i].Address = (uint8_t*)new uint32_t[modbusArray[i].LengthDiap / 2 + 8]; // 8 - bug?
       memset(modbusArray[i].Address, 0x00, modbusArray[i].LengthDiap * sizeof(uint16_t));
+
+      pck[i].id = 1;
+      pck[i].function = Command;
+      pck[i].address = StartDiap;
+      pck[i].no_of_registers = LengthDiap;
+      pck[i].register_array = (unsigned int*)modbusArray[i].Address;
       
       return 0;
     }
@@ -111,12 +98,14 @@ void Eastron::getStrModbusConfig(String &str) {
 }
 
 uint8_t* Eastron::getValueAddress(byte Command, word ModbusAddress) {
+  if (!Command) {
+    return NULL;
+  }
   for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
     if (modbusArray[i].Command == Command &&
         modbusArray[i].StartDiap <= ModbusAddress &&
         modbusArray[i].StartDiap + modbusArray[i].LengthDiap - 1 >= ModbusAddress){
       return modbusArray[i].Address + (ModbusAddress - modbusArray[i].StartDiap) * 2; 
-//      return &modbusArray[i].Address[ModbusAddress - modbusArray[i].StartDiap];
     }
   }
 
@@ -141,15 +130,57 @@ void Eastron::setWordValue(uint16_t value, byte Command, word ModbusAddress) {
   memcpy(ptr, &value, 2); 
 }
 
-int Eastron::getIntValue(byte Command, word ModbusAddress) {
+uint32_t Eastron::getIntValue(byte Command, word ModbusAddress) {
   uint8_t *ptr = getValueAddress(Command, ModbusAddress);
   if (ptr == NULL) {
     return 0;
   }
 
-  uint32_t ri;
-  memcpy(&ri, ptr, 4);
-  return ri;  
+  uint32_t i;
+  memcpy(&i, ptr, 4);
+  return i;  
+}
+
+uint64_t Eastron::getInt64Value(byte Command, word ModbusAddress) {
+  uint8_t *ptr = getValueAddress(Command, ModbusAddress);
+  if (ptr == NULL) {
+    return 0;
+  }
+
+  uint64_t li;
+  memcpy(&li, ptr, 8);
+  return li;  
+}
+
+float Eastron::getFloatValue(byte Command, word ModbusAddress) {
+  uint8_t *ptr = getValueAddress(Command, ModbusAddress);
+  if (ptr == NULL) {
+    return 0;
+  }
+
+  dataFloat df;
+  memcpy(&df.arr[0], ptr + 3, 1);
+  memcpy(&df.arr[1], ptr + 2, 1);
+  memcpy(&df.arr[2], ptr + 1, 1);
+  memcpy(&df.arr[3], ptr + 0, 1);
+  return df.f;  
+}
+
+void Eastron::getMemoryHex(String &str, byte Command, word ModbusAddress, int len) {
+  str = "";
+  uint8_t *ptr = getValueAddress(Command, ModbusAddress);
+  if (ptr == NULL) {
+    return;
+  }
+
+  uint8_t b;
+  for(int i=0; i < len; i++) {
+    memcpy(&b, ptr + i, 1);
+    if (b < 0x10) {
+      str += "0";
+    }      
+    str += String(b, HEX) + " ";
+  }
 }
 
 void Eastron::getValue(String &str, byte Command, word ModbusAddress, byte valueType) {
@@ -160,6 +191,20 @@ void Eastron::getValue(String &str, byte Command, word ModbusAddress, byte value
     case MDB_INT:   
       str = String(getIntValue(Command, ModbusAddress));
       break;
+    case MDB_INT64:   
+      char c[10];
+      sprintf(c, "%I64d", getInt64Value(Command, ModbusAddress)); // "%llu", (unsigned long long) tr
+      str = String(c);
+      break;
+    case MDB_FLOAT:   
+      str = String(getFloatValue(Command, ModbusAddress));
+      break;
+    case MDB_8BYTE_HEX:   
+      getMemoryHex(str, Command, ModbusAddress, 8);
+      break;
+    case MDB_16BYTE_HEX:   
+      getMemoryHex(str, Command, ModbusAddress, 16);
+      break;
     default: str = "---";
   }
 }
@@ -167,10 +212,6 @@ void Eastron::getValue(String &str, byte Command, word ModbusAddress, byte value
 void Eastron::ModbusSetup() {
   
   // Initialize modbus communication settings etc...
-//  modbus_configure(SERIAL_BAUD, MODBUS_POLL_TIMEOUT, MODBUS_POLL_INTERVAL, SERIAL_RETRY_COUNT, 0, packets, TOTAL_NO_OF_PACKETS);
-  
+  modbus_configure(SERIAL_BAUD, MODBUS_POLL_TIMEOUT, MODBUS_POLL_INTERVAL, SERIAL_RETRY_COUNT, 0, pck, getModbusDiapLength());  
 }
-
-
-
 

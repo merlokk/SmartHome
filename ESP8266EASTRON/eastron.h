@@ -1,7 +1,3 @@
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifndef __EASTRON_H__
 #define __EASTRON_H__
 
@@ -10,7 +6,7 @@ extern "C" {
 
 #define SERIAL_BAUD                 9600       // baudrate
 #define MODBUS_POLL_TIMEOUT         500        // max time to wait for response from SDM
-#define MODBUS_POLL_INTERVAL        300        // poll interval for modbus library.  
+#define MODBUS_POLL_INTERVAL        10000       // poll interval for modbus library.  
 #define SERIAL_RETRY_COUNT          3          // poll retry count
 
 // Poll commands
@@ -19,12 +15,15 @@ extern "C" {
 #define POLL_INPUT_REGISTERS        4
 
 // registers configuration
-#define MDB_WORD       1
-#define MDB_INT        2
-#define MDB_FLOAT2     3
-#define MDB_FLOAT4     4
-#define MDB_INT_HEX    5
-#define MDB_INT64_HEX  6
+#define MDB_WORD        1
+#define MDB_INT         2
+#define MDB_INT64       3
+#define MDB_FLOAT       4
+#define MDB_FLOAT8      5
+#define MDB_INT_HEX     6
+#define MDB_INT64_HEX   7
+#define MDB_8BYTE_HEX   8
+#define MDB_16BYTE_HEX  9
 struct mqttMapConfigS {
   const char * mqttTopicName;
   byte command;
@@ -35,7 +34,7 @@ struct mqttMapConfigS {
 // devices configuration
 #define eastron220Len 5
 extern mqttMapConfigS eastron220[eastron220Len];
-#define eastron630smallLen 15
+#define eastron630smallLen 17
 extern mqttMapConfigS eastron630small[eastron630smallLen];
 //extern mqttMapConfigS eastron630[15];
 
@@ -97,6 +96,13 @@ extern mqttMapConfigS eastron630small[eastron630smallLen];
 #define SDM630_TOTAL_SYSTEM_POWER_DEMAND    0x0054                              //W
 #define SDM630_MAXIMUM_TOTAL_SYSTEM_POWER   0x0056                              //W
 
+// IEEE 754 Float. web here https://www.h-schmidt.net/FloatConverter/IEEE754.html
+union dataFloat {
+  float    f;
+  uint8_t  arr[4];
+  uint32_t i;
+};
+
 #define MAX_MODBUS_DIAP 20
 typedef struct {
   byte Command = 0; 
@@ -107,32 +113,30 @@ typedef struct {
 
 class Eastron {
   private:
-    HardwareSerial ser = HardwareSerial(0);
-
     ModbusDiap modbusArray[MAX_MODBUS_DIAP];
+    Packet pck[MAX_MODBUS_DIAP];
 
-    uint8_t* getValueAddress(byte Command, word ModbusAddress);
   public:
-  bool Connected = false;
+    uint8_t* getValueAddress(byte Command, word ModbusAddress);
   
-  Eastron();
-  int AddModbusDiap(byte Command, word StartDiap, word LengthDiap);
-  int getModbusDiapLength();
-  void getStrModbusConfig(String &str);
-  void ModbusSetup();
-  void Poll(byte Command);
+    bool Connected = false;
+  
+    Eastron();
+    int AddModbusDiap(byte Command, word StartDiap, word LengthDiap);
+    int getModbusDiapLength();
+    void getStrModbusConfig(String &str);
+    void ModbusSetup();
+    void Poll(byte Command);
 
-  uint16_t getWordValue(byte Command, word ModbusAddress);
-  void setWordValue(uint16_t value, byte Command, word ModbusAddress);
-  int getIntValue(byte Command, word ModbusAddress);
-  uint64_t getInt64Value(byte Command, word ModbusAddress);
-  void getValue(String &str, byte Command, word ModbusAddress, byte valueType);
+    uint16_t getWordValue(byte Command, word ModbusAddress);
+    void setWordValue(uint16_t value, byte Command, word ModbusAddress);
+    uint32_t getIntValue(byte Command, word ModbusAddress);
+    uint64_t getInt64Value(byte Command, word ModbusAddress);
+    float getFloatValue(byte Command, word ModbusAddress);
+    void getMemoryHex(String &str, byte Command, word ModbusAddress, int len);
+    void getValue(String &str, byte Command, word ModbusAddress, byte valueType);
 };
-
 
 #endif // ifndef __EASTRON_H__
 
-#ifdef __cplusplus
-}
-#endif
 

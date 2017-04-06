@@ -1,7 +1,7 @@
 /*
 
 */
-
+#include <Arduino.h>
 #include <ESP8266WiFi.h>        // https://github.com/esp8266/Arduino
 #include <DNSServer.h>          //Local DNS Server used for redirecting all requests to the configuration portal
 #include <WiFiManager.h>        // https://github.com/tzapu/WiFiManager
@@ -15,11 +15,12 @@
 #define               PROGRAM_VERSION   "0.91"
 
 #define               DEBUG                            // enable debugging
+#define               DEBUG_SERIAL      Serial1
 
 // macros for debugging
 #ifdef DEBUG
-  #define             DEBUG_PRINT(...)    Serial.print(__VA_ARGS__)
-  #define             DEBUG_PRINTLN(...)  Serial.println(__VA_ARGS__)
+  #define             DEBUG_PRINT(...)    DEBUG_SERIAL.print(__VA_ARGS__)
+  #define             DEBUG_PRINTLN(...)  DEBUG_SERIAL.println(__VA_ARGS__)
 #else
   #define             DEBUG_PRINT(...)
   #define             DEBUG_PRINTLN(...)
@@ -92,14 +93,16 @@ void mqttPublishRegularState() {
   mqttPublishState("Uptime", s.c_str()); 
   s = String(ESP.getVcc());
   mqttPublishState("VCC", s.c_str()); 
+  s = String(WiFi.RSSI());
+  mqttPublishState("RSSI", s.c_str()); 
 }
 
 void mqttPublishState(const char *topic, const char *payload) {
   String vtopic = String(MQTT_STATE_TOPIC) + String(topic);
   if (mqttClient.publish(vtopic.c_str(), payload, true)) {
-    DEBUG_PRINT(F("INFO: MQTT message publish succeeded. Topic: "));
+    DEBUG_PRINT(F("INFO: MQTT publish ok. Topic: "));
     DEBUG_PRINT(vtopic);
-    DEBUG_PRINT(F(". Payload: "));
+    DEBUG_PRINT(F(" Payload: "));
     DEBUG_PRINTLN(payload);
   } else {
     DEBUG_PRINTLN(F("ERROR: MQTT message publish failed"));
@@ -170,7 +173,7 @@ void wifiSetup(bool withAutoConnect) {
     settings = defaults;
   }
 
-  WiFiManager wifiManager;
+  WiFiManager wifiManager(DEBUG_SERIAL);
 
   WiFiManagerParameter custom_mqtt_text("<br/>MQTT config: <br/>");
   wifiManager.addParameter(&custom_mqtt_text);
@@ -283,7 +286,9 @@ void setupArduinoOTA() {
 ///////////////////////////////////////////////////////////////////////////
 void setup() {
   Serial.setDebugOutput(false);
+  Serial1.setDebugOutput(true);
   Serial.begin(115200); //74880
+  Serial1.begin(115200); 
 
   // for debug
   delay(200);
@@ -354,8 +359,8 @@ void setup() {
   eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number*/
 
   // eastron 630 small
-  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x14); 
-  eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number
+  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x10); 
+  eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x02A, 0x08); // serial number
   // eastron 630 full
 /*  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x58); // 1-87      = 88 registers
   eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x064, 0x08); // 101-107   = 8 registers
@@ -404,11 +409,20 @@ void loop() {
     return;
   }
 
+  // modbus poll function
+  eastron.Poll(POLL_ALL);
+  
   if (millis() > lastPollTime + MILLIS_TO_POLL) {
-    eastron.Poll(POLL_ALL);
-
     // publish some system vars
     mqttPublishRegularState();
+
+    DEBUG_PRINT("VAL: 0x");
+    uint8_t *ptr = eastron.getValueAddress(3, 0x2a); 
+    if (ptr != NULL) {
+      int i;
+      memcpy(&i, ptr, 4);
+      DEBUG_PRINTLN(i, HEX);
+    }
     
     if (!eastron.Connected) {
       String str;
@@ -428,4 +442,5 @@ void loop() {
   digitalWrite(LED2, LEDOFF);
   delay(500);
 }
+
 
