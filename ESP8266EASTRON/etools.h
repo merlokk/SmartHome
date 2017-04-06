@@ -3,6 +3,22 @@
 
 #include <Arduino.h>
 
+// IEEE 754 Float. web check here https://www.h-schmidt.net/FloatConverter/IEEE754.html
+// wiki https://en.wikipedia.org/wiki/IEEE_floating_point
+union dataFloat {
+  float    f;
+  uint8_t  arr[4];
+  uint32_t i;
+};
+
+union dataDouble
+{
+    double d;          
+    uint8_t b[8];
+    uint64_t i64;
+};
+
+// printing date time utils
 #define SECS_PER_MIN  (60UL)
 #define SECS_PER_HOUR (3600UL)
 #define SECS_PER_DAY  (SECS_PER_HOUR * 24L)

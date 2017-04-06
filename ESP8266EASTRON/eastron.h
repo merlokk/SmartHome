@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <SimpleModbusMaster.h> // https://github.com/angeloc/simplemodbusng/tree/master/SimpleModbusMaster
+#include "etools.h"
 
 #define SERIAL_BAUD                 9600       // baudrate
 #define MODBUS_POLL_TIMEOUT         500        // max time to wait for response from SDM
@@ -95,14 +96,6 @@ extern mqttMapConfigS eastron630small[eastron630smallLen];
 #define SDM630_EXPORT_REACTIVE_ENERGY       0x004E                              //VARh
 #define SDM630_TOTAL_SYSTEM_POWER_DEMAND    0x0054                              //W
 #define SDM630_MAXIMUM_TOTAL_SYSTEM_POWER   0x0056                              //W
-
-// IEEE 754 Float. web check here https://www.h-schmidt.net/FloatConverter/IEEE754.html
-// wiki https://en.wikipedia.org/wiki/IEEE_floating_point
-union dataFloat {
-  float    f;
-  uint8_t  arr[4];
-  uint32_t i;
-};
 
 #define MAX_MODBUS_DIAP 20
 typedef struct {
