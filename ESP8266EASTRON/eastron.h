@@ -96,7 +96,8 @@ extern mqttMapConfigS eastron630small[eastron630smallLen];
 #define SDM630_TOTAL_SYSTEM_POWER_DEMAND    0x0054                              //W
 #define SDM630_MAXIMUM_TOTAL_SYSTEM_POWER   0x0056                              //W
 
-// IEEE 754 Float. web here https://www.h-schmidt.net/FloatConverter/IEEE754.html
+// IEEE 754 Float. web check here https://www.h-schmidt.net/FloatConverter/IEEE754.html
+// wiki https://en.wikipedia.org/wiki/IEEE_floating_point
 union dataFloat {
   float    f;
   uint8_t  arr[4];

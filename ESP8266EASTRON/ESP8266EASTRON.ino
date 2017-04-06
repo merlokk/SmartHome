@@ -9,6 +9,7 @@
 #include <Ticker.h>
 #include <EEPROM.h>
 #include <ArduinoOTA.h>
+#include "etools.h"
 
 #include "eastron.h"
 
@@ -89,7 +90,8 @@ void mqttPublishInitialState() {
 
 void mqttPublishRegularState() {
   mqttPublishState("Connected", eastron.Connected ? MQTT_ON_PAYLOAD:MQTT_OFF_PAYLOAD);
-  String s = String(millis() / 1000);
+  String s = "";
+  eTimeToStr(s, millis() / 1000);
   mqttPublishState("Uptime", s.c_str()); 
   s = String(ESP.getVcc());
   mqttPublishState("VCC", s.c_str()); 
