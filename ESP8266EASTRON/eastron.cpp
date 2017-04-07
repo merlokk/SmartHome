@@ -187,9 +187,7 @@ void Eastron::getValue(String &str, byte Command, word ModbusAddress, byte value
 
 void Eastron::ModbusSetup() {
   // Initialize modbus communication settings etc...
-  //modbus_configure(SERIAL_BAUD, MODBUS_POLL_TIMEOUT, MODBUS_POLL_INTERVAL, SERIAL_RETRY_COUNT, 0, pck, getModbusDiapLength());  
   modbusNode.begin(&Serial, SERIAL_BAUD);
-  
 }
 
 void Eastron::Poll(byte Command) {
@@ -206,12 +204,5 @@ void Eastron::Poll(byte Command) {
       break;
     }
   }
-  
-/*  unsigned int connection_status = modbus_update(pck);
-  if (connection_status != MAX_MODBUS_DIAP)
-  {
-    // re-enable the connection by:
-    pck[connection_status].connection = true;
-  }*/
 }
 

@@ -47,6 +47,7 @@ ADC_MODE(ADC_VCC);                         // set ADC to meassure esp8266 VCC
 // MQTT defines
 #define               MQTT_CFG_CHAR_ARRAY_SIZE 24      // size of the arrays for MQTT username, password, etc.
 #define               MQTT_CFG_CHAR_ARRAY_SIZE_PORT 6  // size of the arrays for MQTT port
+#define               MQTT_CFG_CHAR_ARRAY_SIZE_TYPE 4  // size of eastron device type for MQTT
 
 // MQTT ID and topics
 char                  HARDWARE_ID[7]                             = {0};
@@ -57,13 +58,13 @@ const char*           MQTT_OFF_PAYLOAD                           = "OFF";
 // MQTT settings
 #define EEPROM_SALT 123321
 typedef struct {
-  char                mqttUser[MQTT_CFG_CHAR_ARRAY_SIZE]        = {0};
-  char                mqttPassword[MQTT_CFG_CHAR_ARRAY_SIZE]    = {0};
-  char                mqttServer[MQTT_CFG_CHAR_ARRAY_SIZE]      = {0};
-  char                mqttPort[MQTT_CFG_CHAR_ARRAY_SIZE_PORT]   = {0};
-  char                mqttPath[MQTT_CFG_CHAR_ARRAY_SIZE]        = {0};
-  char                deviceType[4]                             = {0};
-  int                 salt                                      = EEPROM_SALT; 
+  char                mqttUser[MQTT_CFG_CHAR_ARRAY_SIZE]         = {0};
+  char                mqttPassword[MQTT_CFG_CHAR_ARRAY_SIZE]     = {0};
+  char                mqttServer[MQTT_CFG_CHAR_ARRAY_SIZE]       = {0};
+  char                mqttPort[MQTT_CFG_CHAR_ARRAY_SIZE_PORT]    = {0};
+  char                mqttPath[MQTT_CFG_CHAR_ARRAY_SIZE]         = {0};
+  char                deviceType[MQTT_CFG_CHAR_ARRAY_SIZE_TYPE]  = {0};
+  int                 salt                                       = EEPROM_SALT; 
 } EEPROM_settings;
 
 // vars
@@ -78,6 +79,8 @@ Ticker           ticker;
 WiFiClient       wifiClient;
 PubSubClient     mqttClient(wifiClient);
 Eastron          eastron;
+mqttMapConfigS   *eastronCfg = NULL;
+int              eastronCfgLength = 0;
 
 ///////////////////////////////////////////////////////////////////////////
 //   MQTT
@@ -195,7 +198,7 @@ void wifiSetup(bool withAutoConnect) {
   wifiManager.addParameter(&custom_mqtt_port);
   WiFiManagerParameter custom_mqtt_path("mqtt-path", "MQTT Path", settings.mqttPath, MQTT_CFG_CHAR_ARRAY_SIZE);
   wifiManager.addParameter(&custom_mqtt_path);
-  WiFiManagerParameter custom_device_type("device-type", "Device type", settings.deviceType, 4);
+  WiFiManagerParameter custom_device_type("device-type", "Device type", settings.deviceType, MQTT_CFG_CHAR_ARRAY_SIZE_TYPE);
   wifiManager.addParameter(&custom_device_type);
 
   wifiManager.setAPCallback(configModeCallback);
@@ -360,23 +363,30 @@ void setup() {
 
   mqttPublishInitialState();
 
-  // eastron 220
-/*  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x1E);   // 1-37
-  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x12);   // 71-79
-  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x156, 0x04);   // 343-345
-  eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number*/
+  // eastron 220, 230
+  if (settings.deviceType == "220" || settings.deviceType == "230") {
+    eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x1E);   // 1-37
+    eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x12);   // 71-79
+    eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x156, 0x04);   // 343-345
+    eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number*/
+  }
 
   // eastron 630 small
-  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x1D); 
-  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x02); 
-  eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x02A, 0x04); // serial number
+  if (strcmp(settings.deviceType, "630s") == 0) {
+    eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x1D); 
+    eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x02); 
+    eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x02A, 0x04); // serial number
+  }
+  
   // eastron 630 full
-/*  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x58); // 1-87      = 88 registers
-  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x064, 0x08); // 101-107   = 8 registers
-  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x0C8, 0x4E); // 201-269   = 70 registers
-  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x14E, 0x4E); // 335-341   = 8 registers
-  eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x007, 0x04); // voltage and current
-  eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number*/
+  if (settings.deviceType == "630") {
+    eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x58); // 1-87      = 88 registers
+    eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x064, 0x08); // 101-107   = 8 registers
+    eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x0C8, 0x4E); // 201-269   = 70 registers
+    eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x14E, 0x4E); // 335-341   = 8 registers
+    eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x007, 0x04); // voltage and current
+    eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number*/
+  }
   
   String str;
   eastron.getStrModbusConfig(str);
@@ -422,17 +432,10 @@ void loop() {
     // publish some system vars
     mqttPublishRegularState();
 
-    DEBUG_PRINT("VAL: 0x");
-    uint8_t *ptr = eastron.getValueAddress(3, 0x2a); 
-    if (ptr != NULL) {
-      int i;
-      memcpy(&i, ptr, 4);
-      DEBUG_PRINTLN(i, HEX);
-    }
-    
     // modbus poll function
     eastron.Poll(POLL_ALL);
 
+    // publish vars from configuration
     if (eastron.Connected) {
       String str;
       for(int i = 0; i < eastron630smallLen; i++) {
