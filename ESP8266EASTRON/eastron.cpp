@@ -197,7 +197,7 @@ void Eastron::Poll(byte Command) {
 
   for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
     if (modbusArray[i].Command){
-      uint8_t res = modbusNode.ModbusMasterTransaction(1, modbusArray[i].Command, modbusArray[i].StartDiap, modbusArray[i].LengthDiap, modbusArray[i].Address, NULL, 0);
+      uint8_t res = modbusNode.ModbusMasterTransaction(1, modbusArray[i].Command, modbusArray[i].StartDiap, modbusArray[i].LengthDiap, modbusArray[i].Address);
       if (res != MBSuccess) {
         // debug output error here
       }

@@ -14,13 +14,11 @@
 
 #define SERIAL_BAUD                 9600       // baudrate
 #define MODBUS_POLL_TIMEOUT         1000       // max time to wait for response from SDM
-#define MODBUS_POLL_INTERVAL        10000      // poll interval for modbus library.  
-#define SERIAL_RETRY_COUNT          3          // poll retry count
 
 // Poll commands
 #define POLL_ALL                    0
-#define POLL_HOLDING_REGISTERS      3
-#define POLL_INPUT_REGISTERS        4
+#define POLL_HOLDING_REGISTERS      MBReadHoldingRegisters
+#define POLL_INPUT_REGISTERS        MBReadInputRegisters
 
 // registers configuration
 #define MDB_WORD        1

@@ -9,7 +9,7 @@
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>        // https://github.com/esp8266/Arduino
-#include <DNSServer.h>          //Local DNS Server used for redirecting all requests to the configuration portal
+#include <DNSServer.h>          // Local DNS Server used for redirecting all requests to the configuration portal
 #include <WiFiManager.h>        // https://github.com/tzapu/WiFiManager
 #include <PubSubClient.h>       // https://github.com/knolleary/pubsubclient/releases/tag/v2.6
 #include <Ticker.h>
@@ -418,9 +418,6 @@ void loop() {
     return;
   }
 
-  // modbus poll function
-  eastron.Poll(POLL_ALL);
-  
   if (millis() > lastPollTime + MILLIS_TO_POLL) {
     // publish some system vars
     mqttPublishRegularState();
@@ -433,6 +430,9 @@ void loop() {
       DEBUG_PRINTLN(i, HEX);
     }
     
+    // modbus poll function
+    eastron.Poll(POLL_ALL);
+
     if (eastron.Connected) {
       String str;
       for(int i = 0; i < eastron630smallLen; i++) {
