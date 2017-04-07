@@ -1,3 +1,9 @@
+/*
+ * Tools
+ * 
+ * (c) Oleg Moiseenko 2017
+ */
+
 #ifndef __ETOOLS_H__
 #define __ETOOLS_H__
 

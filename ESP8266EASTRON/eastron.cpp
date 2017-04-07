@@ -28,29 +28,12 @@ mqttMapConfigS eastron630small[eastron630smallLen] = {
   {"PowerVAR3",       POLL_INPUT_REGISTERS, 0x1C, MDB_FLOAT},
   {"Data",       POLL_INPUT_REGISTERS, 0x00, MDB_16BYTE_HEX},
 
+  {"Frequency",       POLL_INPUT_REGISTERS, 0x46, MDB_FLOAT},
+
   {"SerialNumber",    POLL_HOLDING_REGISTERS, 0x2A, MDB_8BYTE_HEX},
 };
 
 Eastron::Eastron() {
-}
-
-void Eastron::Poll(byte Command) {
-  Connected = false;
-
- /* for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
-    if (modbusArray[i].Command){
-      //test
-      setWordValue(getWordValue(modbusArray[i].Command, modbusArray[i].StartDiap) + 1, modbusArray[i].Command, modbusArray[i].StartDiap);
-      setWordValue(1, modbusArray[i].Command, modbusArray[i].StartDiap + 2);
-    }
-  }*/
-
-  unsigned int connection_status = modbus_update(pck);
-  if (connection_status != MAX_MODBUS_DIAP)
-  {
-    // re-enable the connection by:
-    pck[connection_status].connection = true;
-  }
 }
 
 int Eastron::AddModbusDiap(byte Command, word StartDiap, word LengthDiap) {
@@ -59,16 +42,9 @@ int Eastron::AddModbusDiap(byte Command, word StartDiap, word LengthDiap) {
       modbusArray[i].Command = Command;
       modbusArray[i].StartDiap = StartDiap;
       modbusArray[i].LengthDiap = LengthDiap;
-//      modbusArray[i].Address = new uint8_t[modbusArray[i].LengthDiap * sizeof(uint16_t)];
-      modbusArray[i].Address = (uint8_t*)new uint32_t[modbusArray[i].LengthDiap / 2 + 8]; // 8 - bug?
+      modbusArray[i].Address = new uint8_t[modbusArray[i].LengthDiap * sizeof(uint16_t) + 4]; // +4 - because of data alignment
       memset(modbusArray[i].Address, 0x00, modbusArray[i].LengthDiap * sizeof(uint16_t));
-
-      pck[i].id = 1;
-      pck[i].function = Command;
-      pck[i].address = StartDiap;
-      pck[i].no_of_registers = LengthDiap;
-      pck[i].register_array = (unsigned int*)modbusArray[i].Address;
-      
+     
       return 0;
     }
   }
@@ -210,8 +186,32 @@ void Eastron::getValue(String &str, byte Command, word ModbusAddress, byte value
 }
 
 void Eastron::ModbusSetup() {
-  
   // Initialize modbus communication settings etc...
-  modbus_configure(SERIAL_BAUD, MODBUS_POLL_TIMEOUT, MODBUS_POLL_INTERVAL, SERIAL_RETRY_COUNT, 0, pck, getModbusDiapLength());  
+  //modbus_configure(SERIAL_BAUD, MODBUS_POLL_TIMEOUT, MODBUS_POLL_INTERVAL, SERIAL_RETRY_COUNT, 0, pck, getModbusDiapLength());  
+  modbusNode.begin(&Serial, SERIAL_BAUD);
+  
+}
+
+void Eastron::Poll(byte Command) {
+  Connected = false;
+
+  for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
+    if (modbusArray[i].Command){
+      uint8_t res = modbusNode.ModbusMasterTransaction(1, modbusArray[i].Command, modbusArray[i].StartDiap, modbusArray[i].LengthDiap, modbusArray[i].Address, NULL, 0);
+      if (res != MBSuccess) {
+        // debug output error here
+      }
+      Connected = (res == 0);
+    } else {
+      break;
+    }
+  }
+  
+/*  unsigned int connection_status = modbus_update(pck);
+  if (connection_status != MAX_MODBUS_DIAP)
+  {
+    // re-enable the connection by:
+    pck[connection_status].connection = true;
+  }*/
 }
 

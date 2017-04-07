@@ -1,13 +1,20 @@
+/*
+ * Eastron bridge. 
+ * Universal eastron reader.
+ * 
+ * (c) Oleg Moiseenko 2017
+ */
+ 
 #ifndef __EASTRON_H__
 #define __EASTRON_H__
 
 #include <Arduino.h>
-#include <SimpleModbusMaster.h> // https://github.com/angeloc/simplemodbusng/tree/master/SimpleModbusMaster
 #include "etools.h"
+#include "emodbus.h"
 
 #define SERIAL_BAUD                 9600       // baudrate
-#define MODBUS_POLL_TIMEOUT         500        // max time to wait for response from SDM
-#define MODBUS_POLL_INTERVAL        10000       // poll interval for modbus library.  
+#define MODBUS_POLL_TIMEOUT         1000       // max time to wait for response from SDM
+#define MODBUS_POLL_INTERVAL        10000      // poll interval for modbus library.  
 #define SERIAL_RETRY_COUNT          3          // poll retry count
 
 // Poll commands
@@ -35,7 +42,7 @@ struct mqttMapConfigS {
 // devices configuration
 #define eastron220Len 5
 extern mqttMapConfigS eastron220[eastron220Len];
-#define eastron630smallLen 17
+#define eastron630smallLen 18
 extern mqttMapConfigS eastron630small[eastron630smallLen];
 //extern mqttMapConfigS eastron630[15];
 
@@ -108,8 +115,7 @@ typedef struct {
 class Eastron {
   private:
     ModbusDiap modbusArray[MAX_MODBUS_DIAP];
-    Packet pck[MAX_MODBUS_DIAP];
-
+    ModbusMaster modbusNode;
   public:
     uint8_t* getValueAddress(byte Command, word ModbusAddress);
   

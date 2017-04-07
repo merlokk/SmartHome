@@ -1,6 +1,12 @@
 /*
+ * Eastron energy counter bridge. 
+ * SDM 230, SDM 630
+ * Eastron -> RS-485 -> esp-8266 -> WiFi -> MQTT
+ * 
+ * original repository here https://github.com/merlokk/SmartHome/tree/master/ESP8266EASTRON
+ * (c) Oleg Moiseenko 2017
+ */
 
-*/
 #include <Arduino.h>
 #include <ESP8266WiFi.h>        // https://github.com/esp8266/Arduino
 #include <DNSServer.h>          //Local DNS Server used for redirecting all requests to the configuration portal
@@ -361,8 +367,9 @@ void setup() {
   eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number*/
 
   // eastron 630 small
-  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x10); 
-  eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x02A, 0x08); // serial number
+  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x1D); 
+  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x02); 
+  eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x02A, 0x04); // serial number
   // eastron 630 full
 /*  eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x58); // 1-87      = 88 registers
   eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x064, 0x08); // 101-107   = 8 registers
@@ -426,7 +433,7 @@ void loop() {
       DEBUG_PRINTLN(i, HEX);
     }
     
-    if (!eastron.Connected) {
+    if (eastron.Connected) {
       String str;
       for(int i = 0; i < eastron630smallLen; i++) {
         eastron.getValue(
