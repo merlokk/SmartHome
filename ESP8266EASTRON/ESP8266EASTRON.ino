@@ -360,6 +360,7 @@ void setup() {
   setupArduinoOTA();
 
   ticker.detach();
+  ticker.attach(0.1, tick);
 
   mqttPublishInitialState();
 
@@ -369,6 +370,9 @@ void setup() {
   eastron.getStrModbusConfig(str);
   DEBUG_PRINTLN(F("INFO: Modbus config:"));
   DEBUG_PRINTLN(str);
+
+  ticker.detach();
+  digitalWrite(LED1, LEDOFF);
 }
 
 // the loop function runs over and over again forever
@@ -383,12 +387,15 @@ void loop() {
   
   digitalWrite(LED2, LEDON);
   ArduinoOTA.handle();
+  digitalWrite(LED2, LEDOFF);
 
   yield();
 
   // keep the MQTT client connected to the broker
   if (!mqttClient.connected()) {
+    digitalWrite(LED2, LEDON);
     reconnect();
+    digitalWrite(LED2, LEDOFF);
   }
   mqttClient.loop();
 
@@ -405,6 +412,7 @@ void loop() {
   }
 
   if (millis() > lastPollTime + MILLIS_TO_POLL) {
+    digitalWrite(LED2, LEDON);
     // publish some system vars
     mqttPublishRegularState();
 
@@ -412,19 +420,20 @@ void loop() {
     eastron.Poll(POLL_ALL);
 
     // publish vars from configuration
-    if (eastron.Connected) {
+    if (eastron.mapConfigLen && eastron.mapConfig && eastron.Connected) {
       String str;
-      for(int i = 0; i < eastron630smallLen; i++) {
+      for(int i = 0; i < eastron.mapConfigLen; i++) {
         eastron.getValue(
           str,
-          eastron630small[i].command,
-          eastron630small[i].modbusAddress,
-          eastron630small[i].valueType);
-        mqttPublishState(eastron630small[i].mqttTopicName, str.c_str());        
+          eastron.mapConfig[i].command,
+          eastron.mapConfig[i].modbusAddress,
+          eastron.mapConfig[i].valueType);
+        mqttPublishState(eastron.mapConfig[i].mqttTopicName, str.c_str());        
       }    
     };
   
     lastPollTime = millis();
+    digitalWrite(LED2, LEDOFF);
   }
   
   digitalWrite(LED2, LEDOFF);
