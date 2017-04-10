@@ -191,9 +191,12 @@ void Eastron::Connect() {
 }
 
 void Eastron::ModbusSetup(char *deviceType) {
+  mapConfig = NULL;
+  mapConfigLen = 0;
+
   // eastron 220, 230
-  if (strncmp(deviceType, "220", 5) || 
-      strncmp(deviceType, "230", 10)) {
+  if (strncmp(deviceType, "220", 5) == 0 || 
+      strncmp(deviceType, "230", 10) == 0) {
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x1E);   // 1-37
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x12);   // 71-79
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x156, 0x04);   // 343-345
@@ -205,6 +208,9 @@ void Eastron::ModbusSetup(char *deviceType) {
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x1D); 
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x02); 
     AddModbusDiap(POLL_HOLDING_REGISTERS, 0x02A, 0x04); // serial number
+
+    mapConfig = eastron630small;
+    mapConfigLen = eastron630smallLen;
   }
   
   // eastron 630 full

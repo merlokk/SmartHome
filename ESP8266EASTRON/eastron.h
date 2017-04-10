@@ -118,6 +118,8 @@ class Eastron {
     uint8_t* getValueAddress(byte Command, word ModbusAddress);
   
     bool Connected = false;
+    mqttMapConfigS *mapConfig = NULL;
+    int mapConfigLen = 0;
   
     Eastron();
     int AddModbusDiap(byte Command, word StartDiap, word LengthDiap);
