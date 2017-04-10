@@ -47,7 +47,7 @@ ADC_MODE(ADC_VCC);                         // set ADC to meassure esp8266 VCC
 // MQTT defines
 #define               MQTT_CFG_CHAR_ARRAY_SIZE 24      // size of the arrays for MQTT username, password, etc.
 #define               MQTT_CFG_CHAR_ARRAY_SIZE_PORT 6  // size of the arrays for MQTT port
-#define               MQTT_CFG_CHAR_ARRAY_SIZE_TYPE 4  // size of eastron device type for MQTT
+#define               MQTT_CFG_CHAR_ARRAY_SIZE_TYPE 5  // size of eastron device type for MQTT
 
 // MQTT ID and topics
 char                  HARDWARE_ID[7]                             = {0};
@@ -363,36 +363,12 @@ void setup() {
 
   mqttPublishInitialState();
 
-  // eastron 220, 230
-  if (settings.deviceType == "220" || settings.deviceType == "230") {
-    eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x1E);   // 1-37
-    eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x12);   // 71-79
-    eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x156, 0x04);   // 343-345
-    eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number*/
-  }
+  eastron.ModbusSetup(&settings.deviceType[0]);
 
-  // eastron 630 small
-  if (strcmp(settings.deviceType, "630s") == 0) {
-    eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x1D); 
-    eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x02); 
-    eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x02A, 0x04); // serial number
-  }
-  
-  // eastron 630 full
-  if (settings.deviceType == "630") {
-    eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x58); // 1-87      = 88 registers
-    eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x064, 0x08); // 101-107   = 8 registers
-    eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x0C8, 0x4E); // 201-269   = 70 registers
-    eastron.AddModbusDiap(POLL_INPUT_REGISTERS, 0x14E, 0x4E); // 335-341   = 8 registers
-    eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x007, 0x04); // voltage and current
-    eastron.AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number*/
-  }
-  
   String str;
   eastron.getStrModbusConfig(str);
   DEBUG_PRINTLN(F("INFO: Modbus config:"));
   DEBUG_PRINTLN(str);
-  eastron.ModbusSetup();
 }
 
 // the loop function runs over and over again forever
@@ -452,7 +428,6 @@ void loop() {
   }
   
   digitalWrite(LED2, LEDOFF);
-  delay(500);
 }
 
 

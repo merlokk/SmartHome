@@ -185,9 +185,40 @@ void Eastron::getValue(String &str, byte Command, word ModbusAddress, byte value
   }
 }
 
-void Eastron::ModbusSetup() {
+void Eastron::Connect() {
   // Initialize modbus communication settings etc...
   modbusNode.begin(&Serial, SERIAL_BAUD);
+}
+
+void Eastron::ModbusSetup(char *deviceType) {
+  // eastron 220, 230
+  if (strncmp(deviceType, "220", 5) || 
+      strncmp(deviceType, "230", 10)) {
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x1E);   // 1-37
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x12);   // 71-79
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x156, 0x04);   // 343-345
+    AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number*/
+  }
+
+  // eastron 630 small
+  if (strncmp(deviceType, "630s", 5) == 0) {
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x1D); 
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x02); 
+    AddModbusDiap(POLL_HOLDING_REGISTERS, 0x02A, 0x04); // serial number
+  }
+  
+  // eastron 630 full
+  if (strncmp(deviceType, "630", 5) == 0) {
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x60); // 1-87      = 88 registers
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x064, 0x08); // 101-107   = 8 registers
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x0C8, 0x4E); // 201-269   = 70 registers
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x14E, 0x4E); // 335-341   = 8 registers
+    AddModbusDiap(POLL_HOLDING_REGISTERS, 0x007, 0x04); // voltage and current
+    AddModbusDiap(POLL_HOLDING_REGISTERS, 0x02A, 0x04); // serial number*/
+  }
+  
+
+  Connect();
 }
 
 void Eastron::Poll(byte Command) {
