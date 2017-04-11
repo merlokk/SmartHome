@@ -17,7 +17,6 @@ static uint16_t crc16_update(uint16_t crc, uint8_t a) {
   return crc;
 }
 
-
 ModbusMaster::ModbusMaster(void) {
   _idle = NULL;
   _preTransmission = NULL;
@@ -237,6 +236,7 @@ uint8_t ModbusMaster::ModbusMasterTransaction(
     if (u8ModbusADU[2] != u8ModbusADUSize -3 -2) {
       u8MBStatus = MBInvalidPacketLength;     
     }
+    
     // calculate CRC
     u16CRC = 0xFFFF;
     for (i = 0; i < (u8ModbusADUSize - 2); i++) {

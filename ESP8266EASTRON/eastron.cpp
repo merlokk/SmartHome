@@ -3,13 +3,17 @@
 #include <Arduino.h>
 #include "eastron.h"
 
+// devices configuration
+#define eastron220Len 5
 mqttMapConfigS eastron220[eastron220Len] = {
-  {"Voltage",         POLL_INPUT_REGISTERS, 0x00, MDB_INT},
-  {"Current",         POLL_INPUT_REGISTERS, 0x06, MDB_INT},
-  {"PowerActive",     POLL_INPUT_REGISTERS, 0x0C, MDB_INT},
-  {"PowerVA",         POLL_INPUT_REGISTERS, 0x12, MDB_INT},
-  {"PowerVAR",        POLL_INPUT_REGISTERS, 0x18, MDB_INT}
+  {"Voltage",         POLL_INPUT_REGISTERS, 0x00, MDB_FLOAT},
+  {"Current",         POLL_INPUT_REGISTERS, 0x06, MDB_FLOAT},
+  {"PowerActive",     POLL_INPUT_REGISTERS, 0x0C, MDB_FLOAT},
+  {"PowerVA",         POLL_INPUT_REGISTERS, 0x12, MDB_FLOAT},
+  {"PowerVAR",        POLL_INPUT_REGISTERS, 0x18, MDB_FLOAT}
 };
+
+#define eastron630smallLen 17
 mqttMapConfigS eastron630small[eastron630smallLen] = {
   {"Voltage1",        POLL_INPUT_REGISTERS, 0x00, MDB_FLOAT},
   {"Voltage2",        POLL_INPUT_REGISTERS, 0x02, MDB_FLOAT},
@@ -26,11 +30,93 @@ mqttMapConfigS eastron630small[eastron630smallLen] = {
   {"PowerVAR1",       POLL_INPUT_REGISTERS, 0x18, MDB_FLOAT},
   {"PowerVAR2",       POLL_INPUT_REGISTERS, 0x1A, MDB_FLOAT},
   {"PowerVAR3",       POLL_INPUT_REGISTERS, 0x1C, MDB_FLOAT},
-  {"Data",       POLL_INPUT_REGISTERS, 0x00, MDB_16BYTE_HEX},
+//  {"Data",       POLL_INPUT_REGISTERS, 0x00, MDB_16BYTE_HEX}, // debug only
 
   {"Frequency",       POLL_INPUT_REGISTERS, 0x46, MDB_FLOAT},
 
   {"SerialNumber",    POLL_HOLDING_REGISTERS, 0x2A, MDB_8BYTE_HEX},
+};
+
+#define eastron630Len 69
+mqttMapConfigS eastron630[eastron630Len] = {
+  {"Voltage1",        POLL_INPUT_REGISTERS, 0x00, MDB_FLOAT},
+  {"Voltage2",        POLL_INPUT_REGISTERS, 0x02, MDB_FLOAT},
+  {"Voltage3",        POLL_INPUT_REGISTERS, 0x04, MDB_FLOAT},
+  {"Current1",        POLL_INPUT_REGISTERS, 0x06, MDB_FLOAT},
+  {"Current2",        POLL_INPUT_REGISTERS, 0x08, MDB_FLOAT},
+  {"Current3",        POLL_INPUT_REGISTERS, 0x0A, MDB_FLOAT},
+  {"PowerActive1",    POLL_INPUT_REGISTERS, 0x0C, MDB_FLOAT},
+  {"PowerActive2",    POLL_INPUT_REGISTERS, 0x0E, MDB_FLOAT},
+  {"PowerActive3",    POLL_INPUT_REGISTERS, 0x10, MDB_FLOAT},
+  {"PowerVA1",        POLL_INPUT_REGISTERS, 0x12, MDB_FLOAT},
+  {"PowerVA2",        POLL_INPUT_REGISTERS, 0x14, MDB_FLOAT},
+  {"PowerVA3",        POLL_INPUT_REGISTERS, 0x16, MDB_FLOAT},
+  {"PowerVAR1",       POLL_INPUT_REGISTERS, 0x18, MDB_FLOAT},
+  {"PowerVAR2",       POLL_INPUT_REGISTERS, 0x1A, MDB_FLOAT},
+  {"PowerVAR3",       POLL_INPUT_REGISTERS, 0x1C, MDB_FLOAT},
+  {"PowerFactor1",    POLL_INPUT_REGISTERS, 0x1E, MDB_FLOAT},
+  {"PowerFactor2",    POLL_INPUT_REGISTERS, 0x20, MDB_FLOAT},
+  {"PowerFactor3",    POLL_INPUT_REGISTERS, 0x22, MDB_FLOAT},
+  {"PhaseAngle1",     POLL_INPUT_REGISTERS, 0x24, MDB_FLOAT},
+  {"PhaseAngle2",     POLL_INPUT_REGISTERS, 0x26, MDB_FLOAT},
+  {"PhaseAngle3",     POLL_INPUT_REGISTERS, 0x28, MDB_FLOAT},
+  {"VoltageAvg",      POLL_INPUT_REGISTERS, 0x2A, MDB_FLOAT},
+  {"CurrentAvg",      POLL_INPUT_REGISTERS, 0x2E, MDB_FLOAT},
+  {"CurrentSum",      POLL_INPUT_REGISTERS, 0x30, MDB_FLOAT},
+  {"PowerActiveSum",  POLL_INPUT_REGISTERS, 0x34, MDB_FLOAT},
+  {"PowerVASum",      POLL_INPUT_REGISTERS, 0x38, MDB_FLOAT},
+  {"PowerVARSum",     POLL_INPUT_REGISTERS, 0x3C, MDB_FLOAT},
+  {"PowerFactorSum",  POLL_INPUT_REGISTERS, 0x3E, MDB_FLOAT},
+  {"PhaseAngleTotal", POLL_INPUT_REGISTERS, 0x42, MDB_FLOAT},
+
+  {"Frequency",             POLL_INPUT_REGISTERS, 0x46, MDB_FLOAT},
+  {"ImportWhLastReset",     POLL_INPUT_REGISTERS, 0x48, MDB_FLOAT},
+  {"ExportWhLastReset",     POLL_INPUT_REGISTERS, 0x4A, MDB_FLOAT},
+  {"ImportVAhLastReset",    POLL_INPUT_REGISTERS, 0x5C, MDB_FLOAT},
+  {"ExportVAhLastReset",    POLL_INPUT_REGISTERS, 0x4E, MDB_FLOAT},
+  {"VAhLastReset",          POLL_INPUT_REGISTERS, 0x50, MDB_FLOAT},
+  {"AhLastReset",           POLL_INPUT_REGISTERS, 0x54, MDB_FLOAT},
+
+  {"PowerTotalDem",         POLL_INPUT_REGISTERS, 0x54, MDB_FLOAT},
+  {"MaxPowerTotalDem",      POLL_INPUT_REGISTERS, 0x56, MDB_FLOAT},
+  // hole
+  {"PowerVATotalDem",       POLL_INPUT_REGISTERS, 0x64, MDB_FLOAT},
+  {"MaxPowerVATotalDem",    POLL_INPUT_REGISTERS, 0x66, MDB_FLOAT},
+  {"NeutralCurrentDem",     POLL_INPUT_REGISTERS, 0x68, MDB_FLOAT},
+  {"MaxNeutralCurrentDem",  POLL_INPUT_REGISTERS, 0x6A, MDB_FLOAT},
+
+  {"Line1to2Volts",         POLL_INPUT_REGISTERS, 0xC8, MDB_FLOAT},
+  {"Line2to3Volts",         POLL_INPUT_REGISTERS, 0xCA, MDB_FLOAT},
+  {"Line3to1Volts",         POLL_INPUT_REGISTERS, 0xCC, MDB_FLOAT},
+  {"AvgLineToLineVolts",    POLL_INPUT_REGISTERS, 0xCE, MDB_FLOAT},
+  {"NeutralCurrent",        POLL_INPUT_REGISTERS, 0xE0, MDB_FLOAT},
+
+  {"Phase1LNVoltsTHD",      POLL_INPUT_REGISTERS, 0xEA, MDB_FLOAT},
+  {"Phase2LNVoltsTHD",      POLL_INPUT_REGISTERS, 0xEC, MDB_FLOAT},
+  {"Phase3LNVoltsTHD",      POLL_INPUT_REGISTERS, 0xEE, MDB_FLOAT},
+  {"Phase1CurrentTHD",      POLL_INPUT_REGISTERS, 0xF0, MDB_FLOAT},
+  {"Phase2CurrentTHD",      POLL_INPUT_REGISTERS, 0xF2, MDB_FLOAT},
+  {"Phase3CurrentTHD",      POLL_INPUT_REGISTERS, 0xF4, MDB_FLOAT},
+  {"AvgVoltageTHD",         POLL_INPUT_REGISTERS, 0xF8, MDB_FLOAT},
+  {"AvgCurrentTHD",         POLL_INPUT_REGISTERS, 0xFA, MDB_FLOAT},
+  
+  {"PowerFactorTotal",      POLL_INPUT_REGISTERS, 0xFE, MDB_FLOAT},
+  {"Phase1CurrentDem",      POLL_INPUT_REGISTERS, 0x0102, MDB_FLOAT},
+  {"Phase2CurrentDem",      POLL_INPUT_REGISTERS, 0x0104, MDB_FLOAT},
+  {"Phase3CurrentDem",      POLL_INPUT_REGISTERS, 0x0106, MDB_FLOAT},
+  {"MaxPhase1CurrentDem",   POLL_INPUT_REGISTERS, 0x0108, MDB_FLOAT},
+  {"MaxPhase2CurrentDem",   POLL_INPUT_REGISTERS, 0x010A, MDB_FLOAT},
+  {"MaxPhase3CurrentDem",   POLL_INPUT_REGISTERS, 0x010C, MDB_FLOAT},
+  // hole
+  {"Line1to2VoltsTHD",      POLL_INPUT_REGISTERS, 0x014E, MDB_FLOAT},
+  {"Line2to3VoltsTHD",      POLL_INPUT_REGISTERS, 0x0150, MDB_FLOAT},
+  {"Line3to1VoltsTHD",      POLL_INPUT_REGISTERS, 0x0152, MDB_FLOAT},
+  {"AvgLineToLineVoltsTHD", POLL_INPUT_REGISTERS, 0x0154, MDB_FLOAT},
+
+  // Holding registers 
+  {"SystemVoltage",   POLL_HOLDING_REGISTERS, 0x06, MDB_FLOAT},
+  {"SystemType",      POLL_HOLDING_REGISTERS, 0x08, MDB_FLOAT},
+  {"SerialNumber",    POLL_HOLDING_REGISTERS, 0x2A, MDB_8BYTE_HEX}
 };
 
 Eastron::Eastron() {
@@ -196,11 +282,14 @@ void Eastron::ModbusSetup(char *deviceType) {
 
   // eastron 220, 230
   if (strncmp(deviceType, "220", 5) == 0 || 
-      strncmp(deviceType, "230", 10) == 0) {
+      strncmp(deviceType, "230", 5) == 0) {
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x1E);   // 1-37
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x12);   // 71-79
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x156, 0x04);   // 343-345
     AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number*/
+
+    mapConfig = eastron220;
+    mapConfigLen = eastron220Len;
   }
 
   // eastron 630 small
@@ -219,8 +308,11 @@ void Eastron::ModbusSetup(char *deviceType) {
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x064, 0x08); // 101-107   = 8 registers
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x0C8, 0x4E); // 201-269   = 70 registers
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x14E, 0x4E); // 335-341   = 8 registers
-    AddModbusDiap(POLL_HOLDING_REGISTERS, 0x007, 0x04); // voltage and current
+    AddModbusDiap(POLL_HOLDING_REGISTERS, 0x006, 0x04); // voltage and system type
     AddModbusDiap(POLL_HOLDING_REGISTERS, 0x02A, 0x04); // serial number*/
+
+    mapConfig = eastron630;
+    mapConfigLen = eastron630Len;
   }
   
 
@@ -235,6 +327,8 @@ void Eastron::Poll(byte Command) {
       uint8_t res = modbusNode.ModbusMasterTransaction(1, modbusArray[i].Command, modbusArray[i].StartDiap, modbusArray[i].LengthDiap, modbusArray[i].Address);
       if (res != MBSuccess) {
         // debug output error here
+        Serial1.print("ERROR: modbus poll error: ");
+        Serial1.println(res);
       }
       Connected = (res == 0);
     } else {

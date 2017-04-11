@@ -15,6 +15,8 @@
 #include <Ticker.h>
 #include <EEPROM.h>
 #include <ArduinoOTA.h>
+#include <TimeLib.h>
+#include <NtpClientLib.h>
 #include "etools.h"
 
 #include "eastron.h"
@@ -109,8 +111,12 @@ void mqttPublishRegularState() {
 }
 
 void mqttPublishState(const char *topic, const char *payload) {
+  mqttPublishState(topic, payload, true);
+}
+
+void mqttPublishState(const char *topic, const char *payload, bool retained) {
   String vtopic = String(MQTT_STATE_TOPIC) + String(topic);
-  if (mqttClient.publish(vtopic.c_str(), payload, true)) {
+  if (mqttClient.publish(vtopic.c_str(), payload, retained)) {
     DEBUG_PRINT(F("INFO: MQTT publish ok. Topic: "));
     DEBUG_PRINT(vtopic);
     DEBUG_PRINT(F(" Payload: "));
@@ -144,6 +150,26 @@ void reconnect() {
       }
       i++;
     }
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+//   NTP
+///////////////////////////////////////////////////////////////////////////
+boolean syncEventTriggered = false;   // True if a time even has been triggered
+NTPSyncEvent_t ntpEvent;              // Last triggered event
+
+void processSyncEvent(NTPSyncEvent_t ntpEvent) {
+  if (ntpEvent) {
+    DEBUG_PRINTLN(F("ERROR: Time Sync error: "));
+    if (ntpEvent == noResponse)
+      DEBUG_PRINTLN(F("NTP server not reachable"));
+    else if (ntpEvent == invalidAddress)
+      DEBUG_PRINTLN(F("Invalid NTP server address"));
+  }
+  else {
+    DEBUG_PRINTLN(F("INFO: Got NTP time: "));
+    DEBUG_PRINTLN(NTP.getTimeDateString(NTP.getLastNTPSync()));
   }
 }
 
@@ -337,6 +363,12 @@ void setup() {
     delay(500);
   }
 
+  // NTP config
+  NTP.onNTPSyncEvent([](NTPSyncEvent_t event) {
+    ntpEvent = event;
+    syncEventTriggered = true;
+  });
+
   // configure mqtt topic
   if (strlen(settings.mqttPath) == 0) {
     sprintf(MQTT_STATE_TOPIC, "%s/PowerMeter/", HARDWARE_ID);
@@ -364,6 +396,9 @@ void setup() {
 
   mqttPublishInitialState();
 
+  // eastron setup
+  DEBUG_PRINT(F("INFO: DeviceType: "));
+  DEBUG_PRINTLN(settings.deviceType);
   eastron.ModbusSetup(&settings.deviceType[0]);
 
   String str;
@@ -390,6 +425,12 @@ void loop() {
   digitalWrite(LED2, LEDOFF);
 
   yield();
+
+  // NTP
+  if (syncEventTriggered) {
+    processSyncEvent(ntpEvent);
+    syncEventTriggered = false;
+  }
 
   // keep the MQTT client connected to the broker
   if (!mqttClient.connected()) {

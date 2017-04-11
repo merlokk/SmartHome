@@ -37,13 +37,6 @@ struct mqttMapConfigS {
   byte valueType;
 };
 
-// devices configuration
-#define eastron220Len 5
-extern mqttMapConfigS eastron220[eastron220Len];
-#define eastron630smallLen 18
-extern mqttMapConfigS eastron630small[eastron630smallLen];
-//extern mqttMapConfigS eastron630[15];
-
 ///////////////////////////////////////////////////////////////////////////
 //  EASTRON modbus addresses  
 //  original here https://github.com/beireken/SDM220t/blob/master/SDM.h 
