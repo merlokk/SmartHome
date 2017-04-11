@@ -4,13 +4,69 @@
 #include "eastron.h"
 
 // devices configuration
-#define eastron220Len 5
+#define eastron220Len 14
 mqttMapConfigS eastron220[eastron220Len] = {
   {"Voltage",         POLL_INPUT_REGISTERS, 0x00, MDB_FLOAT},
   {"Current",         POLL_INPUT_REGISTERS, 0x06, MDB_FLOAT},
   {"PowerActive",     POLL_INPUT_REGISTERS, 0x0C, MDB_FLOAT},
   {"PowerVA",         POLL_INPUT_REGISTERS, 0x12, MDB_FLOAT},
-  {"PowerVAR",        POLL_INPUT_REGISTERS, 0x18, MDB_FLOAT}
+  {"PowerVAR",        POLL_INPUT_REGISTERS, 0x18, MDB_FLOAT},
+  {"PowerFactor",     POLL_INPUT_REGISTERS, 0x1E, MDB_FLOAT},
+  {"PhaseAngle",      POLL_INPUT_REGISTERS, 0x24, MDB_FLOAT},
+  
+  {"Frequency",       POLL_INPUT_REGISTERS, 0x46, MDB_FLOAT},
+  {"ImportActive",    POLL_INPUT_REGISTERS, 0x48, MDB_FLOAT},
+  {"ExportActive",    POLL_INPUT_REGISTERS, 0x4A, MDB_FLOAT},
+  {"ImportReactive",  POLL_INPUT_REGISTERS, 0x4C, MDB_FLOAT},
+  {"ExportRreactive", POLL_INPUT_REGISTERS, 0x4E, MDB_FLOAT},
+  {"TotalActive",     POLL_INPUT_REGISTERS, 0x56, MDB_FLOAT},
+  {"TotalRreactive",  POLL_INPUT_REGISTERS, 0x58, MDB_FLOAT}
+};
+
+#define eastron230Len 24
+mqttMapConfigS eastron230[eastron230Len] = {
+  {"Voltage",         POLL_INPUT_REGISTERS, 0x00, MDB_FLOAT},
+  {"Current",         POLL_INPUT_REGISTERS, 0x06, MDB_FLOAT},
+  {"PowerActive",     POLL_INPUT_REGISTERS, 0x0C, MDB_FLOAT},
+  {"PowerVA",         POLL_INPUT_REGISTERS, 0x12, MDB_FLOAT},
+  {"PowerVAR",        POLL_INPUT_REGISTERS, 0x18, MDB_FLOAT},
+  {"PowerFactor",     POLL_INPUT_REGISTERS, 0x1E, MDB_FLOAT},
+  {"PhaseAngle",      POLL_INPUT_REGISTERS, 0x24, MDB_FLOAT},
+  
+  {"Frequency",              POLL_INPUT_REGISTERS, 0x46, MDB_FLOAT},
+  {"ImportActive",           POLL_INPUT_REGISTERS, 0x48, MDB_FLOAT},
+  {"ExportActive",           POLL_INPUT_REGISTERS, 0x4A, MDB_FLOAT},
+  {"ImportReactive",         POLL_INPUT_REGISTERS, 0x4C, MDB_FLOAT},
+  {"ExportRreactive",        POLL_INPUT_REGISTERS, 0x4E, MDB_FLOAT},
+  {"TotalDem",               POLL_INPUT_REGISTERS, 0x54, MDB_FLOAT},
+  {"MaxTotalDem",            POLL_INPUT_REGISTERS, 0x56, MDB_FLOAT},
+  {"PositivePowerDem",       POLL_INPUT_REGISTERS, 0x58, MDB_FLOAT},
+  {"MaxPositivePowerDem",    POLL_INPUT_REGISTERS, 0x5A, MDB_FLOAT},
+  {"ReversePowerDem",        POLL_INPUT_REGISTERS, 0x5C, MDB_FLOAT},
+  {"MaxReversePowerDem",     POLL_INPUT_REGISTERS, 0x5E, MDB_FLOAT},
+  {"CurrentDem",             POLL_INPUT_REGISTERS, 0x0102, MDB_FLOAT},
+  {"MaxCurrentDem",          POLL_INPUT_REGISTERS, 0x0108, MDB_FLOAT},
+  {"TotalActiveEnergy",      POLL_INPUT_REGISTERS, 0x0156, MDB_FLOAT},
+  {"TotalReactiveEnergy",    POLL_INPUT_REGISTERS, 0x0158, MDB_FLOAT},
+  {"ResTotalActiveEnergy",   POLL_INPUT_REGISTERS, 0x0180, MDB_FLOAT},
+  {"ResTotalReactiveEnergy", POLL_INPUT_REGISTERS, 0x0182, MDB_FLOAT}
+};
+
+#define eastron230SmallLen 12
+mqttMapConfigS eastron230Small[eastron230SmallLen] = {
+  {"Voltage",         POLL_INPUT_REGISTERS, 0x00, MDB_FLOAT},
+  {"Current",         POLL_INPUT_REGISTERS, 0x06, MDB_FLOAT},
+  {"PowerActive",     POLL_INPUT_REGISTERS, 0x0C, MDB_FLOAT},
+  {"PowerVA",         POLL_INPUT_REGISTERS, 0x12, MDB_FLOAT},
+  {"PowerVAR",        POLL_INPUT_REGISTERS, 0x18, MDB_FLOAT},
+  {"PowerFactor",     POLL_INPUT_REGISTERS, 0x1E, MDB_FLOAT},
+  {"PhaseAngle",      POLL_INPUT_REGISTERS, 0x24, MDB_FLOAT},
+  
+  {"Frequency",              POLL_INPUT_REGISTERS, 0x46, MDB_FLOAT},
+  {"ImportActive",           POLL_INPUT_REGISTERS, 0x48, MDB_FLOAT},
+  {"ExportActive",           POLL_INPUT_REGISTERS, 0x4A, MDB_FLOAT},
+  {"ImportReactive",         POLL_INPUT_REGISTERS, 0x4C, MDB_FLOAT},
+  {"ExportRreactive",        POLL_INPUT_REGISTERS, 0x4E, MDB_FLOAT},
 };
 
 #define eastron630smallLen 18
@@ -281,16 +337,34 @@ void Eastron::ModbusSetup(char *deviceType) {
   mapConfig = NULL;
   mapConfigLen = 0;
 
-  // eastron 220, 230
-  if (strncmp(deviceType, "220", 5) == 0 || 
-      strncmp(deviceType, "230", 5) == 0) {
-    AddModbusDiap(POLL_INPUT_REGISTERS, 0x001, 0x1E);   // 1-37
-    AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x12);   // 71-79
-    AddModbusDiap(POLL_INPUT_REGISTERS, 0x156, 0x04);   // 343-345
-    AddModbusDiap(POLL_HOLDING_REGISTERS, 0x043, 0x04); // serial number*/
+  // eastron 220
+  if (strncmp(deviceType, "220", 5) == 0) {
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x26);   // 0x00-0x24
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x0E);   // 0x46-0x58
 
     mapConfig = eastron220;
     mapConfigLen = eastron220Len;
+  }
+
+  // eastron 230
+  if (strncmp(deviceType, "230", 5) == 0) {
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x26);   // 0x00-0x24
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x14);   // 0x46-0x5E
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x102, 0x04);   // 0x0102-0x0108
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x156, 0x04);   // 0x0156-0x0158
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x180, 0x04);   // 0x0180-0x0182
+
+    mapConfig = eastron230;
+    mapConfigLen = eastron230Len;
+  }
+
+  // eastron 230 small
+  if (strncmp(deviceType, "230s", 5) == 0) {
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x26);   // 0x00-0x24
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x0A);   // 0x46-0x4E
+
+    mapConfig = eastron230Small;
+    mapConfigLen = eastron230SmallLen;
   }
 
   // eastron 630 small
