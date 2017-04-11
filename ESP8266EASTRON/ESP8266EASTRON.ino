@@ -197,8 +197,14 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     restart();
   }
 
-  if (strncmp((char*)payload, "cfgdevice", length) == 0) {
-    DEBUG_PRINTLN(F("COMMAND: config device."));
+  if (length > 10 && strncmp((char*)payload, "cfgdevice ", 10) == 0) {
+    char param[MQTT_CFG_CHAR_ARRAY_SIZE_TYPE] = {0};
+    strncpy(param, (char*)&payload[10], min((int)length - 10, MQTT_CFG_CHAR_ARRAY_SIZE_TYPE - 1)); 
+    DEBUG_PRINT(F("COMMAND: config device. deviceType="));
+    DEBUG_PRINTLN(param);
+
+    changeDeviceType(param);
+
     restart();
   }
 }
@@ -243,6 +249,25 @@ void saveConfigCallback () {
 
 void configModeCallback (WiFiManager *myWiFiManager) {
   ticker.attach(0.2, tick);
+}
+
+void changeDeviceType(char* deviceType) {
+  // load custom params
+  EEPROM.begin(512);
+  EEPROM.get(0, settings);
+  EEPROM.end();
+
+  if (settings.salt != EEPROM_SALT) {
+    DEBUG_PRINTLN(F("ERROR: Invalid settings in EEPROM, settings was cleared."));
+    EEPROM_settings defaults;
+    settings = defaults;
+  }
+  
+  strncpy(settings.deviceType, deviceType, MQTT_CFG_CHAR_ARRAY_SIZE_TYPE);
+
+  EEPROM.begin(512);
+  EEPROM.put(0, settings);
+  EEPROM.end();
 }
 
 void wifiSetup(bool withAutoConnect) {
