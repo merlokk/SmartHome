@@ -15,13 +15,13 @@
 #include <Ticker.h>
 #include <EEPROM.h>
 #include <ArduinoOTA.h>
-#include <TimeLib.h>
-#include <NtpClientLib.h>
+#include <TimeLib.h>            // https://github.com/PaulStoffregen/Time 
+#include <NtpClientLib.h>       // https://github.com/gmag11/NtpClient
 #include "etools.h"
 
 #include "eastron.h"
 
-#define               PROGRAM_VERSION   "0.91"
+#define               PROGRAM_VERSION   "0.92"
 
 #define               DEBUG                            // enable debugging
 #define               DEBUG_SERIAL      Serial1
@@ -100,14 +100,30 @@ void mqttPublishInitialState() {
 }
 
 void mqttPublishRegularState() {
-  mqttPublishState("Connected", eastron.Connected ? MQTT_ON_PAYLOAD:MQTT_OFF_PAYLOAD);
   String s = "";
   eTimeToStr(s, millis() / 1000);
   mqttPublishState("Uptime", s.c_str()); 
+  
   s = String(ESP.getVcc());
   mqttPublishState("VCC", s.c_str()); 
+  
   s = String(WiFi.RSSI());
   mqttPublishState("RSSI", s.c_str()); 
+
+  if (timeStatus() == timeSet){
+    s = NTP.getTimeDateString();
+    mqttPublishState("LastSeenDateTime", s.c_str()); 
+  
+    s = NTP.getTimeDateString(NTP.getFirstSync());
+    mqttPublishState("LastBootDateTime", s.c_str()); 
+
+    if (eastron.Connected) {
+      s = NTP.getTimeDateString();
+      mqttPublishState("LastConnectedDateTime", s.c_str()); 
+    }
+  }
+
+  mqttPublishState("Connected", eastron.Connected ? MQTT_ON_PAYLOAD:MQTT_OFF_PAYLOAD);
 }
 
 void mqttPublishState(const char *topic, const char *payload) {
@@ -161,14 +177,14 @@ NTPSyncEvent_t ntpEvent;              // Last triggered event
 
 void processSyncEvent(NTPSyncEvent_t ntpEvent) {
   if (ntpEvent) {
-    DEBUG_PRINTLN(F("ERROR: Time Sync error: "));
-    if (ntpEvent == noResponse)
-      DEBUG_PRINTLN(F("NTP server not reachable"));
-    else if (ntpEvent == invalidAddress)
-      DEBUG_PRINTLN(F("Invalid NTP server address"));
-  }
-  else {
-    DEBUG_PRINTLN(F("INFO: Got NTP time: "));
+    DEBUG_PRINT(F("ERROR: NTP sync error: "));
+    switch (noResponse) {
+      case noResponse: DEBUG_PRINTLN(F("NTP server not reachable")); break;
+      case invalidAddress: DEBUG_PRINTLN(F("Invalid NTP server address")); break;
+      default: DEBUG_PRINTLN(""); 
+    }
+  } else {
+    DEBUG_PRINT(F("INFO: Got NTP time: "));
     DEBUG_PRINTLN(NTP.getTimeDateString(NTP.getLastNTPSync()));
   }
 }
@@ -360,7 +376,7 @@ void setup() {
 
   // pause for connecting
   if (WiFi.status() != WL_CONNECTED) {
-    delay(500);
+    delay(1000);
   }
 
   // NTP config
@@ -368,6 +384,8 @@ void setup() {
     ntpEvent = event;
     syncEventTriggered = true;
   });
+  NTP.begin("ua.pool.ntp.org", 0, false);
+  NTP.setInterval(30 * 60); // twice a hour
 
   // configure mqtt topic
   if (strlen(settings.mqttPath) == 0) {
@@ -454,11 +472,12 @@ void loop() {
 
   if (millis() > lastPollTime + MILLIS_TO_POLL) {
     digitalWrite(LED2, LEDON);
-    // publish some system vars
-    mqttPublishRegularState();
 
     // modbus poll function
     eastron.Poll(POLL_ALL);
+
+    // publish some system vars
+    mqttPublishRegularState();
 
     // publish vars from configuration
     if (eastron.mapConfigLen && eastron.mapConfig && eastron.Connected) {
