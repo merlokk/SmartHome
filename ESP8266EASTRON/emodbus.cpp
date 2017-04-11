@@ -21,6 +21,8 @@ ModbusMaster::ModbusMaster(void) {
   _idle = NULL;
   _preTransmission = NULL;
   _postTransmission = NULL;
+
+  _serial = NULL;
 }
 
 void ModbusMaster::begin(HardwareSerial *serial, int SerialSpeed)

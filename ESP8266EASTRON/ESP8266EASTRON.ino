@@ -150,6 +150,10 @@ void reconnect() {
   while (!mqttClient.connected()) {
     if (mqttClient.connect(HARDWARE_ID, settings.mqttUser, settings.mqttPassword)) {
       DEBUG_PRINTLN(F("INFO: The client is successfully connected to the MQTT broker"));
+
+      // subscribe to control topic
+      String vtopic = String(MQTT_STATE_TOPIC) + "control";
+      mqttClient.subscribe(vtopic.c_str());
     } else {
       DEBUG_PRINTLN(F("ERROR: The connection to the MQTT broker failed"));
       DEBUG_PRINT(F("Username: "));
@@ -166,6 +170,28 @@ void reconnect() {
       }
       i++;
     }
+  }
+}
+
+/*
+  Callback for receive message from MQTT broker
+*/
+void mqttCallback(char* topic, byte* payload, unsigned int length) {
+  DEBUG_PRINT("INFO: MQTT message arrived [");
+  DEBUG_PRINT(topic);
+  DEBUG_PRINT("] ");
+  for (int i = 0; i < length; i++) {
+    DEBUG_PRINT((char)payload[i]);
+  }
+  DEBUG_PRINTLN();
+
+  // Switch on the LED if an 1 was received as first character
+  if ((char)payload[0] == '1') {
+//    digitalWrite(BUILTIN_LED, LOW);   // Turn the LED on (Note that LOW is the voltage level
+    // but actually the LED is on; this is because
+    // it is acive low on the ESP-01)
+  } else {
+//    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
   }
 }
 
@@ -403,6 +429,7 @@ void setup() {
 
   // configure MQTT
   mqttClient.setServer(settings.mqttServer, atoi(settings.mqttPort));
+  mqttClient.setCallback(mqttCallback);
 
   // connect to the MQTT broker
   reconnect();
