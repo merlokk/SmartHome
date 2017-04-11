@@ -10,7 +10,7 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>        // https://github.com/esp8266/Arduino
 #include <DNSServer.h>          // Local DNS Server used for redirecting all requests to the configuration portal
-#include <WiFiManager.h>        // https://github.com/tzapu/WiFiManager
+#include <WiFiManager.h>        // https://github.com/merlokk/WiFiManager original:https://github.com/tzapu/WiFiManager
 #include <PubSubClient.h>       // https://github.com/knolleary/pubsubclient/releases/tag/v2.6
 #include <Ticker.h>
 #include <EEPROM.h>
@@ -127,7 +127,7 @@ void mqttPublishRegularState() {
 }
 
 void mqttPublishState(const char *topic, const char *payload) {
-  mqttPublishState(topic, payload, true);
+  mqttPublishState(topic, payload, false);                             // true - for release!!!!
 }
 
 void mqttPublishState(const char *topic, const char *payload, bool retained) {
@@ -227,6 +227,7 @@ void wifiSetup(bool withAutoConnect) {
   }
 
   WiFiManager wifiManager(DEBUG_SERIAL);
+  wifiManager.mainProgramVersion = PROGRAM_VERSION;
 
   WiFiManagerParameter custom_mqtt_text("<br/>MQTT config: <br/>");
   wifiManager.addParameter(&custom_mqtt_text);

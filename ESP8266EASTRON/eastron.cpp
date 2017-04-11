@@ -13,7 +13,7 @@ mqttMapConfigS eastron220[eastron220Len] = {
   {"PowerVAR",        POLL_INPUT_REGISTERS, 0x18, MDB_FLOAT}
 };
 
-#define eastron630smallLen 17
+#define eastron630smallLen 18
 mqttMapConfigS eastron630small[eastron630smallLen] = {
   {"Voltage1",        POLL_INPUT_REGISTERS, 0x00, MDB_FLOAT},
   {"Voltage2",        POLL_INPUT_REGISTERS, 0x02, MDB_FLOAT},
@@ -30,6 +30,7 @@ mqttMapConfigS eastron630small[eastron630smallLen] = {
   {"PowerVAR1",       POLL_INPUT_REGISTERS, 0x18, MDB_FLOAT},
   {"PowerVAR2",       POLL_INPUT_REGISTERS, 0x1A, MDB_FLOAT},
   {"PowerVAR3",       POLL_INPUT_REGISTERS, 0x1C, MDB_FLOAT},
+  {"NeutralCurrent",  POLL_INPUT_REGISTERS, 0xE0, MDB_FLOAT},
 //  {"Data",       POLL_INPUT_REGISTERS, 0x00, MDB_16BYTE_HEX}, // debug only
 
   {"Frequency",       POLL_INPUT_REGISTERS, 0x46, MDB_FLOAT},
@@ -296,6 +297,7 @@ void Eastron::ModbusSetup(char *deviceType) {
   if (strncmp(deviceType, "630s", 5) == 0) {
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x1D); 
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x02); 
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x0E0, 0x02); 
     AddModbusDiap(POLL_HOLDING_REGISTERS, 0x02A, 0x04); // serial number
 
     mapConfig = eastron630small;
