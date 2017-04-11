@@ -111,7 +111,7 @@ class Eastron {
     uint8_t* getValueAddress(byte Command, word ModbusAddress);
   
     bool Connected;
-    mqttMapConfigS *mapConfig;
+    const mqttMapConfigS *mapConfig;
     int mapConfigLen;
   
     Eastron();

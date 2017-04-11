@@ -4,8 +4,7 @@
 #include "eastron.h"
 
 // devices configuration
-#define eastron220Len 14
-mqttMapConfigS eastron220[eastron220Len] = {
+const mqttMapConfigS eastron220[] = {
   {"Voltage",         POLL_INPUT_REGISTERS, 0x00, MDB_FLOAT},
   {"Current",         POLL_INPUT_REGISTERS, 0x06, MDB_FLOAT},
   {"PowerActive",     POLL_INPUT_REGISTERS, 0x0C, MDB_FLOAT},
@@ -23,8 +22,7 @@ mqttMapConfigS eastron220[eastron220Len] = {
   {"TotalRreactive",  POLL_INPUT_REGISTERS, 0x58, MDB_FLOAT}
 };
 
-#define eastron230Len 24
-mqttMapConfigS eastron230[eastron230Len] = {
+const mqttMapConfigS eastron230[] = {
   {"Voltage",         POLL_INPUT_REGISTERS, 0x00, MDB_FLOAT},
   {"Current",         POLL_INPUT_REGISTERS, 0x06, MDB_FLOAT},
   {"PowerActive",     POLL_INPUT_REGISTERS, 0x0C, MDB_FLOAT},
@@ -52,8 +50,7 @@ mqttMapConfigS eastron230[eastron230Len] = {
   {"ResTotalReactiveEnergy", POLL_INPUT_REGISTERS, 0x0182, MDB_FLOAT}
 };
 
-#define eastron230SmallLen 12
-mqttMapConfigS eastron230Small[eastron230SmallLen] = {
+const mqttMapConfigS eastron230Small[] = {
   {"Voltage",         POLL_INPUT_REGISTERS, 0x00, MDB_FLOAT},
   {"Current",         POLL_INPUT_REGISTERS, 0x06, MDB_FLOAT},
   {"PowerActive",     POLL_INPUT_REGISTERS, 0x0C, MDB_FLOAT},
@@ -69,8 +66,7 @@ mqttMapConfigS eastron230Small[eastron230SmallLen] = {
   {"ExportRreactive",        POLL_INPUT_REGISTERS, 0x4E, MDB_FLOAT},
 };
 
-#define eastron630smallLen 18
-mqttMapConfigS eastron630small[eastron630smallLen] = {
+const mqttMapConfigS eastron630small[] = {
   {"Voltage1",        POLL_INPUT_REGISTERS, 0x00, MDB_FLOAT},
   {"Voltage2",        POLL_INPUT_REGISTERS, 0x02, MDB_FLOAT},
   {"Voltage3",        POLL_INPUT_REGISTERS, 0x04, MDB_FLOAT},
@@ -94,8 +90,7 @@ mqttMapConfigS eastron630small[eastron630smallLen] = {
   {"SerialNumber",    POLL_HOLDING_REGISTERS, 0x2A, MDB_8BYTE_HEX},
 };
 
-#define eastron630Len 69
-mqttMapConfigS eastron630[eastron630Len] = {
+const mqttMapConfigS eastron630[] = {
   {"Voltage1",        POLL_INPUT_REGISTERS, 0x00, MDB_FLOAT},
   {"Voltage2",        POLL_INPUT_REGISTERS, 0x02, MDB_FLOAT},
   {"Voltage3",        POLL_INPUT_REGISTERS, 0x04, MDB_FLOAT},
@@ -346,7 +341,7 @@ void Eastron::ModbusSetup(char *deviceType) {
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x0E);   // 0x46-0x58
 
     mapConfig = eastron220;
-    mapConfigLen = eastron220Len;
+    mapConfigLen = sizeof(eastron220) / sizeof(mqttMapConfigS);
   }
 
   // eastron 230
@@ -358,7 +353,7 @@ void Eastron::ModbusSetup(char *deviceType) {
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x180, 0x04);   // 0x0180-0x0182
 
     mapConfig = eastron230;
-    mapConfigLen = eastron230Len;
+    mapConfigLen = sizeof(eastron230) / sizeof(mqttMapConfigS);
   }
 
   // eastron 230 small
@@ -367,7 +362,7 @@ void Eastron::ModbusSetup(char *deviceType) {
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x046, 0x0A);   // 0x46-0x4E
 
     mapConfig = eastron230Small;
-    mapConfigLen = eastron230SmallLen;
+    mapConfigLen = sizeof(eastron230Small) / sizeof(mqttMapConfigS);
   }
 
   // eastron 630 small
@@ -378,7 +373,7 @@ void Eastron::ModbusSetup(char *deviceType) {
     AddModbusDiap(POLL_HOLDING_REGISTERS, 0x02A, 0x04); // serial number
 
     mapConfig = eastron630small;
-    mapConfigLen = eastron630smallLen;
+    mapConfigLen = sizeof(eastron630small) / sizeof(mqttMapConfigS);
   }
   
   // eastron 630 full
@@ -391,7 +386,7 @@ void Eastron::ModbusSetup(char *deviceType) {
     AddModbusDiap(POLL_HOLDING_REGISTERS, 0x02A, 0x04); // serial number*/
 
     mapConfig = eastron630;
-    mapConfigLen = eastron630Len;
+    mapConfigLen = sizeof(eastron630) / sizeof(mqttMapConfigS);
   }
   
 
