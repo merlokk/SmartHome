@@ -185,13 +185,21 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   }
   DEBUG_PRINTLN();
 
-  // Switch on the LED if an 1 was received as first character
-  if ((char)payload[0] == '1') {
-//    digitalWrite(BUILTIN_LED, LOW);   // Turn the LED on (Note that LOW is the voltage level
-    // but actually the LED is on; this is because
-    // it is acive low on the ESP-01)
-  } else {
-//    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
+  // commands
+  if (strncmp((char*)payload, "reboot", length) == 0) {
+    DEBUG_PRINTLN(F("COMMAND: reboot. Rebooting..."));
+    restart();
+  }
+
+  if (strncmp((char*)payload, "startwificfg", length) == 0) {
+    DEBUG_PRINTLN(F("COMMAND: start wifi config."));
+    wifiSetup(false);
+    restart();
+  }
+
+  if (strncmp((char*)payload, "cfgdevice", length) == 0) {
+    DEBUG_PRINTLN(F("COMMAND: config device."));
+    restart();
   }
 }
 
