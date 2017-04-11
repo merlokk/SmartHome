@@ -110,9 +110,9 @@ class Eastron {
   public:
     uint8_t* getValueAddress(byte Command, word ModbusAddress);
   
-    bool Connected = false;
-    mqttMapConfigS *mapConfig = NULL;
-    int mapConfigLen = 0;
+    bool Connected;
+    mqttMapConfigS *mapConfig;
+    int mapConfigLen;
   
     Eastron();
     int AddModbusDiap(byte Command, word StartDiap, word LengthDiap);

@@ -177,6 +177,9 @@ mqttMapConfigS eastron630[eastron630Len] = {
 };
 
 Eastron::Eastron() {
+  Connected = false;
+  mapConfig = NULL;
+  mapConfigLen = 0;
 }
 
 int Eastron::AddModbusDiap(byte Command, word StartDiap, word LengthDiap) {
