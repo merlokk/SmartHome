@@ -13,6 +13,7 @@
 
 struct timer {
   int timerID = 0;
+  int interval = 0;
   int lastTimeReset = 0;
 };
 
