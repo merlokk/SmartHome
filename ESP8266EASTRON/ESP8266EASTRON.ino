@@ -18,18 +18,20 @@
 #include <TimeLib.h>            // https://github.com/PaulStoffregen/Time 
 #include <NtpClientLib.h>       // https://github.com/gmag11/NtpClient
 #include "etools.h"
+#include <RemoteDebug.h>
 
 #include "eastron.h"
 
 #define               PROGRAM_VERSION   "0.92"
 
-#define               DEBUG                            // enable debugging
+#define               DEBUG                            // enable debuggin
 #define               DEBUG_SERIAL      Serial1
 
 // macros for debugging
+RemoteDebug      logger;
 #ifdef DEBUG
-  #define             DEBUG_PRINT(...)    DEBUG_SERIAL.print(__VA_ARGS__)
-  #define             DEBUG_PRINTLN(...)  DEBUG_SERIAL.println(__VA_ARGS__)
+  #define             DEBUG_PRINT(...)    logger.print(__VA_ARGS__)
+  #define             DEBUG_PRINTLN(...)  logger.println(__VA_ARGS__)
 #else
   #define             DEBUG_PRINT(...)
   #define             DEBUG_PRINTLN(...)
@@ -401,10 +403,20 @@ void setup() {
   Serial.begin(115200); //74880
   Serial1.begin(115200); 
 
+  // client ID
+  sprintf(HARDWARE_ID, "%06X", ESP.getChipId());
+  // start logger
+  logger.begin(HARDWARE_ID);
+  logger.setSerialEnabled(true);
+  logger.showDebugLevel(false);
+
   // for debug
   delay(200);
   DEBUG_PRINTLN(F(" "));
   DEBUG_PRINTLN(F("Starting..."));
+
+  DEBUG_PRINT(F("INFO: Hardware ID/Hostname: "));
+  DEBUG_PRINTLN(HARDWARE_ID);
 
   DEBUG_PRINT("Module VCC: ");
   DEBUG_PRINTLN(ESP.getVcc());
@@ -423,11 +435,6 @@ void setup() {
   if (inProgrammingMode) {
     DEBUG_PRINTLN(F("WARNINIG: Programming mode active!"));
   }
-
-  // client ID
-  sprintf(HARDWARE_ID, "%06X", ESP.getChipId());
-  DEBUG_PRINT(F("INFO: Hardware ID/Hostname: "));
-  DEBUG_PRINTLN(HARDWARE_ID);
 
   // wifi setup with autoconnect
   wifiSetup(true);
@@ -499,6 +506,7 @@ void loop() {
   
   digitalWrite(LED2, LEDON);
   ArduinoOTA.handle();
+  logger.handle();
   digitalWrite(LED2, LEDOFF);
 
   yield();
