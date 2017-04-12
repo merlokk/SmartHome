@@ -403,7 +403,9 @@ void Eastron::Poll(byte Command) {
       if (res != MBSuccess) {
         // debug output error here
         Serial1.print("ERROR: modbus poll error: ");
-        Serial1.println(res);
+        String s;
+        strModbusError(s, res);
+        Serial1.println(s.c_str());
       }
       Connected = (res == 0);
     } else {

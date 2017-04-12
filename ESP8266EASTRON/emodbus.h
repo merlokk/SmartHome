@@ -22,6 +22,7 @@ enum ModbusError {
   MBInvalidCRC                 = 0xE3,
   MBInvalidPacketLength        = 0xE4
 };
+void strModbusError(String &str, int error);
 
 enum ModbusFunctions {
   // Modbus function codes for bit access

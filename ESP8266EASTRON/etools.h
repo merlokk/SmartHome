@@ -9,6 +9,13 @@
 
 #include <Arduino.h>
 
+// put strings to flash
+#define SF(x) String(F(x))
+
+//align
+#define STORE_ATTR __attribute__((aligned(4)))
+
+
 // IEEE 754 Float. web check here https://www.h-schmidt.net/FloatConverter/IEEE754.html
 // wiki https://en.wikipedia.org/wiki/IEEE_floating_point
 union dataFloat {

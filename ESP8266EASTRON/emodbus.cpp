@@ -17,6 +17,23 @@ static uint16_t crc16_update(uint16_t crc, uint8_t a) {
   return crc;
 }
 
+void strModbusError(String &str, int error) {
+  str = SF("[0x") + String(error, HEX) + SF("] ");
+  switch (error) {
+    case MBSuccess:               str += SF("Success."); break;
+    case MBIllegalFunction:       str += SF("Illegal Function."); break;
+    case MBIllegalDataAddress:    str += SF("Illegal Data Address."); break;
+    case MBIllegalDataValue:      str += SF("Illegal Data Value."); break;
+    case MBSlaveDeviceFailure:    str += SF("Slave Device Failure."); break;
+    case MBInvalidSlaveID:        str += SF("Invalid Slave ID."); break;
+    case MBInvalidFunction:       str += SF("Invalid Func."); break;
+    case MBResponseTimedOut:      str += SF("Response Timeout."); break;
+    case MBInvalidCRC:            str += SF("Invalid CRC."); break;
+    case MBInvalidPacketLength:   str += SF("Invalid Packet Length."); break;
+    default:                      str += SF("Unknown error."); 
+  }  
+}
+
 ModbusMaster::ModbusMaster(void) {
   _idle = NULL;
   _preTransmission = NULL;
