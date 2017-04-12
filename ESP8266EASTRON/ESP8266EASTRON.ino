@@ -251,8 +251,7 @@ void configModeCallback (WiFiManager *myWiFiManager) {
   ticker.attach(0.2, tick);
 }
 
-void changeDeviceType(char* deviceType) {
-  // load custom params
+void loadEepromSettings() {
   EEPROM.begin(512);
   EEPROM.get(0, settings);
   EEPROM.end();
@@ -262,12 +261,21 @@ void changeDeviceType(char* deviceType) {
     EEPROM_settings defaults;
     settings = defaults;
   }
-  
-  strncpy(settings.deviceType, deviceType, MQTT_CFG_CHAR_ARRAY_SIZE_TYPE);
+}
 
+void saveEepromSettings() {
   EEPROM.begin(512);
   EEPROM.put(0, settings);
   EEPROM.end();
+}
+
+void changeDeviceType(char* deviceType) {
+  // load custom params
+  loadEepromSettings();
+  
+  strncpy(settings.deviceType, deviceType, MQTT_CFG_CHAR_ARRAY_SIZE_TYPE);
+
+  saveEepromSettings();
 }
 
 void wifiSetup(bool withAutoConnect) {
@@ -275,15 +283,7 @@ void wifiSetup(bool withAutoConnect) {
   ticker.attach(0.1, tick);
 
   // load custom params
-  EEPROM.begin(512);
-  EEPROM.get(0, settings);
-  EEPROM.end();
-
-  if (settings.salt != EEPROM_SALT) {
-    DEBUG_PRINTLN(F("ERROR: Invalid settings in EEPROM, settings was cleared."));
-    EEPROM_settings defaults;
-    settings = defaults;
-  }
+  loadEepromSettings();
 
   WiFiManager wifiManager(DEBUG_SERIAL);
   wifiManager.mainProgramVersion = PROGRAM_VERSION;
@@ -329,9 +329,7 @@ void wifiSetup(bool withAutoConnect) {
     strcpy(settings.mqttPath,     custom_mqtt_path.getValue());
     strcpy(settings.deviceType,   custom_device_type.getValue());
 
-    EEPROM.begin(512);
-    EEPROM.put(0, settings);
-    EEPROM.end();
+    saveEepromSettings();
   }
 
   ticker.detach();
