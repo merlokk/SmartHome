@@ -18,6 +18,7 @@
 #include <TimeLib.h>            // https://github.com/PaulStoffregen/Time 
 #include <NtpClientLib.h>       // https://github.com/gmag11/NtpClient
 #include "etools.h"
+#include "pitimer.h"            // timers
 #include <RemoteDebug.h>
 
 #include "eastron.h"

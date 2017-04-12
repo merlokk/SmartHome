@@ -44,3 +44,4 @@ union dataDouble
 void eTimeToStr(String &str, long val, bool fullPrint = false);
 
 #endif // ifndef __ETOOLS_H__
+
