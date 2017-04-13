@@ -395,6 +395,8 @@ void Eastron::ModbusSetup(char *deviceType) {
 
 void Eastron::Poll(byte Command) {
   Connected = false;
+//  Serial1.print("Eastron poll: ");
+//  Serial1.println(Command);
 
   for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
     if (modbusArray[i].Command && 

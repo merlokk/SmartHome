@@ -67,17 +67,14 @@ void ModbusMaster::postTransmission(void (*postTransmission)())
 uint8_t ModbusMaster::ModbusMasterTransaction(
     uint8_t u8MBSlave,
     uint8_t u8MBFunction, uint16_t u16ReadAddress, uint16_t u16ReadQty,
-    uint8_t *_u8ReceiveBuffer)
-{
-    ModbusMasterTransaction(u8MBSlave, u8MBFunction, u16ReadAddress, u16ReadQty, _u8ReceiveBuffer, NULL, 0, 0);
-}
-
-uint8_t ModbusMaster::ModbusMasterTransaction(
-    uint8_t u8MBSlave,
-    uint8_t u8MBFunction, uint16_t u16ReadAddress, uint16_t u16ReadQty,
     uint8_t *_u8ReceiveBuffer, 
     uint16_t *u16TransmitBuffer, uint16_t u16WriteAddress, uint16_t u16WriteQty)
 {
+//  Serial1.print("Modbus poll. F="); 
+//  Serial1.print(u8MBFunction);
+//  Serial1.print(" Addr="); 
+//  Serial1.println(u16ReadAddress);
+
   uint8_t u8ModbusADU[256];
   uint8_t u8ModbusADUSize = 0;
   uint8_t i, u8Qty;

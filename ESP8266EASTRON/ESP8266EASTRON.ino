@@ -38,9 +38,15 @@ RemoteDebug      logger;
   #define             DEBUG_PRINTLN(...)
 #endif
 
-// mechanics
-ADC_MODE(ADC_VCC);                         // set ADC to meassure esp8266 VCC
-#define MILLIS_TO_POLL          15000      //max time to wait for poll
+// vcc measurements
+ADC_MODE(ADC_VCC);                            // set ADC to meassure esp8266 VCC
+
+// poll
+#define MILLIS_TO_POLL          15*1000       //max time to wait for poll
+#define MILLIS_TO_POLL_HOLD_REG 15*60*1000    //max time to wait for poll
+// timers
+#define TID_POLL                0x0001        // timer UID for regular poll 
+#define TID_HOLD_REG            0x0002        // timer UID for poll all the registers
 
 // LEDs and pins
 #define PIN_PGM  0      // programming pin and jumper
@@ -77,7 +83,6 @@ bool inProgrammingMode = false;
 
 // global vars
 EEPROM_settings  settings;
-int              lastPollTime;
 
 // objects
 Ticker           ticker;
@@ -86,6 +91,7 @@ PubSubClient     mqttClient(wifiClient);
 Eastron          eastron;
 mqttMapConfigS   *eastronCfg = NULL;
 int              eastronCfgLength = 0;
+piTimer          ptimer;
 
 ///////////////////////////////////////////////////////////////////////////
 //   MQTT
@@ -411,6 +417,10 @@ void setup() {
   logger.setSerialEnabled(true);
   logger.showDebugLevel(false);
 
+  //timer
+  ptimer.Add(TID_POLL, MILLIS_TO_POLL);
+  ptimer.Add(TID_HOLD_REG, MILLIS_TO_POLL_HOLD_REG);
+
   // for debug
   delay(200);
   DEBUG_PRINTLN(F(" "));
@@ -538,11 +548,16 @@ void loop() {
     return;
   }
 
-  if (millis() > lastPollTime + MILLIS_TO_POLL) {
+  if (ptimer.isArmed(TID_POLL)) {
     digitalWrite(LED2, LEDON);
 
     // modbus poll function
-    eastron.Poll(POLL_ALL);
+    if (ptimer.isArmed(TID_HOLD_REG)) {
+      eastron.Poll(POLL_ALL);
+      ptimer.Reset(TID_HOLD_REG);
+    } else {
+      eastron.Poll(POLL_INPUT_REGISTERS);
+    };
 
     // publish some system vars
     mqttPublishRegularState();
@@ -560,11 +575,12 @@ void loop() {
       }    
     };
   
-    lastPollTime = millis();
+    ptimer.Reset(TID_POLL);
     digitalWrite(LED2, LEDOFF);
   }
   
   digitalWrite(LED2, LEDOFF);
+  delay(100);
 }
 
 

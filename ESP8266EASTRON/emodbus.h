@@ -61,13 +61,8 @@ class ModbusMaster {
       uint8_t u8MBSlave,
       uint8_t u8MBFunction, uint16_t u16ReadAddress, uint16_t u16ReadQty,
       uint8_t *u8ReceiveBuffer,
-      uint16_t *u16TransmitBuffer, uint16_t u16WriteAddress, uint16_t u16WriteQty);
-
-    uint8_t ModbusMasterTransaction(
-      uint8_t u8MBSlave,
-      uint8_t u8MBFunction, uint16_t u16ReadAddress, uint16_t u16ReadQty,
-      uint8_t *_u8ReceiveBuffer);
-private:
+      uint16_t *u16TransmitBuffer = NULL, uint16_t u16WriteAddress = 0, uint16_t u16WriteQty = 0);
+  private:
     // idle callback function; gets called during idle time between TX and RX
     callback _idle;
     // preTransmission callback function; gets called before writing a Modbus message
