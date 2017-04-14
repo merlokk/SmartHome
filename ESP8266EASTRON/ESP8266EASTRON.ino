@@ -42,8 +42,8 @@ RemoteDebug      logger;
 ADC_MODE(ADC_VCC);                            // set ADC to meassure esp8266 VCC
 
 // poll
-#define MILLIS_TO_POLL          15*1000       //max time to wait for poll
-#define MILLIS_TO_POLL_HOLD_REG 15*60*1000    //max time to wait for poll
+#define MILLIS_TO_POLL          15*1000       //max time to wait for poll input registers (regular poll)
+#define MILLIS_TO_POLL_HOLD_REG 15*60*1000    //max time to wait for poll all
 // timers
 #define TID_POLL                0x0001        // timer UID for regular poll 
 #define TID_HOLD_REG            0x0002        // timer UID for poll all the registers
