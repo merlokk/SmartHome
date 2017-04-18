@@ -19,4 +19,6 @@ board https://www.aliexpress.com/item/3-5V-Multi-HDC1080-Temperature-Humidity-Se
 
 ESP-14 info https://esp8266.ru/forum/threads/esp-14-chto-ehto.531/
 
+STM8 sensor reading part https://bitbucket.org/hrandib/esp-stm8-sensors
+
 
