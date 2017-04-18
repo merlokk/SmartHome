@@ -175,15 +175,15 @@ void reconnect() {
       String vtopic = String(MQTT_STATE_TOPIC) + "control";
       mqttClient.subscribe(vtopic.c_str());
     } else {
-      DEBUG_PRINTLN(F("ERROR: The connection to the MQTT broker failed"));
-      DEBUG_PRINT(F("Username: "));
-      DEBUG_PRINTLN(settings.mqttUser);
-      DEBUG_PRINT(F("Password: "));
-      DEBUG_PRINTLN(settings.mqttPassword);
-      DEBUG_PRINT(F("Broker: "));
-      DEBUG_PRINT(settings.mqttServer);
-      DEBUG_PRINT(F(":"));
-      DEBUG_PRINTLN(settings.mqttPort);
+      DEBUG_EPRINTLN(F("The connection to the MQTT broker failed"));
+      DEBUG_EPRINT(F("Username: "));
+      DEBUG_EPRINT(settings.mqttUser);
+      DEBUG_EPRINT(F(" Password: "));
+      DEBUG_EPRINT(settings.mqttPassword);
+      DEBUG_EPRINT(F(" Broker: "));
+      DEBUG_EPRINT(settings.mqttServer);
+      DEBUG_EPRINT(F(":"));
+      DEBUG_EPRINTLN(settings.mqttPort);
       delay(1000);
       if (i == 3) {
         reset();
@@ -384,8 +384,8 @@ void reset() {
 
 void setupArduinoOTA() {
   ArduinoOTA.onError([](ota_error_t error) {
-    DEBUG_PRINT(F("ERROR: OTA error: "));
-    DEBUG_PRINTLN(error);
+    DEBUG_EPRINT(F("OTA error: "));
+    DEBUG_EPRINTLN(error);
     switch (error) {
       case OTA_AUTH_ERROR:    DEBUG_EPRINTLN(F("OTA: Auth Failed")); break;
       case OTA_BEGIN_ERROR:   DEBUG_EPRINTLN(F("OTA: Begin Failed")); break;
@@ -482,7 +482,7 @@ void setup() {
       sprintf(MQTT_STATE_TOPIC, "%s/", settings.mqttPath);
     }
   }
-  DEBUG_PRINT(F("INFO: MQTT command topic: "));
+  DEBUG_PRINT(F("MQTT command topic: "));
   DEBUG_PRINTLN(MQTT_STATE_TOPIC);
 
   // configure MQTT
@@ -501,13 +501,13 @@ void setup() {
   mqttPublishInitialState();
 
   // eastron setup
-  DEBUG_PRINT(F("INFO: DeviceType: "));
+  DEBUG_PRINT(F("DeviceType: "));
   DEBUG_PRINTLN(settings.deviceType);
   eastron.ModbusSetup(&settings.deviceType[0]);
 
   String str;
   eastron.getStrModbusConfig(str);
-  DEBUG_PRINTLN(F("INFO: Modbus config:"));
+  DEBUG_PRINTLN(F("Modbus config:"));
   DEBUG_PRINTLN(str);
 
   ticker.detach();
