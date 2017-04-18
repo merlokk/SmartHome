@@ -1,3 +1,7 @@
+xlogger.h
+xlogger.cpp
+pitimer.h
+pitimer.cpp
 ESP8266EASTRON.ino
 eastron.cpp
 eastron.h

@@ -19,7 +19,7 @@
 #include <NtpClientLib.h>       // https://github.com/gmag11/NtpClient
 #include "etools.h"
 #include "pitimer.h"            // timers
-#include <RemoteDebug.h>
+#include "xlogger.h"            // logger
 
 #include "eastron.h"
 
@@ -29,13 +29,24 @@
 #define               DEBUG_SERIAL      Serial1
 
 // macros for debugging
-RemoteDebug      logger;
+xLogger               logger;
 #ifdef DEBUG
+  // log level: info
   #define             DEBUG_PRINT(...)    logger.print(__VA_ARGS__)
   #define             DEBUG_PRINTLN(...)  logger.println(__VA_ARGS__)
+  // log level: warning
+  #define             DEBUG_WPRINT(...)   logger.print(llWarning, __VA_ARGS__)
+  #define             DEBUG_WPRINTLN(...) logger.println(llWarning, __VA_ARGS__)
+  // log level: error
+  #define             DEBUG_EPRINT(...)   logger.print(llError, __VA_ARGS__)
+  #define             DEBUG_EPRINTLN(...) logger.println(llError, __VA_ARGS__)
 #else
   #define             DEBUG_PRINT(...)
   #define             DEBUG_PRINTLN(...)
+  #define             DEBUG_WPRINT(...)
+  #define             DEBUG_WPRINTLN(...)
+  #define             DEBUG_EPRINT(...)
+  #define             DEBUG_EPRINTLN(...)
 #endif
 
 // vcc measurements
@@ -142,12 +153,12 @@ void mqttPublishState(const char *topic, const char *payload) {
 void mqttPublishState(const char *topic, const char *payload, bool retained) {
   String vtopic = String(MQTT_STATE_TOPIC) + String(topic);
   if (mqttClient.publish(vtopic.c_str(), payload, retained)) {
-    DEBUG_PRINT(F("INFO: MQTT publish ok. Topic: "));
+    DEBUG_PRINT(F("MQTT publish ok. Topic: "));
     DEBUG_PRINT(vtopic);
     DEBUG_PRINT(F(" Payload: "));
     DEBUG_PRINTLN(payload);
   } else {
-    DEBUG_PRINTLN(F("ERROR: MQTT message publish failed"));
+    DEBUG_EPRINTLN(F("MQTT message publish failed"));
   }
 }
 
@@ -158,7 +169,7 @@ void reconnect() {
   uint8_t i = 0;
   while (!mqttClient.connected()) {
     if (mqttClient.connect(HARDWARE_ID, settings.mqttUser, settings.mqttPassword)) {
-      DEBUG_PRINTLN(F("INFO: The client is successfully connected to the MQTT broker"));
+      DEBUG_PRINTLN(F("The client is successfully connected to the MQTT broker"));
 
       // subscribe to control topic
       String vtopic = String(MQTT_STATE_TOPIC) + "control";
@@ -186,7 +197,7 @@ void reconnect() {
   Callback for receive message from MQTT broker
 */
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
-  DEBUG_PRINT("INFO: MQTT message arrived [");
+  DEBUG_PRINT("MQTT message arrived [");
   DEBUG_PRINT(topic);
   DEBUG_PRINT("] ");
   for (int i = 0; i < length; i++) {
@@ -226,14 +237,14 @@ NTPSyncEvent_t ntpEvent;              // Last triggered event
 
 void processSyncEvent(NTPSyncEvent_t ntpEvent) {
   if (ntpEvent) {
-    DEBUG_PRINT(F("ERROR: NTP sync error: "));
+    DEBUG_EPRINT(F("NTP sync error: "));
     switch (noResponse) {
-      case noResponse: DEBUG_PRINTLN(F("NTP server not reachable")); break;
-      case invalidAddress: DEBUG_PRINTLN(F("Invalid NTP server address")); break;
-      default: DEBUG_PRINTLN(""); 
+      case noResponse: DEBUG_EPRINTLN(F("NTP server not reachable")); break;
+      case invalidAddress: DEBUG_EPRINTLN(F("Invalid NTP server address")); break;
+      default: DEBUG_EPRINTLN(F("")); 
     }
   } else {
-    DEBUG_PRINT(F("INFO: Got NTP time: "));
+    DEBUG_PRINT(F("Got NTP time: "));
     DEBUG_PRINTLN(NTP.getTimeDateString(NTP.getLastNTPSync()));
   }
 }
@@ -266,7 +277,7 @@ void loadEepromSettings() {
   EEPROM.end();
 
   if (settings.salt != EEPROM_SALT) {
-    DEBUG_PRINTLN(F("ERROR: Invalid settings in EEPROM, settings was cleared."));
+    DEBUG_EPRINTLN(F("Invalid settings in EEPROM, settings was cleared."));
     EEPROM_settings defaults;
     settings = defaults;
   }
@@ -351,7 +362,7 @@ void wifiSetup(bool withAutoConnect) {
   Function called to restart the switch
 */
 void restart() {
-  DEBUG_PRINTLN(F("INFO: Restart..."));
+  DEBUG_PRINTLN(F("Restart..."));
   ESP.reset();
   delay(1000);
 }
@@ -360,7 +371,7 @@ void restart() {
   Function called to reset the configuration of the switch
 */
 void reset() {
-  DEBUG_PRINTLN(F("INFO: Reset..."));
+  DEBUG_PRINTLN(F("Reset..."));
   WiFi.disconnect();
   delay(1000);
   ESP.reset();
@@ -376,21 +387,21 @@ void setupArduinoOTA() {
     DEBUG_PRINT(F("ERROR: OTA error: "));
     DEBUG_PRINTLN(error);
     switch (error) {
-      case OTA_AUTH_ERROR:    DEBUG_PRINTLN(F("OTA ERROR: Auth Failed")); break;
-      case OTA_BEGIN_ERROR:   DEBUG_PRINTLN(F("OTA ERROR: Begin Failed")); break;
-      case OTA_CONNECT_ERROR: DEBUG_PRINTLN(F("OTA ERROR: Connect Failed")); break;
-      case OTA_RECEIVE_ERROR: DEBUG_PRINTLN(F("OTA ERROR: Receive Failed")); break;
-      case OTA_END_ERROR:     DEBUG_PRINTLN(F("OTA ERROR: End Failed")); break;
+      case OTA_AUTH_ERROR:    DEBUG_EPRINTLN(F("OTA: Auth Failed")); break;
+      case OTA_BEGIN_ERROR:   DEBUG_EPRINTLN(F("OTA: Begin Failed")); break;
+      case OTA_CONNECT_ERROR: DEBUG_EPRINTLN(F("OTA: Connect Failed")); break;
+      case OTA_RECEIVE_ERROR: DEBUG_EPRINTLN(F("OTA: Receive Failed")); break;
+      case OTA_END_ERROR:     DEBUG_EPRINTLN(F("OTA: End Failed")); break;
     }
 
     ESP.restart();
   });
   
   ArduinoOTA.onStart([]() {
-    DEBUG_PRINTLN(F("INFO: Start OTA"));
+    DEBUG_PRINTLN(F("Start OTA"));
   });
   ArduinoOTA.onEnd([]() {
-    DEBUG_PRINTLN(F("INFO: End OTA"));
+    DEBUG_PRINTLN(F("End OTA"));
   });
   
   // Port defaults to 8266
@@ -413,9 +424,7 @@ void setup() {
   // client ID
   sprintf(HARDWARE_ID, "%06X", ESP.getChipId());
   // start logger
-  logger.begin(HARDWARE_ID);
-  logger.setSerialEnabled(true);
-  logger.showDebugLevel(false);
+  logger.begin(HARDWARE_ID, &Serial1, "");
 
   //timer
   ptimer.Add(TID_POLL, MILLIS_TO_POLL);
@@ -423,10 +432,10 @@ void setup() {
 
   // for debug
   delay(200);
-  DEBUG_PRINTLN(F(" "));
+  DEBUG_PRINTLN(F(""));
   DEBUG_PRINTLN(F("Starting..."));
 
-  DEBUG_PRINT(F("INFO: Hardware ID/Hostname: "));
+  DEBUG_PRINT(F("Hardware ID/Hostname: "));
   DEBUG_PRINTLN(HARDWARE_ID);
 
   DEBUG_PRINT("Module VCC: ");
@@ -444,7 +453,7 @@ void setup() {
   pinMode(PIN_PGM, INPUT);   
   inProgrammingMode = !digitalRead(PIN_PGM);
   if (inProgrammingMode) {
-    DEBUG_PRINTLN(F("WARNINIG: Programming mode active!"));
+    DEBUG_WPRINTLN(F("Programming mode active!"));
   }
 
   // wifi setup with autoconnect
@@ -509,7 +518,7 @@ void setup() {
 void loop() {
   // Programming pin activates setup
   if (!inProgrammingMode && (!digitalRead(PIN_PGM))) {
-    DEBUG_PRINTLN(F("Wifi setup activated"));
+    DEBUG_WPRINTLN(F("Wifi setup activated"));
 
     wifiSetup(false);
     delay(1000);
