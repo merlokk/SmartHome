@@ -40,7 +40,7 @@ enum ModbusFunctions {
   MBReadWriteMultipleRegisters = 0x17  // Modbus function 0x17 Read Write Multiple Registers
 };
 
-typedef void (*callback)();
+typedef void (*mbCallback)();
 
 class ModbusMaster {
   public:
@@ -49,9 +49,9 @@ class ModbusMaster {
     //init
     void begin(HardwareSerial *serial, int SerialSpeed);
     //callbacks
-    void idle(callback);
-    void preTransmission(callback);
-    void postTransmission(callback);
+    void idle(mbCallback);
+    void preTransmission(mbCallback);
+    void postTransmission(mbCallback);
 
     HardwareSerial *_serial;                                     // reference to serial port object
     static const uint16_t ku16MBResponseTimeout          = 2000; // Modbus timeout [milliseconds]
@@ -64,11 +64,11 @@ class ModbusMaster {
       uint16_t *u16TransmitBuffer = NULL, uint16_t u16WriteAddress = 0, uint16_t u16WriteQty = 0);
   private:
     // idle callback function; gets called during idle time between TX and RX
-    callback _idle;
+    mbCallback _idle;
     // preTransmission callback function; gets called before writing a Modbus message
-    callback _preTransmission;
+    mbCallback _preTransmission;
     // postTransmission callback function; gets called after a Modbus message has been sent
-    callback _postTransmission;
+    mbCallback _postTransmission;
 };
 
 
