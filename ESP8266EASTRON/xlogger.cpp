@@ -59,8 +59,6 @@ void xLogger::handle() {
           telnetClient.read();
 
     }
-
-    
   }
 
   // Is client connected ? (to reduce overhead in active)
@@ -83,13 +81,16 @@ void xLogger::handle() {
           telnetCommand.concat(c);
     }
   }
-
-
   
 }
 
 void xLogger::processCommand(String &cmd) {
   println(llInfo, "Telnet received command: " + cmd);
+
+  if (cmd == "?") {
+    showInitMessage();
+    return;
+  }
 
   if (cmd == "serial enable") {
     serialEnabled = true;
@@ -130,7 +131,7 @@ void xLogger::processCommand(String &cmd) {
     return;
   }
   if (cmd == "loglvl ?") {
-    print("Log level: " + String(strLogLevel[filterLogLevel]));
+    println(filterLogLevel, "Log level: " + String(strLogLevel[filterLogLevel]));
     return;
   }
 
@@ -151,7 +152,7 @@ void xLogger::processCommand(String &cmd) {
     return;
   }
   if (cmd == "time ?") {
-    print("Time format: " + String(strLogTimeFormat[logTimeFormat]));
+    println("Time format: " + String(strLogTimeFormat[logTimeFormat]));
     return;
   }
 
@@ -184,10 +185,18 @@ void xLogger::showInitMessage() {
   String msg = SF("*** Telnet debug for ESP8266.\r\n");
 
   if (programVersion && strnlen(programVersion, 1))
-    msg += SF(" Program version: ") + String(programVersion);
-  msg += SF(" Logger version: ") + String(XLOGGER_VERSION) + SF(".") + STR_RN;
+    msg += SF("Program version: ") + String(programVersion);
+  msg += SF(" Logger version: ") + String(XLOGGER_VERSION) + SF(".") + STR_RN + STR_RN;
 
-  msg += "Enable serial=" + (serialEnabled ? SF("enable") : SF("disable")) + STR_RN;
+  msg += "Command serial [enable|disable|?] write log to serial debug port."+ STR_RN;
+  msg += "Serial enabled: " + (serialEnabled ? SF("enable") : SF("disable")) + STR_RN;
+  msg += "Command showdebuglvl [enable|disable|?] shows debug level in log lines."+ STR_RN;
+  msg += "Show debug level: " + (showDebugLevel ? SF("enable") : SF("disable")) + STR_RN;
+  msg += "Command loglvl [info|warning|error|?] filters messages by log level."+ STR_RN;
+  msg += "Log level: " + String(strLogLevel[filterLogLevel]) + STR_RN;
+  msg += "Command time [none|str|ms|gmt|?] shows time in log lines." + STR_RN;
+  msg += "Time format: " + String(strLogTimeFormat[logTimeFormat]) + STR_RN;
+  msg += STR_RN;
 
   telnetClient.print(msg);
 }
@@ -208,7 +217,7 @@ void xLogger::formatLogMessage(String &str, const char *buffer, size_t size, Log
         break;
       case ltGMTTime:
         if (timeStatus() != timeNotSet) {
-          str += NTP.getTimeStr(NTP.getUptime() + millis() / 1000);
+          str += NTP.getTimeStr(NTP.getLastBootTime() + millis() / 1000);
           str += SF(" ");
         }
         break;
@@ -218,7 +227,7 @@ void xLogger::formatLogMessage(String &str, const char *buffer, size_t size, Log
     };
   
     // show log level
-    if (showDebugLevel && true) {
+    if (showDebugLevel) {
       switch (header->logLevel) {
         case llInfo:     str += SF("INFO: "); break;
         case llWarning:  str += SF("WARNING: "); break;
@@ -228,9 +237,7 @@ void xLogger::formatLogMessage(String &str, const char *buffer, size_t size, Log
     }
   }
 
-  for(int i = 0; i < size; i++) {
-    str += String((char)buffer[i]);  
-  }
+  str += String(buffer);  
 }
 
 void xLogger::processLineBuffer() {
@@ -242,22 +249,24 @@ void xLogger::processLineBuffer() {
     return;
   }
 
-  curHeader.logTime = millis();
+  // processing...
+  if (filterLogLevel <= curHeader.logLevel) { // filter here
+    curHeader.logTime = millis();
 
-  String msg = "";
-  formatLogMessage(msg, lineBuffer, lineBufferLen, &curHeader);
-  curHeader.logSize = msg.length();
-  // write to serial
-  if (serialEnabled && logSerial) {
-    logSerial->print(msg);
+    String msg = "";
+    formatLogMessage(msg, lineBuffer, lineBufferLen, &curHeader);
+    curHeader.logSize = msg.length();
+    // write to serial
+    if (serialEnabled && logSerial) {
+      logSerial->print(msg);
+    }
+
+    // write to telnet
+    if (telnetConnected) { 
+      telnetClient.print(msg);
+    }
   }
-
-  // write to telnet
-  if (telnetConnected) { 
-    telnetClient.print(msg);
-  }
-
- 
+  
   lineBufferLen = 0;
 }
 

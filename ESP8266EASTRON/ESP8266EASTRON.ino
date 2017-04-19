@@ -445,7 +445,7 @@ void setup() {
   logger.cmdCallback(CmdCallback);
   logger.begin(HARDWARE_ID, &Serial1, true);
   logger.setProgramVersion(PROGRAM_VERSION);
-  logger.setTimeFormat(ltNone); //ltGMTTime
+  logger.setTimeFormat(ltNone); 
 
   //timer
   ptimer.Add(TID_POLL, MILLIS_TO_POLL);
