@@ -415,6 +415,22 @@ void setupArduinoOTA() {
 }
 
 ///////////////////////////////////////////////////////////////////////////
+//   logger
+///////////////////////////////////////////////////////////////////////////
+void CmdCallback(String &cmd) {
+  if (cmd == "reboot") {
+    DEBUG_PRINTLN(F("COMMAND: reboot. Rebooting..."));
+    restart();
+  }
+
+  if (cmd == "startwificfg") {
+    DEBUG_PRINTLN(F("COMMAND: start wifi config."));
+    wifiSetup(false);
+    restart();
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
 //   Setup() and loop()
 ///////////////////////////////////////////////////////////////////////////
 void setup() {
@@ -426,6 +442,7 @@ void setup() {
   // client ID
   sprintf(HARDWARE_ID, "%06X", ESP.getChipId());
   // start logger
+  logger.cmdCallback(CmdCallback);
   logger.begin(HARDWARE_ID, &Serial1, true);
   logger.setProgramVersion(PROGRAM_VERSION);
   logger.setTimeFormat(ltNone); //ltGMTTime
