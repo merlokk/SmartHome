@@ -29,6 +29,10 @@ void xLogger::begin(char *_hostName, Stream *_serial, bool _serialEnabled, char 
   setPassword(_passwd);
 }
 
+void xLogger::cmdCallback(logCallback cb) {
+  _cmdCallback = cb;
+}
+
 void xLogger::enableSerial(bool _serialEnabled) {
   serialEnabled = _serialEnabled && logSerial;
 }
@@ -151,7 +155,8 @@ void xLogger::processCommand(String &cmd) {
     return;
   }
 
-  
+  if (_cmdCallback) 
+    _cmdCallback(cmd);
 }
 
 

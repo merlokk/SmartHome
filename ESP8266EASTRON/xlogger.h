@@ -21,7 +21,7 @@
 #define LINE_BUFFER_LENGTH   256                 // buffer length for lines (concat print and printf)
 extern char pf_buffer[PRINTF_BUFFER_LENGTH];
 
-typedef void (*logCallback)();
+typedef void (*logCallback)(String &cmd);
 
 enum LogLevel: uint8_t{
   llInfo, 
@@ -54,6 +54,8 @@ class xLogger: public Print{
 
     void begin(char *_hostName, Stream *_serial = NULL, bool _serialEnabled = false, char *_passwd = "");
     void handle();
+    void cmdCallback(logCallback);
+
     void setSerial(Stream *_serial);
     void enableSerial(bool _serialEnabled);
     void setPassword(char *_passwd);
@@ -114,6 +116,9 @@ class xLogger: public Print{
     LogTimeFormat logTimeFormat = ltStrTime;
     String telnetCommand = "";
     bool telnetAuthenticated = true; // TODO!!!
+
+    // command callback
+    logCallback _cmdCallback;
 
     WiFiServer telnetServer = WiFiServer(TELNET_PORT);
     WiFiClient telnetClient;
