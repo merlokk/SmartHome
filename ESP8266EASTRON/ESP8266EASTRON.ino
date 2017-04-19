@@ -427,6 +427,8 @@ void setup() {
   sprintf(HARDWARE_ID, "%06X", ESP.getChipId());
   // start logger
   logger.begin(HARDWARE_ID, &Serial1, true);
+  logger.setProgramVersion(PROGRAM_VERSION);
+  logger.setTimeFormat(ltNone); //ltGMTTime
 
   //timer
   ptimer.Add(TID_POLL, MILLIS_TO_POLL);

@@ -21,17 +21,26 @@
 #define LINE_BUFFER_LENGTH   256                 // buffer length for lines (concat print and printf)
 extern char pf_buffer[PRINTF_BUFFER_LENGTH];
 
+typedef void (*logCallback)();
+
 enum LogLevel: uint8_t{
   llInfo, 
   llWarning,
-  llError
+  llError,
+
+  llLast
 };
+extern const char *strLogLevel[llLast];
 
 enum LogTimeFormat: uint8_t {
+  ltNone,
   ltStrTime,
   ltMsTime,
-  ltGMTTime
+  ltGMTTime,
+
+  ltLast
 };
+extern const char *strLogTimeFormat[ltLast];
 
 struct LogHeader {
   int logTime = 0;
@@ -50,54 +59,61 @@ class xLogger: public Print{
     void setPassword(char *_passwd);
     void setProgramVersion(char * _programVersion);
     void setTimeFormat(LogTimeFormat _timeFormat);
-    void setShowDebugLevel(LogLevel _logLevel);
+    void setShowDebugLevel(bool _showDebugLevel);
     void setFilterDebugLevel(LogLevel _logLevel);
 
     virtual size_t write(uint8_t c);
     virtual size_t write(const uint8_t *buffer, size_t size);
+
+    virtual void print(){}
+    virtual void println(){}
     
     template<typename... Args>
     void printf(LogLevel loglev, const char* fmtstr, Args... args)
     {
-      curHeader.logLevel = loglev;
-      printf(fmtstr, args...);
+      int len = snprintf(pf_buffer, sizeof(pf_buffer), fmtstr, args...);
+      print(curHeader.logLevel, pf_buffer);
     }
     template<typename... Args>
     void printf(const char* fmtstr, Args... args) {
-      int len = snprintf(pf_buffer, sizeof(pf_buffer), fmtstr, args...);
-      print(pf_buffer);
+      printf(llInfo, fmtstr, args...);
     }
     
     template<typename... Args>
     void print(LogLevel loglev, Args... args)
     {
       curHeader.logLevel = loglev;
-      print(args...);
+      Print::print(args...);
     }
     template<typename... Args>
     void print(Args... args)
     {
-      Print::print(args...);
+      print(llInfo, args...);
     }
 
     template<typename... Args>
     void println(LogLevel loglev, Args... args)
     {
       curHeader.logLevel = loglev;
-      println(args...);
+      Print::println(args...);
     }
     template<typename... Args>
     void println(Args... args)
     {
-      Print::println(args...);
+      println(llInfo, args...);
     }
   private:
     bool serialEnabled = false;
     Stream *logSerial = NULL;
     uint8_t logMem[LOG_SIZE] = {0};
-    char passwd[10] = {0};
+    char passwd[11] = {0};
     bool telnetConnected = false;
     char * programVersion = NULL;
+    bool showDebugLevel = true;
+    LogLevel filterLogLevel = llInfo;
+    LogTimeFormat logTimeFormat = ltStrTime;
+    String telnetCommand = "";
+    bool telnetAuthenticated = true; // TODO!!!
 
     WiFiServer telnetServer = WiFiServer(TELNET_PORT);
     WiFiClient telnetClient;
@@ -107,6 +123,7 @@ class xLogger: public Print{
     void showInitMessage();
     void formatLogMessage(String &str, const char *buffer, size_t size, LogHeader *header);
     void processLineBuffer();
+    void processCommand(String &cmd);
 };
 
 #endif // ifndef __XLOGGER_H__
