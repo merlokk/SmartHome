@@ -26,7 +26,7 @@
 #define               PROGRAM_VERSION   "0.92"
 
 #define               DEBUG                            // enable debuggin
-#define               DEBUG_SERIAL      Serial1
+#define               DEBUG_SERIAL      logger
 
 // macros for debugging
 xLogger               logger;
@@ -112,6 +112,8 @@ piTimer          ptimer;
   Function called to publish the state of 
 */
 void mqttPublishInitialState() {
+  String str = WiFi.macAddress();
+  mqttPublishState("MAC", str.c_str());
   mqttPublishState("HardwareId", HARDWARE_ID);  
   mqttPublishState("Version", PROGRAM_VERSION);  
   mqttPublishState("DeviceType", settings.deviceType);  
@@ -424,7 +426,7 @@ void setup() {
   // client ID
   sprintf(HARDWARE_ID, "%06X", ESP.getChipId());
   // start logger
-  logger.begin(HARDWARE_ID, &Serial1, "");
+  logger.begin(HARDWARE_ID, &Serial1, true);
 
   //timer
   ptimer.Add(TID_POLL, MILLIS_TO_POLL);
@@ -509,6 +511,9 @@ void setup() {
   eastron.getStrModbusConfig(str);
   DEBUG_PRINTLN(F("Modbus config:"));
   DEBUG_PRINTLN(str);
+
+  // set password in work mode
+  logger.setPassword("");
 
   ticker.detach();
   digitalWrite(LED1, LEDOFF);

@@ -43,10 +43,15 @@ class xLogger: public Print{
   public:
     xLogger();
 
-    void begin(char *_hostName, Stream *_serial, char *_passwd);
+    void begin(char *_hostName, Stream *_serial = NULL, bool _serialEnabled = false, char *_passwd = "");
     void handle();
     void setSerial(Stream *_serial);
+    void enableSerial(bool _serialEnabled);
     void setPassword(char *_passwd);
+    void setProgramVersion(char * _programVersion);
+    void setTimeFormat(LogTimeFormat _timeFormat);
+    void setShowDebugLevel(LogLevel _logLevel);
+    void setFilterDebugLevel(LogLevel _logLevel);
 
     virtual size_t write(uint8_t c);
     virtual size_t write(const uint8_t *buffer, size_t size);
@@ -87,10 +92,12 @@ class xLogger: public Print{
       Print::println(args...);
     }
   private:
+    bool serialEnabled = false;
     Stream *logSerial = NULL;
     uint8_t logMem[LOG_SIZE] = {0};
     char passwd[10] = {0};
     bool telnetConnected = false;
+    char * programVersion = NULL;
 
     WiFiServer telnetServer = WiFiServer(TELNET_PORT);
     WiFiClient telnetClient;
@@ -99,6 +106,7 @@ class xLogger: public Print{
 
     void showInitMessage();
     void formatLogMessage(String &str, const char *buffer, size_t size, LogHeader *header);
+    void processLineBuffer();
 };
 
 #endif // ifndef __XLOGGER_H__

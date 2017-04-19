@@ -11,6 +11,7 @@
 
 // put strings to flash
 #define SF(x) String(F(x))
+#define STR_RN SF("\r\n")
 
 //align
 #define STORE_ATTR __attribute__((aligned(4)))

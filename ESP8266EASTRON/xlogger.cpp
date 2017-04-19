@@ -8,12 +8,23 @@ xLogger::xLogger() {
   
 }
 
-void xLogger::begin(char *_hostName, Stream *_serial, char *_passwd) {
+void xLogger::begin(char *_hostName, Stream *_serial, bool _serialEnabled, char *_passwd) {
   telnetServer.begin();
   telnetServer.setNoDelay(true);
   setSerial(_serial);
+  enableSerial(_serialEnabled);
   setPassword(_passwd);
 }
+
+void xLogger::enableSerial(bool _serialEnabled) {
+  serialEnabled = _serialEnabled && logSerial;
+}
+
+void xLogger::setProgramVersion(char * _programVersion) {
+  programVersion = _programVersion;
+}
+
+
 
 void xLogger::handle() {
   if (telnetServer.hasClient()) {
@@ -51,7 +62,11 @@ void xLogger::setPassword(char *_passwd) {
 void xLogger::showInitMessage() {
   String msg = SF("*** Telnet debug for ESP8266.\r\n");
 
-  msg += SF("Logger version: ") + String(XLOGGER_VERSION) + SF(". Program version: ") + SF("\r\n");
+  if (programVersion && strnlen(programVersion, 1))
+    msg += SF(" Program version: ") + String(programVersion);
+  msg += SF(" Logger version: ") + String(XLOGGER_VERSION) + SF(".") + STR_RN;
+
+  msg += "Enable serial=" + (serialEnabled ? SF("enable") : SF("disable")) + STR_RN;
 
   telnetClient.print(msg);
 }
@@ -77,29 +92,22 @@ void xLogger::formatLogMessage(String &str, const char *buffer, size_t size, Log
   }
 }
 
-size_t xLogger::write(uint8_t c) {
-  write(&c, 1);
-}
-
-size_t xLogger::write(const uint8_t *buffer, size_t size) {
-  if (!size)
-    return size;
-                              
-  memcpy(&lineBuffer[lineBufferLen], buffer, min(size, LINE_BUFFER_LENGTH - lineBufferLen - 1)); // copy with checking length
-  lineBufferLen += size;
-  
-  if (buffer[size - 1] != '\n') {
-    return size;
-  }
-  curHeader.logTime = millis();
-  curHeader.logSize = size;
-
+void xLogger::processLineBuffer() {
+  // add end of char
   lineBuffer[lineBufferLen] = 0x00;
+
+  // if end of line or buffer full
+  if (lineBuffer[lineBufferLen - 1] != '\n' && LINE_BUFFER_LENGTH - 1 > lineBufferLen) {  
+    return;
+  }
+
+  curHeader.logTime = millis();
 
   String msg = "";
   formatLogMessage(msg, lineBuffer, lineBufferLen, &curHeader);
+  curHeader.logSize = msg.length();
   // write to serial
-  if (logSerial) {
+  if (serialEnabled && logSerial) {
     logSerial->print(msg);
   }
 
@@ -110,6 +118,25 @@ size_t xLogger::write(const uint8_t *buffer, size_t size) {
 
  
   lineBufferLen = 0;
+}
+
+size_t xLogger::write(uint8_t c) {
+  lineBuffer[lineBufferLen] = c;
+  lineBufferLen++;
+
+  processLineBuffer();
+  return 1;
+}
+
+size_t xLogger::write(const uint8_t *buffer, size_t size) {
+  if (!size)
+    return size;
+                              
+  memcpy(&lineBuffer[lineBufferLen], buffer, min((int)size, LINE_BUFFER_LENGTH - lineBufferLen - 1)); // copy with checking length
+  lineBufferLen += size;
+
+  processLineBuffer();
+  
   return size;
 }
 
