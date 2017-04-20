@@ -68,9 +68,6 @@ class xLogger: public Print{
     virtual size_t write(uint8_t c);
     virtual size_t write(const uint8_t *buffer, size_t size);
 
-    virtual void print(){}
-    virtual void println(){}
-    
     template<typename... Args>
     void printf(LogLevel loglev, const char* fmtstr, Args... args)
     {
@@ -106,6 +103,7 @@ class xLogger: public Print{
       println(llInfo, args...);
     }
   private:
+    String hostName = "n/a";
     bool serialEnabled = false;
     Stream *logSerial = NULL;
     uint8_t logMem[LOG_SIZE] = {0};

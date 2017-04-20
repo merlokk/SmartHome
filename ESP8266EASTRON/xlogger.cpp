@@ -23,6 +23,7 @@ xLogger::xLogger() {
 }
 
 void xLogger::begin(char *_hostName, Stream *_serial, bool _serialEnabled, char *_passwd) {
+  hostName = String(_hostName);
   telnetServer.begin();
   telnetServer.setNoDelay(true);
   setSerial(_serial);
@@ -225,7 +226,9 @@ void xLogger::showInitMessage() {
 
   if (programVersion && strnlen(programVersion, 1))
     msg += SF("Program version: ") + String(programVersion);
-  msg += SF(" Logger version: ") + String(XLOGGER_VERSION) + SF(".") + STR_RN + STR_RN;
+  msg += SF(" Logger version: ") + String(XLOGGER_VERSION) + SF(".") + STR_RN;
+  msg += SF("Host name: ") + hostName + SF(" IP:") + WiFi.localIP().toString() + SF(" Mac address:") + WiFi.macAddress() + STR_RN;
+  msg += SF("Free Heap RAM: ") + String(ESP.getFreeHeap()) + STR_RN + STR_RN;
 
   msg += "Command serial [enable|disable|?] write log to serial debug port."+ STR_RN;
   msg += "Serial: " + (serialEnabled ? SF("enable") : SF("disable")) + STR_RN;
