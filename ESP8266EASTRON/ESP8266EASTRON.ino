@@ -204,7 +204,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
   DEBUG_PRINT(F("MQTT message arrived ["));
   DEBUG_PRINT(topic);
-  DEBUG_PRINTLN(SR("] ") + sPayload);
+  DEBUG_PRINTLN(SF("] ") + sPayload);
 
   // commands
   CmdCallback(sPayload); 
