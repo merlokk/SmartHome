@@ -117,7 +117,7 @@ class xLogger: public Print{
     int oldMillis = 0;
     LogTimeFormat logTimeFormat = ltStrTime;
     String telnetCommand = "";
-    bool telnetAuthenticated = true; // TODO!!!
+    bool telnetAuthenticated = false;
 
     // command callback
     logCallback _cmdCallback;
@@ -128,6 +128,7 @@ class xLogger: public Print{
     LogHeader curHeader;
 
     void showInitMessage();
+    void addLogToBuffer(LogHeader &header, const char *buffer, int len);
     void showLog();
     void formatLogMessage(String &str, const char *buffer, size_t size, LogHeader *header);
     void processLineBuffer();

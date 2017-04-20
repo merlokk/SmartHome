@@ -54,7 +54,8 @@ void xLogger::handle() {
 
       // Show the initial message
       showInitMessage();
-      showLog();
+      if (telnetAuthenticated)
+        showLog();
 
       // Empty buffer in
       while(telnetClient.available()) 
@@ -87,6 +88,26 @@ void xLogger::handle() {
 }
 
 bool xLogger::processCommand(String &cmd) {
+  // process login
+  if (!telnetAuthenticated) {
+
+    if (cmd == String(passwd)) {
+      telnetClient.println("Password accepted.");
+      println(llInfo, "Password accepted.");
+
+      showLog();
+
+      telnetAuthenticated = true;
+      return true;
+    }
+
+    telnetClient.println("Password rejected.");
+    println(llError, "Password (" + cmd + ") rejected.");
+
+    return false;
+  }
+
+  // process command
   println(llInfo, "Telnet received command: " + cmd);
 
   if (cmd == "?") {
@@ -184,6 +205,7 @@ void xLogger::setSerial(Stream *_serial) {
 
 void xLogger::setPassword(char *_passwd) {
   strncpy(passwd, _passwd, 10);
+  telnetAuthenticated = !strnlen(passwd, 1);
 }
 
 void xLogger::setTimeFormat(LogTimeFormat _timeFormat) {
@@ -214,13 +236,22 @@ void xLogger::showInitMessage() {
   msg += "Command time [none|str|ms|btw|gmt|?] shows time in log lines." + STR_RN;
   msg += "Time format: " + String(strLogTimeFormat[logTimeFormat]) + STR_RN;
   msg += STR_RN;
+  
+  if (!telnetAuthenticated && strnlen(passwd, 1))
+    msg += "Please, enter password before entering commands. Password length may be up to 10 symbols." + STR_RN;
 
   telnetClient.print(msg);
 }
 
+void xLogger::addLogToBuffer(LogHeader &header, const char *buffer, int len) {
+  if (len <= 0 || !buffer)
+    return;
+    
+}
+
 void xLogger::showLog() {
   // if (log exist) return;
-  String msg = SF("*** Log.\r\n");
+  String msg = SF("*** Cached log.\r\n");
   
   telnetClient.print(msg);
 }
@@ -282,6 +313,8 @@ void xLogger::processLineBuffer() {
   if (filterLogLevel <= curHeader.logLevel) { // filter here
     curHeader.logTime = millis();
 
+    addLogToBuffer(curHeader, &lineBuffer[0], lineBufferLen);
+
     String msg = "";
     formatLogMessage(msg, lineBuffer, lineBufferLen, &curHeader);
     curHeader.logSize = msg.length();
@@ -291,7 +324,7 @@ void xLogger::processLineBuffer() {
     }
 
     // write to telnet
-    if (telnetConnected) { 
+    if (telnetConnected && (telnetAuthenticated || !strnlen(passwd, 1)) ) { 
       telnetClient.print(msg);
     }
   }

@@ -538,7 +538,7 @@ void setup() {
   DEBUG_PRINTLN(str);
 
   // set password in work mode
-  logger.setPassword("");
+  logger.setPassword("123454321");
 
   ticker.detach();
   digitalWrite(LED1, LEDOFF);
