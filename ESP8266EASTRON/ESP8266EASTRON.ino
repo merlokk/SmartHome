@@ -208,27 +208,9 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   DEBUG_PRINTLN();
 
   // commands
-  if (strncmp((char*)payload, "reboot", length) == 0) {
-    DEBUG_PRINTLN(F("COMMAND: reboot. Rebooting..."));
-    restart();
-  }
-
-  if (strncmp((char*)payload, "startwificfg", length) == 0) {
-    DEBUG_PRINTLN(F("COMMAND: start wifi config."));
-    wifiSetup(false);
-    restart();
-  }
-
-  if (length > 10 && strncmp((char*)payload, "cfgdevice ", 10) == 0) {
-    char param[MQTT_CFG_CHAR_ARRAY_SIZE_TYPE] = {0};
-    strncpy(param, (char*)&payload[10], min((int)length - 10, MQTT_CFG_CHAR_ARRAY_SIZE_TYPE - 1)); 
-    DEBUG_PRINT(F("COMMAND: config device. deviceType="));
-    DEBUG_PRINTLN(param);
-
-    changeDeviceType(param);
-
-    restart();
-  }
+  String cmd;
+  BufferToString(cmd, (char*)payload, length);
+  CmdCallback(cmd); 
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -291,7 +273,7 @@ void saveEepromSettings() {
   EEPROM.end();
 }
 
-void changeDeviceType(char* deviceType) {
+void changeDeviceType(const char* deviceType) {
   // load custom params
   loadEepromSettings();
   
@@ -415,7 +397,7 @@ void setupArduinoOTA() {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-//   logger
+//  execute commands
 ///////////////////////////////////////////////////////////////////////////
 bool CmdCallback(String &cmd) {
   if (cmd == "reboot") {
@@ -431,6 +413,16 @@ bool CmdCallback(String &cmd) {
     restart();
     delay(200);
     return true;
+  }
+
+  if (cmd.length() > 10 && cmd.startsWith("cfgdevice ")) {
+    String param = cmd.substring(10);
+    DEBUG_PRINT(F("COMMAND: config device. deviceType="));
+    DEBUG_PRINTLN(param);
+
+    changeDeviceType(param.c_str());
+
+    restart();
   }
 
   return false;

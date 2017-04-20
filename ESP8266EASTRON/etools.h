@@ -44,5 +44,8 @@ union dataDouble
 
 void eTimeToStr(String &str, long val, bool fullPrint = false);
 
+// String
+void BufferToString(String & str, const char* buf, int len);
+
 #endif // ifndef __ETOOLS_H__
 
