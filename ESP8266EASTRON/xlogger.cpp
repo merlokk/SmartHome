@@ -31,8 +31,9 @@ void xLogger::begin(char *_hostName, Stream *_serial, bool _serialEnabled, char 
   setPassword(_passwd);
 }
 
-void xLogger::cmdCallback(logCallback cb) {
+void xLogger::cmdCallback(logCallback cb, const char* _commandDescription) {
   _cmdCallback = cb;
+  commandDescription = _commandDescription;
 }
 
 void xLogger::enableSerial(bool _serialEnabled) {
@@ -238,6 +239,8 @@ void xLogger::showInitMessage() {
   msg += "Log level: " + String(strLogLevel[filterLogLevel]) + STR_RN;
   msg += "Command time [none|str|ms|btw|gmt|?] shows time in log lines." + STR_RN;
   msg += "Time format: " + String(strLogTimeFormat[logTimeFormat]) + STR_RN;
+  if (commandDescription && _cmdCallback)
+    msg += String(commandDescription) + STR_RN;
   msg += STR_RN;
   
   if (!telnetAuthenticated && strnlen(passwd, 1))

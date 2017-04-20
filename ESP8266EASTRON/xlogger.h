@@ -48,6 +48,10 @@ struct LogHeader {
   uint16_t logSize = 0;
   LogLevel logLevel = llInfo;
 };
+struct LogEntity {
+  LogHeader header;
+  String data;
+};
 
 class xLogger: public Print{
   public:
@@ -55,7 +59,7 @@ class xLogger: public Print{
 
     void begin(char *_hostName, Stream *_serial = NULL, bool _serialEnabled = false, char *_passwd = "");
     void handle();
-    void cmdCallback(logCallback);
+    void cmdCallback(logCallback, const char* = NULL);
 
     void setSerial(Stream *_serial);
     void enableSerial(bool _serialEnabled);
@@ -110,6 +114,7 @@ class xLogger: public Print{
     char passwd[11] = {0};
     bool telnetConnected = false;
     char * programVersion = NULL;
+    const char * commandDescription = NULL;
     bool showDebugLevel = true;
     LogLevel filterLogLevel = llInfo;
     int oldMillis = 0;

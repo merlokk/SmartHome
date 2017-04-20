@@ -174,7 +174,7 @@ void reconnect() {
       DEBUG_PRINTLN(F("The client is successfully connected to the MQTT broker"));
 
       // subscribe to control topic
-      String vtopic = String(MQTT_STATE_TOPIC) + "control";
+      String vtopic = String(MQTT_STATE_TOPIC) + SF("control");
       mqttClient.subscribe(vtopic.c_str());
     } else {
       DEBUG_EPRINTLN(F("The connection to the MQTT broker failed"));
@@ -315,7 +315,7 @@ void wifiSetup(bool withAutoConnect) {
       delay(1000);
     }
   } else {
-    String ssid = "ESP" + String(ESP.getChipId());
+    String ssid = SF("ESP") + String(ESP.getChipId());
     if (!wifiManager.startConfigPortal(ssid.c_str())) { 
       ESP.reset();
       delay(1000);
@@ -396,6 +396,11 @@ void setupArduinoOTA() {
 ///////////////////////////////////////////////////////////////////////////
 //  execute commands
 ///////////////////////////////////////////////////////////////////////////
+const char* strCommandsDesc = 
+  "Command reboot reboots ESP.\r\n"\
+  "Command startwificfg puts ESP to configure mode. Show configuration AP.\r\n"\
+  "Command cfgdevice writes RS-485 device type to ESP memory and reboot.";
+  
 bool CmdCallback(String &cmd) {
   if (cmd == "reboot") {
     DEBUG_PRINTLN(F("COMMAND: reboot. Rebooting..."));
@@ -437,7 +442,7 @@ void setup() {
   // client ID
   sprintf(HARDWARE_ID, "%06X", ESP.getChipId());
   // start logger
-  logger.cmdCallback(CmdCallback);
+  logger.cmdCallback(CmdCallback, strCommandsDesc);
   logger.begin(HARDWARE_ID, &Serial1, true);
   logger.setProgramVersion(PROGRAM_VERSION);
   logger.setTimeFormat(ltNone); 
