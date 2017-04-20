@@ -14,6 +14,7 @@ const char *strLogTimeFormat[ltLast] = {
   "none",
   "time from start",
   "milliseconds from start",
+  "milliseconds from previous log entry",
   "gmt time (needs NTP available)"
 };
 
@@ -53,6 +54,7 @@ void xLogger::handle() {
 
       // Show the initial message
       showInitMessage();
+      showLog();
 
       // Empty buffer in
       while(telnetClient.available()) 
@@ -84,80 +86,95 @@ void xLogger::handle() {
   
 }
 
-void xLogger::processCommand(String &cmd) {
+bool xLogger::processCommand(String &cmd) {
   println(llInfo, "Telnet received command: " + cmd);
 
   if (cmd == "?") {
     showInitMessage();
-    return;
+    return true;
+  }
+
+  if (cmd == "showlog") {
+    showLog();
+    return true;
   }
 
   if (cmd == "serial enable") {
     serialEnabled = true;
-    return;
+    return true;
   }
   if (cmd == "serial disable") {
     serialEnabled = false;
-    return;
+    return true;
   }
   if (cmd == "serial ?") {
-    println(SF("Serial enabled: ") + (serialEnabled ? SF("enable") : SF("disable")));
-    return;
+    println(SF("Serial: ") + (serialEnabled ? SF("enable") : SF("disable")));
+    return true;
   }
 
   if (cmd == "showdebuglvl enable") {
     showDebugLevel = true;
-    return;
+    return true;
   }
   if (cmd == "showdebuglvl disable") {
     showDebugLevel = false;
-    return;
+    return true;
   }
   if (cmd == "showdebuglvl ?") {
     println(SF("Show debug level: ") + (showDebugLevel ? SF("enable") : SF("disable")));
-    return;
+    return true;
   }
 
   if (cmd == "loglvl info") {
     filterLogLevel = llInfo;
-    return;
+    return true;
   }
   if (cmd == "loglvl warning") {
     filterLogLevel = llWarning;
-    return;
+    return true;
   }
   if (cmd == "loglvl error") {
     filterLogLevel = llError;
-    return;
+    return true;
   }
   if (cmd == "loglvl ?") {
     println(filterLogLevel, "Log level: " + String(strLogLevel[filterLogLevel]));
-    return;
+    return true;
   }
 
   if (cmd == "time none") {
     logTimeFormat = ltNone;
-    return;
+    return true;
   }
   if (cmd == "time str") {
     logTimeFormat = ltStrTime;
-    return;
+    return true;
   }
   if (cmd == "time ms") {
     logTimeFormat = ltMsTime;
-    return;
+    return true;
+  }
+  if (cmd == "time btw") {
+    logTimeFormat = ltMsBetween;
+    return true;
   }
   if (cmd == "time gmt") {
     logTimeFormat = ltGMTTime;
-    return;
+    return true;
   }
   if (cmd == "time ?") {
     println("Time format: " + String(strLogTimeFormat[logTimeFormat]));
-    return;
+    return true;
   }
 
+  bool res = false;
   if (_cmdCallback) 
-    _cmdCallback(cmd);
+    res = _cmdCallback(cmd);
+
+  if (!res) 
+    println(llError, "Unknown command.");
+  
+  return res;
 }
 
 
@@ -189,15 +206,22 @@ void xLogger::showInitMessage() {
   msg += SF(" Logger version: ") + String(XLOGGER_VERSION) + SF(".") + STR_RN + STR_RN;
 
   msg += "Command serial [enable|disable|?] write log to serial debug port."+ STR_RN;
-  msg += "Serial enabled: " + (serialEnabled ? SF("enable") : SF("disable")) + STR_RN;
+  msg += "Serial: " + (serialEnabled ? SF("enable") : SF("disable")) + STR_RN;
   msg += "Command showdebuglvl [enable|disable|?] shows debug level in log lines."+ STR_RN;
   msg += "Show debug level: " + (showDebugLevel ? SF("enable") : SF("disable")) + STR_RN;
   msg += "Command loglvl [info|warning|error|?] filters messages by log level."+ STR_RN;
   msg += "Log level: " + String(strLogLevel[filterLogLevel]) + STR_RN;
-  msg += "Command time [none|str|ms|gmt|?] shows time in log lines." + STR_RN;
+  msg += "Command time [none|str|ms|btw|gmt|?] shows time in log lines." + STR_RN;
   msg += "Time format: " + String(strLogTimeFormat[logTimeFormat]) + STR_RN;
   msg += STR_RN;
 
+  telnetClient.print(msg);
+}
+
+void xLogger::showLog() {
+  // if (log exist) return;
+  String msg = SF("*** Log.\r\n");
+  
   telnetClient.print(msg);
 }
 
@@ -214,6 +238,11 @@ void xLogger::formatLogMessage(String &str, const char *buffer, size_t size, Log
       case ltMsTime:
         str = String(millis());
         str += SF(" ");
+        break;
+      case ltMsBetween:
+        str = String(millis() - oldMillis);
+        str += SF(" ");
+        oldMillis = millis();
         break;
       case ltGMTTime:
         if (timeStatus() != timeNotSet) {

@@ -21,7 +21,7 @@
 #define LINE_BUFFER_LENGTH   256                 // buffer length for lines (concat print and printf)
 extern char pf_buffer[PRINTF_BUFFER_LENGTH];
 
-typedef void (*logCallback)(String &cmd);
+typedef bool (*logCallback)(String &cmd);
 
 enum LogLevel: uint8_t{
   llInfo, 
@@ -36,6 +36,7 @@ enum LogTimeFormat: uint8_t {
   ltNone,
   ltStrTime,
   ltMsTime,
+  ltMsBetween,
   ltGMTTime,
 
   ltLast
@@ -113,6 +114,7 @@ class xLogger: public Print{
     char * programVersion = NULL;
     bool showDebugLevel = true;
     LogLevel filterLogLevel = llInfo;
+    int oldMillis = 0;
     LogTimeFormat logTimeFormat = ltStrTime;
     String telnetCommand = "";
     bool telnetAuthenticated = true; // TODO!!!
@@ -126,9 +128,10 @@ class xLogger: public Print{
     LogHeader curHeader;
 
     void showInitMessage();
+    void showLog();
     void formatLogMessage(String &str, const char *buffer, size_t size, LogHeader *header);
     void processLineBuffer();
-    void processCommand(String &cmd);
+    bool processCommand(String &cmd);
 };
 
 #endif // ifndef __XLOGGER_H__

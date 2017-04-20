@@ -417,17 +417,23 @@ void setupArduinoOTA() {
 ///////////////////////////////////////////////////////////////////////////
 //   logger
 ///////////////////////////////////////////////////////////////////////////
-void CmdCallback(String &cmd) {
+bool CmdCallback(String &cmd) {
   if (cmd == "reboot") {
     DEBUG_PRINTLN(F("COMMAND: reboot. Rebooting..."));
     restart();
+    delay(200);
+    return true;
   }
 
   if (cmd == "startwificfg") {
     DEBUG_PRINTLN(F("COMMAND: start wifi config."));
     wifiSetup(false);
     restart();
+    delay(200);
+    return true;
   }
+
+  return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -591,6 +597,8 @@ void loop() {
     } else {
       eastron.Poll(POLL_INPUT_REGISTERS);
     };
+
+    yield();
 
     // publish some system vars
     mqttPublishRegularState();
