@@ -199,18 +199,15 @@ void reconnect() {
   Callback for receive message from MQTT broker
 */
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
-  DEBUG_PRINT("MQTT message arrived [");
+  String sPayload;
+  BufferToString(sPayload, (char*)payload, length);
+
+  DEBUG_PRINT(F("MQTT message arrived ["));
   DEBUG_PRINT(topic);
-  DEBUG_PRINT("] ");
-  for (int i = 0; i < length; i++) {
-    DEBUG_PRINT((char)payload[i]);
-  }
-  DEBUG_PRINTLN();
+  DEBUG_PRINTLN(SR("] ") + sPayload);
 
   // commands
-  String cmd;
-  BufferToString(cmd, (char*)payload, length);
-  CmdCallback(cmd); 
+  CmdCallback(sPayload); 
 }
 
 ///////////////////////////////////////////////////////////////////////////
