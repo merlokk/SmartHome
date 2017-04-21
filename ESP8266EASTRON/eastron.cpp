@@ -342,6 +342,7 @@ void Eastron::getValue(String &str, byte Command, word ModbusAddress, byte value
 void Eastron::Connect() {
   // Initialize modbus communication settings etc...
   modbusNode.begin(&Serial, SERIAL_BAUD);
+  modbusNode.ku16MBResponseTimeout = MODBUS_POLL_TIMEOUT;
   DEBUG_PRINTLN(F("Eastron connected to com port."));
 }
 

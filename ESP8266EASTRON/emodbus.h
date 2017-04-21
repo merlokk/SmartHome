@@ -54,7 +54,7 @@ class ModbusMaster {
     void postTransmission(mbCallback);
 
     HardwareSerial *_serial;                                     // reference to serial port object
-    static const uint16_t ku16MBResponseTimeout          = 2000; // Modbus timeout [milliseconds]
+    uint16_t ku16MBResponseTimeout          = 2000; // Modbus timeout [milliseconds]
 
     // master function that conducts Modbus transactions
     uint8_t ModbusMasterTransaction(

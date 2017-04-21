@@ -16,7 +16,7 @@
 #define EASTRON_DEBUG
 
 #define SERIAL_BAUD                 9600       // baudrate
-#define MODBUS_POLL_TIMEOUT         1000       // max time to wait for response from SDM
+#define MODBUS_POLL_TIMEOUT         700        // max time to wait for response from SDM
 
 // Poll commands
 #define POLL_ALL                    0
