@@ -421,7 +421,9 @@ void Eastron::Poll(byte Command) {
         // debug output error here
         String s;
         strModbusError(s, res);
-        DEBUG_PRINTLN(llError, SF("Eastron modbus poll error: ") + s);
+        DEBUG_PRINTLN(llError, SF("Eastron modbus (c") + 
+          String(modbusArray[i].Command) + SF(" ") + String(modbusArray[i].StartDiap) + SF("[") + String(modbusArray[i].LengthDiap) +
+          SF("]) poll error: ") + s);
       }
       Connected = (res == 0);
     } else {
