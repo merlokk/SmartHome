@@ -218,7 +218,7 @@ void Eastron::getStrModbusConfig(String &str) {
   str = "Max length: " + String(MAX_MODBUS_DIAP) + " Length: " + String(getModbusDiapLength());
   for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
     if (modbusArray[i].Command){
-      str += "\n" + String(i);
+      str += "\r\n" + String(i);
       str += ": Cmd:" + String(modbusArray[i].Command);
       str += " Start:" + String(modbusArray[i].StartDiap);
       str += " Len:" + String(modbusArray[i].LengthDiap);
