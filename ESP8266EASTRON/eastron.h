@@ -11,6 +11,9 @@
 #include <Arduino.h>
 #include "etools.h"
 #include "emodbus.h"
+#include "xlogger.h"
+
+#define EASTRON_DEBUG
 
 #define SERIAL_BAUD                 9600       // baudrate
 #define MODBUS_POLL_TIMEOUT         1000       // max time to wait for response from SDM
@@ -107,14 +110,16 @@ class Eastron {
   private:
     ModbusDiap modbusArray[MAX_MODBUS_DIAP];
     ModbusMaster modbusNode;
+    xLogger * logger = NULL;
   public:
     uint8_t* getValueAddress(byte Command, word ModbusAddress);
   
-    bool Connected;
+    bool Connected = false;
     const mqttMapConfigS *mapConfig;
     int mapConfigLen;
   
     Eastron();
+    void SetLogger(xLogger * _logger);
     int AddModbusDiap(byte Command, word StartDiap, word LengthDiap);
     int getModbusDiapLength();
     void getStrModbusConfig(String &str);
@@ -129,6 +134,9 @@ class Eastron {
     float getFloatValue(byte Command, word ModbusAddress);
     void getMemoryHex(String &str, byte Command, word ModbusAddress, int len);
     void getValue(String &str, byte Command, word ModbusAddress, byte valueType);
+
+    template <typename... Args>
+    void DEBUG_PRINTLN(Args... args);
 };
 
 #endif // ifndef __EASTRON_H__

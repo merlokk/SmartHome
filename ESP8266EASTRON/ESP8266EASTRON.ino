@@ -522,6 +522,7 @@ void setup() {
   mqttPublishInitialState();
 
   // eastron setup
+  eastron.SetLogger(&logger);
   DEBUG_PRINT(F("DeviceType: "));
   DEBUG_PRINTLN(settings.deviceType);
   eastron.ModbusSetup(&settings.deviceType[0]);

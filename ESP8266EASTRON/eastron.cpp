@@ -177,6 +177,19 @@ Eastron::Eastron() {
   mapConfigLen = 0;
 }
 
+void Eastron::SetLogger(xLogger * _logger) {
+  logger = _logger;
+}
+
+template <typename... Args>
+void Eastron::DEBUG_PRINTLN(Args... args) {
+#ifdef EASTRON_DEBUG
+  if (logger) {
+    logger->println(args...);
+  }
+#endif
+}
+
 int Eastron::AddModbusDiap(byte Command, word StartDiap, word LengthDiap) {
   for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
     if (modbusArray[i].Command == 0){
@@ -329,11 +342,13 @@ void Eastron::getValue(String &str, byte Command, word ModbusAddress, byte value
 void Eastron::Connect() {
   // Initialize modbus communication settings etc...
   modbusNode.begin(&Serial, SERIAL_BAUD);
+  DEBUG_PRINTLN(F("Eastron connected to com port."));
 }
 
 void Eastron::ModbusSetup(char *deviceType) {
   mapConfig = NULL;
   mapConfigLen = 0;
+  DEBUG_PRINTLN(SF("Eastron modbus setup: ") + String(deviceType));
 
   // eastron 220
   if (strncmp(deviceType, "220", 5) == 0) {
@@ -395,8 +410,7 @@ void Eastron::ModbusSetup(char *deviceType) {
 
 void Eastron::Poll(byte Command) {
   Connected = false;
-//  Serial1.print("Eastron poll: ");
-//  Serial1.println(Command);
+  DEBUG_PRINTLN(SF("Eastron poll: ") + String(Command));
 
   for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
     if (modbusArray[i].Command && 
@@ -404,10 +418,9 @@ void Eastron::Poll(byte Command) {
       uint8_t res = modbusNode.ModbusMasterTransaction(1, modbusArray[i].Command, modbusArray[i].StartDiap, modbusArray[i].LengthDiap, modbusArray[i].Address);
       if (res != MBSuccess) {
         // debug output error here
-        Serial1.print("ERROR: modbus poll error: ");
         String s;
         strModbusError(s, res);
-        Serial1.println(s.c_str());
+        DEBUG_PRINTLN(llError, SF("Eastron modbus poll error: ") + s);
       }
       Connected = (res == 0);
     } else {
