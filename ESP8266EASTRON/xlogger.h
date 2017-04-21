@@ -16,7 +16,7 @@
 #define XLOGGER_VERSION      "0.9"
 
 #define TELNET_PORT          23                  // telent port for remote connection
-#define LOG_SIZE             2048                // size of log memory in bytes
+#define LOG_SIZE             4096                // size of log memory in bytes
 #define PRINTF_BUFFER_LENGTH 128                 // buffer length for printf
 #define LINE_BUFFER_LENGTH   256                 // buffer length for lines (concat print and printf)
 extern char pf_buffer[PRINTF_BUFFER_LENGTH];
@@ -24,6 +24,7 @@ extern char pf_buffer[PRINTF_BUFFER_LENGTH];
 typedef bool (*logCallback)(String &cmd);
 
 enum LogLevel: uint8_t{
+  llNone,
   llInfo, 
   llWarning,
   llError,
@@ -50,7 +51,7 @@ struct LogHeader {
 };
 struct LogEntity {
   LogHeader header;
-  String data;
+  char data[];
 };
 
 class xLogger: public Print{
@@ -110,7 +111,7 @@ class xLogger: public Print{
     String hostName = "n/a";
     bool serialEnabled = false;
     Stream *logSerial = NULL;
-    uint8_t logMem[LOG_SIZE] = {0};
+    uint8_t logMem[LOG_SIZE + sizeof(LogHeader)] = {0};
     char passwd[11] = {0};
     bool telnetConnected = false;
     char * programVersion = NULL;
@@ -131,9 +132,13 @@ class xLogger: public Print{
     LogHeader curHeader;
 
     void showInitMessage();
-    void addLogToBuffer(LogHeader &header, const char *buffer, int len);
+    
+    int getNextLogPtr(int fromPtr);
+    int getEmptytLogPtr();
+    void addLogToBuffer(LogHeader &header, const char *buffer);
     void showLog();
     void formatLogMessage(String &str, const char *buffer, size_t size, LogHeader *header);
+
     void processLineBuffer();
     bool processCommand(String &cmd);
 };

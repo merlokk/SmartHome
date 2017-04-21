@@ -5,6 +5,7 @@ char lineBuffer[LINE_BUFFER_LENGTH] = {0};
 int lineBufferLen = 0;
 
 const char *strLogLevel[llLast] = {
+  "n/a",
   "Info",
   "Warning",
   "Error",
@@ -231,35 +232,102 @@ void xLogger::showInitMessage() {
   msg += SF("Host name: ") + hostName + SF(" IP:") + WiFi.localIP().toString() + SF(" Mac address:") + WiFi.macAddress() + STR_RN;
   msg += SF("Free Heap RAM: ") + String(ESP.getFreeHeap()) + STR_RN + STR_RN;
 
-  msg += "Command serial [enable|disable|?] write log to serial debug port."+ STR_RN;
-  msg += "Serial: " + (serialEnabled ? SF("enable") : SF("disable")) + STR_RN;
-  msg += "Command showdebuglvl [enable|disable|?] shows debug level in log lines."+ STR_RN;
-  msg += "Show debug level: " + (showDebugLevel ? SF("enable") : SF("disable")) + STR_RN;
-  msg += "Command loglvl [info|warning|error|?] filters messages by log level."+ STR_RN;
-  msg += "Log level: " + String(strLogLevel[filterLogLevel]) + STR_RN;
-  msg += "Command time [none|str|ms|btw|gmt|?] shows time in log lines." + STR_RN;
-  msg += "Time format: " + String(strLogTimeFormat[logTimeFormat]) + STR_RN;
+  msg += SF("Command serial [enable|disable|?] write log to serial debug port.") + STR_RN;
+  msg += SF("Serial: ") + (serialEnabled ? SF("enable") : SF("disable")) + STR_RN;
+  msg += SF("Command showdebuglvl [enable|disable|?] shows debug level in log lines.")+ STR_RN;
+  msg += SF("Show debug level: ") + (showDebugLevel ? SF("enable") : SF("disable")) + STR_RN;
+  msg += SF("Command loglvl [info|warning|error|?] filters messages by log level.") + STR_RN;
+  msg += SF("Log level: ") + String(strLogLevel[filterLogLevel]) + STR_RN;
+  msg += SF("Command time [none|str|ms|btw|gmt|?] shows time in log lines.") + STR_RN;
+  msg += SF("Time format: ") + String(strLogTimeFormat[logTimeFormat]) + STR_RN;
   if (commandDescription && _cmdCallback)
     msg += String(commandDescription) + STR_RN;
   msg += STR_RN;
   
   if (!telnetAuthenticated && strnlen(passwd, 1))
-    msg += "Please, enter password before entering commands. Password length may be up to 10 symbols." + STR_RN;
+    msg += SF("Please, enter password before entering commands. Password length may be up to 10 symbols.") + STR_RN;
 
   telnetClient.print(msg);
 }
 
-void xLogger::addLogToBuffer(LogHeader &header, const char *buffer, int len) {
-  if (len <= 0 || !buffer)
+int xLogger::getNextLogPtr(int fromPtr) {
+  int ptr = 0;
+  LogHeader header;
+
+  while (ptr <= LOG_SIZE - 1) {
+    memcpy(&header, &logMem[ptr], sizeof(LogHeader));
+    if (header.logTime == 0 && header.logLevel == llNone)
+      return -1;
+    if (ptr + sizeof(LogHeader) + header.logSize + 1 > fromPtr)
+      return ptr;
+    ptr += sizeof(LogHeader) + header.logSize + 1;
+  }
+  
+  return -1;
+}
+
+int xLogger::getEmptytLogPtr() {
+  int ptr = 0;
+  LogHeader header;
+
+  while (ptr <= LOG_SIZE - 1) {
+    memcpy(&header, &logMem[ptr], sizeof(LogHeader));
+    if (header.logTime == 0 && header.logLevel == llNone) {
+      return ptr;
+    }
+    ptr += sizeof(LogHeader) + header.logSize + 1;
+  }
+
+  return -1;
+}
+
+void xLogger::addLogToBuffer(LogHeader &header, const char *buffer) {
+  if (header.logSize <= 0 || !buffer)
     return;
-    
+
+  int ptr = getEmptytLogPtr();
+
+  // check buffer length
+  if ((ptr < 0) || (ptr + sizeof(LogHeader) + header.logSize + 1 > LOG_SIZE)) {
+    return;  // TODO: here we need to move buffer
+  }
+
+  // copy header
+  memcpy(&logMem[ptr], &header, sizeof(LogHeader));
+  ptr += sizeof(LogHeader);
+
+  // copy buffer
+  memcpy(&logMem[ptr], buffer, header.logSize);
+  ptr += header.logSize;
+  
+  // add 0x00 at the end
+  logMem[ptr] = 0x00;  
+  ptr++;
+  
+  // fill next log entry with 0x00
+  memset(&logMem[ptr], 0x00, sizeof(LogHeader));
 }
 
 void xLogger::showLog() {
   // if (log exist) return;
-  String msg = SF("*** Cached log.\r\n");
-  
-  telnetClient.print(msg);
+  telnetClient.println(SF("\r\n\r\n******** Cached log."));
+
+  int ptr = 0;
+  String str;
+  LogHeader header;
+
+  while (ptr <= LOG_SIZE - 1) {
+    memcpy(&header, &logMem[ptr], sizeof(LogHeader));
+    if (header.logTime == 0 && header.logLevel == llNone) {
+      break;
+    }
+
+    formatLogMessage(str, (char*)(&logMem[ptr] + sizeof(LogHeader)), header.logSize, &header);
+    telnetClient.print(str);
+    
+    ptr += sizeof(LogHeader) + header.logSize + 1;
+  }
+  telnetClient.println(SF("********"));
 }
 
 void xLogger::formatLogMessage(String &str, const char *buffer, size_t size, LogHeader *header) {
@@ -273,17 +341,17 @@ void xLogger::formatLogMessage(String &str, const char *buffer, size_t size, Log
         str += SF(" ");
         break;
       case ltMsTime:
-        str = String(millis());
+        str = String(header->logTime);
         str += SF(" ");
         break;
       case ltMsBetween:
-        str = String(millis() - oldMillis);
+        str = String(header->logTime - oldMillis);
         str += SF(" ");
-        oldMillis = millis();
+        oldMillis = header->logTime;
         break;
       case ltGMTTime:
         if (timeStatus() != timeNotSet) {
-          str += NTP.getTimeStr(NTP.getLastBootTime() + millis() / 1000);
+          str += NTP.getTimeStr(NTP.getLastBootTime() + header->logTime / 1000);
           str += SF(" ");
         }
         break;
@@ -319,11 +387,13 @@ void xLogger::processLineBuffer() {
   if (filterLogLevel <= curHeader.logLevel) { // filter here
     curHeader.logTime = millis();
 
-    addLogToBuffer(curHeader, &lineBuffer[0], lineBufferLen);
+    // write to buffer
+    curHeader.logSize = lineBufferLen;
+    addLogToBuffer(curHeader, &lineBuffer[0]);
 
     String msg = "";
     formatLogMessage(msg, lineBuffer, lineBufferLen, &curHeader);
-    curHeader.logSize = msg.length();
+
     // write to serial
     if (serialEnabled && logSerial) {
       logSerial->print(msg);
