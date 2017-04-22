@@ -1,5 +1,6 @@
 
 # Projects for smart home. ESP8266 + NanoPi NEO Air
+[![Build Status](https://travis-ci.org/merlokk/SmartHome.svg?branch=master)](https://travis-ci.org/merlokk/SmartHome)
 
 ### ESP8266AZ7788
 Connect Datalogger AZ-7788 to MQTT
