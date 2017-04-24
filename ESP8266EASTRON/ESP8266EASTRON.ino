@@ -19,7 +19,7 @@
 #include <NtpClientLib.h>       // https://github.com/gmag11/NtpClient
 #include "etools.h"
 #include "pitimer.h"            // timers
-#include "xlogger.h"            // logger
+#include <xlogger.h>            // logger
 
 #include "eastron.h"
 
@@ -445,7 +445,7 @@ void setup() {
   logger.cmdCallback(CmdCallback, strCommandsDesc);
   logger.begin(HARDWARE_ID, &Serial1, true);
   logger.setProgramVersion(PROGRAM_VERSION);
-  logger.setTimeFormat(ltNone); 
+  logger.setTimeFormat(ltNone);
 
   //timer
   ptimer.Add(TID_POLL, MILLIS_TO_POLL);

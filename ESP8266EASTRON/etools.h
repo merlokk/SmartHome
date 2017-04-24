@@ -42,8 +42,6 @@ union dataDouble
 #define numberOfHours(_time_) (( _time_% SECS_PER_DAY) / SECS_PER_HOUR)
 #define elapsedDays(_time_) ( _time_ / SECS_PER_DAY)  
 
-void eTimeToStr(String &str, long val, bool fullPrint = false);
-
 // String
 void BufferToString(String & str, const char* buf, int len);
 
