@@ -1,4 +1,8 @@
 .
 ..\..\libraries\pubsubclient-2.6\src
 ..\..\libraries\WiFiManager
+..\..\libraries\XLogger
+..\..\libraries\Time
+..\..\libraries\NtpClient
+..\..\libraries\NtpClient\src
 ..\..\libraries\
