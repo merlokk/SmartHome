@@ -303,13 +303,9 @@ void xLogger::addLogToBuffer(LogHeader &header, const char *buffer) {
     int qptr = getNextLogPtr(max(LOG_SEGMENT, (int)sizeof(LogHeader) + header.logSize + 1));
     if (qptr > 0) {
       // move buffer with 0x00 tail
-      Serial1.println(header.logSize);
-      Serial1.println(qptr);
       memmove(&logMem[0], &logMem[qptr], LOG_SIZE + sizeof(LogHeader) - qptr);
       ptr = getEmptytLogPtr();
-      Serial1.println(ptr);
     } else {
-      Serial1.println("cant get");
       // if we cant get next pointer
       return;   
     }
@@ -317,8 +313,6 @@ void xLogger::addLogToBuffer(LogHeader &header, const char *buffer) {
 
   // double check
   if ((ptr < 0) || (ptr + sizeof(LogHeader) + header.logSize + 1 > LOG_SIZE)){ 
-    Serial1.println("dbl check fail");
-    Serial1.println(ptr);
     return;
   }
 
