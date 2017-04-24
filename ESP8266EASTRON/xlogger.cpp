@@ -257,10 +257,15 @@ int xLogger::getNextLogPtr(int fromPtr) {
   while (ptr <= LOG_SIZE - 1) {
     memcpy(&header, &logMem[ptr], sizeof(LogHeader));
     if (header.logTime == 0 && header.logLevel == llNone)
-      return -1;
-    if (ptr + sizeof(LogHeader) + header.logSize + 1 > fromPtr)
       return ptr;
+
+    // check data length
+    if (header.logSize < 0 || header.logSize > LOG_SIZE - ptr + 1)
+      break;
+      
     ptr += sizeof(LogHeader) + header.logSize + 1;
+    if (ptr > fromPtr)
+      return ptr;
   }
   
   return -1;
@@ -275,6 +280,11 @@ int xLogger::getEmptytLogPtr() {
     if (header.logTime == 0 && header.logLevel == llNone) {
       return ptr;
     }
+
+    // check data length
+    if (header.logSize < 0 || header.logSize > LOG_SIZE - ptr + 1)
+      break;
+
     ptr += sizeof(LogHeader) + header.logSize + 1;
   }
 
@@ -289,7 +299,27 @@ void xLogger::addLogToBuffer(LogHeader &header, const char *buffer) {
 
   // check buffer length
   if ((ptr < 0) || (ptr + sizeof(LogHeader) + header.logSize + 1 > LOG_SIZE)) {
-    return;  // TODO: here we need to move buffer
+    // get size that we need in buffer
+    int qptr = getNextLogPtr(max(LOG_SEGMENT, (int)sizeof(LogHeader) + header.logSize + 1));
+    if (qptr > 0) {
+      // move buffer with 0x00 tail
+      Serial1.println(header.logSize);
+      Serial1.println(qptr);
+      memmove(&logMem[0], &logMem[qptr], LOG_SIZE + sizeof(LogHeader) - qptr);
+      ptr = getEmptytLogPtr();
+      Serial1.println(ptr);
+    } else {
+      Serial1.println("cant get");
+      // if we cant get next pointer
+      return;   
+    }
+  }
+
+  // double check
+  if ((ptr < 0) || (ptr + sizeof(LogHeader) + header.logSize + 1 > LOG_SIZE)){ 
+    Serial1.println("dbl check fail");
+    Serial1.println(ptr);
+    return;
   }
 
   // copy header
@@ -309,7 +339,6 @@ void xLogger::addLogToBuffer(LogHeader &header, const char *buffer) {
 }
 
 void xLogger::showLog() {
-  // if (log exist) return;
   telnetClient.println(SF("\r\n\r\n******** Cached log."));
 
   int ptr = 0;

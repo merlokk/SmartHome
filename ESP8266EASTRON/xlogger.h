@@ -16,7 +16,8 @@
 #define XLOGGER_VERSION      "0.9"
 
 #define TELNET_PORT          23                  // telent port for remote connection
-#define LOG_SIZE             4096                // size of log memory in bytes
+#define LOG_SIZE             2048                // size of log memory in bytes
+#define LOG_SEGMENT          0                 // minimal size of log rotating
 #define PRINTF_BUFFER_LENGTH 128                 // buffer length for printf
 #define LINE_BUFFER_LENGTH   256                 // buffer length for lines (concat print and printf)
 extern char pf_buffer[PRINTF_BUFFER_LENGTH];
@@ -111,7 +112,7 @@ class xLogger: public Print{
     String hostName = "n/a";
     bool serialEnabled = false;
     Stream *logSerial = NULL;
-    uint8_t logMem[LOG_SIZE + sizeof(LogHeader)] = {0};
+    uint8_t logMem[LOG_SIZE + sizeof(LogHeader) + 8] = {0}; // 8 - guard interval
     char passwd[11] = {0};
     bool telnetConnected = false;
     char * programVersion = NULL;
