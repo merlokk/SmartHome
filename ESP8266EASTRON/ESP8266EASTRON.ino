@@ -459,6 +459,9 @@ void setup() {
   DEBUG_PRINT(F("Hardware ID/Hostname: "));
   DEBUG_PRINTLN(HARDWARE_ID);
 
+  DEBUG_PRINT(F("MAC address: "));
+  DEBUG_PRINTLN(WiFi.macAddress());
+
   DEBUG_PRINT("Module VCC: ");
   DEBUG_PRINTLN(ESP.getVcc());
 
