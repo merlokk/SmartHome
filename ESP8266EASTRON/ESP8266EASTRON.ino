@@ -22,6 +22,7 @@
 #include <etools.h>
 #include <pitimer.h>     // timers
 #include <eastron.h>
+#include <xparam.h>
 
 #define               PROGRAM_VERSION   "0.95"
 
@@ -99,6 +100,7 @@ EEPROM_settings  settings;
 Ticker           ticker;
 WiFiClient       wifiClient;
 PubSubClient     mqttClient(wifiClient);
+xParam           params;
 Eastron          eastron;
 mqttMapConfigS   *eastronCfg = NULL;
 int              eastronCfgLength = 0;
@@ -479,6 +481,9 @@ void setup() {
   if (inProgrammingMode) {
     DEBUG_WPRINTLN(F("Programming mode active!"));
   }
+
+  // setup xparam lib
+  params.begin();
 
   // wifi setup with autoconnect
   wifiSetup(true);

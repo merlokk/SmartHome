@@ -5,5 +5,7 @@
 ..\..\libraries\Time
 ..\..\libraries\NtpClient
 ..\..\libraries\NtpClient\src
+..\..\libraries\ArduinoJson
+..\..\libraries\ArduinoJson\include
 ..\..\libraries\
-../lib
+..\lib

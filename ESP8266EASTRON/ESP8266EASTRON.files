@@ -6,4 +6,6 @@
 ../lib/etools.h
 ../lib/pitimer.cpp
 ../lib/pitimer.h
+../lib/xparam.cpp
+../lib/xparam.h
 ESP8266EASTRON.ino
