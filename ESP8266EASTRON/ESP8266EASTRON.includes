@@ -6,3 +6,4 @@
 ..\..\libraries\NtpClient
 ..\..\libraries\NtpClient\src
 ..\..\libraries\
+../lib

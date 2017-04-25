@@ -1,4 +1,4 @@
-#include "pitimer.h"
+#include <pitimer.h>
 
 piTimer::piTimer(){
   

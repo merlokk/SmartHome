@@ -1,9 +1,9 @@
-pitimer.h
-pitimer.cpp
+../lib/eastron.cpp
+../lib/eastron.h
+../lib/emodbus.cpp
+../lib/emodbus.h
+../lib/etools.cpp
+../lib/etools.h
+../lib/pitimer.cpp
+../lib/pitimer.h
 ESP8266EASTRON.ino
-eastron.cpp
-eastron.h
-emodbus.cpp
-emodbus.h
-etools.cpp
-etools.h

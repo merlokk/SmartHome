@@ -17,15 +17,15 @@
 #include <ArduinoOTA.h>
 #include <TimeLib.h>            // https://github.com/PaulStoffregen/Time 
 #include <NtpClientLib.h>       // https://github.com/gmag11/NtpClient
-#include "etools.h"
-#include "pitimer.h"            // timers
 #include <xlogger.h>            // logger https://github.com/merlokk/xlogger
+// my libraries
+#include <etools.h>
+#include <pitimer.h>     // timers
+#include <eastron.h>
 
-#include "eastron.h"
+#define               PROGRAM_VERSION   "0.95"
 
-#define               PROGRAM_VERSION   "0.92"
-
-#define               DEBUG                            // enable debuggin
+#define               DEBUG                            // enable debugging
 #define               DEBUG_SERIAL      logger
 
 // macros for debugging

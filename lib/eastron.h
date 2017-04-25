@@ -9,8 +9,8 @@
 #define __EASTRON_H__
 
 #include <Arduino.h>
-#include "etools.h"
-#include "emodbus.h"
+#include <etools.h>
+#include <emodbus.h>
 #include <xlogger.h>        // logger https://github.com/merlokk/xlogger
 
 #define EASTRON_DEBUG

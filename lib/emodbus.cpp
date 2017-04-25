@@ -1,7 +1,7 @@
 
 #include <Arduino.h>
-#include "emodbus.h"
-#include "etools.h"
+#include <emodbus.h>
+#include <etools.h>
 
 static uint16_t crc16_update(uint16_t crc, uint8_t a) {
   int i;
