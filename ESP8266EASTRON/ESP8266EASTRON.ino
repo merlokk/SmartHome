@@ -149,6 +149,7 @@ void mqttPublishState(const char *topic, const char *payload, bool retained) {
 /*
   Function called to connect/reconnect to the MQTT broker
 */
+int resetErrorCnt = 0;
 void reconnect() {
   uint8_t i = 0;
   String srv = params[F("mqtt_server")];                                                                      // extend visiblity of the "mqtt_server" parameter
@@ -160,6 +161,7 @@ void reconnect() {
       // subscribe to control topic
       String vtopic = String(MQTT_STATE_TOPIC) + SF("control");
       mqttClient.subscribe(vtopic.c_str());
+      resetErrorCnt = 0;
     } else {
       DEBUG_EPRINT(F("The connection to the MQTT broker failed."));
       DEBUG_EPRINT(F(" Username: "));
@@ -170,11 +172,18 @@ void reconnect() {
       DEBUG_EPRINT(srv);
       DEBUG_EPRINT(F(":"));
       DEBUG_EPRINTLN(params[F("mqtt_port")]);
+      
       delay(1000);
-      if (i == 3) {
-        restart(); 
+      
+      if (i >= 2) {
+        break;
       }
       i++;
+
+      if (resetErrorCnt >= 50) {
+        restart(); 
+      }
+      resetErrorCnt++;
     }
   }
 }
