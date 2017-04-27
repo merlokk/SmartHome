@@ -236,12 +236,6 @@ void configModeCallback (WiFiManager *myWiFiManager) {
   ticker.attach(0.2, tick);
 }
 
-void changeDeviceType(const char* deviceType) {
-  params.LoadFromEEPROM();
-  params.SetParam(F("device_type"), deviceType);
-  params.SaveToEEPROM();
-}
-
 void wifiSetup(bool withAutoConnect) {
   shouldSaveConfig = false;
   ticker.attach(0.1, tick);
@@ -362,7 +356,8 @@ void setupArduinoOTA() {
 const char* strCommandsDesc = 
   "Command reboot reboots ESP.\r\n"\
   "Command startwificfg puts ESP to configure mode. Show configuration AP.\r\n"\
-  "Command cfgdevice writes RS-485 device type to ESP memory and reboot.";
+  "Command set <param_name> <value> writes parameter to ESP memory \r\n."\
+  "parameters: mqtt_server, mqtt_port, mqtt_user, mqtt_passwd, mqtt_path, device_type";
   
 bool CmdCallback(String &cmd) {
   if (cmd == "reboot") {
@@ -380,14 +375,22 @@ bool CmdCallback(String &cmd) {
     return true;
   }
 
-  if (cmd.length() > 10 && cmd.startsWith("cfgdevice ")) {
-    String param = cmd.substring(10);
-    DEBUG_PRINT(F("COMMAND: config device. deviceType="));
-    DEBUG_PRINTLN(param);
+  // set <param> <value>. sample: set device_type 220
+  if (cmd.length() > 7 && cmd.startsWith("set ")) {
+    String name = cmd.substring(4);
+    int indx = name.indexOf(" ");
+    String value = name.substring(indx + 1);
+    name = name.substring(0, indx);
+    DEBUG_PRINTLN(SF("COMMAND: config <") + name + SF("> <") + value + SF(">"));
 
-    changeDeviceType(param.c_str());
-
-    restart();
+    if (params.ParamExists(name)) {
+      params.LoadFromEEPROM();
+      params.SetParam(name, value);
+      params.SaveToEEPROM();
+    }
+    else {
+      DEBUG_EPRINTLN(SF("Command error. parameter<") + name + SF("> not found"));
+    }
   }
 
   return false;

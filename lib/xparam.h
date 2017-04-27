@@ -26,6 +26,8 @@ public:
   bool GetParamDef(const TString &paramName, T &param, String &defaultParamValue);
   template<typename TString>
   String GetParamStr(const TString &paramName);
+  template<typename TString>
+  bool ParamExists(const TString &paramName);
 
   template<typename TString>
   String operator[](const TString &paramName) {
@@ -103,6 +105,15 @@ String xParam::GetParamStr(const TString &paramName) {
   else
     return "";
 }
+
+template<typename TString>
+bool xParam::ParamExists(const TString &paramName) {
+  StaticJsonBuffer<JSON_OBJ_BUFFER_LEN> jsonBuffer;
+  JsonObject& root = jsonBuffer.parseObject((const char *)jsonMem);
+
+  return (root.success() && root.containsKey(paramName));
+}
+
 
 template <typename... Args>
 void xParam::DEBUG_PRINTLN(Args... args) {
