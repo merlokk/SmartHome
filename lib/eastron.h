@@ -123,7 +123,7 @@ class Eastron {
     int AddModbusDiap(byte Command, word StartDiap, word LengthDiap);
     int getModbusDiapLength();
     void getStrModbusConfig(String &str);
-    void ModbusSetup(char *deviceType);
+    void ModbusSetup(const char *deviceType);
     void Connect();
     void Poll(byte Command);
 

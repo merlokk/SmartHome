@@ -346,7 +346,7 @@ void Eastron::Connect() {
   DEBUG_PRINTLN(F("Eastron connected to com port."));
 }
 
-void Eastron::ModbusSetup(char *deviceType) {
+void Eastron::ModbusSetup(const char *deviceType) {
   mapConfig = NULL;
   mapConfigLen = 0;
   DEBUG_PRINTLN(SF("Eastron modbus setup: ") + String(deviceType));
