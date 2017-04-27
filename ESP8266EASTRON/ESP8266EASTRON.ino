@@ -356,7 +356,7 @@ void setupArduinoOTA() {
 const char* strCommandsDesc = 
   "Command reboot reboots ESP.\r\n"\
   "Command startwificfg puts ESP to configure mode. Show configuration AP.\r\n"\
-  "Command set <param_name> <value> writes parameter to ESP memory \r\n."\
+  "Command set <param_name> <value> writes parameter to ESP memory. \r\n"\
   "parameters: mqtt_server, mqtt_port, mqtt_user, mqtt_passwd, mqtt_path, device_type";
   
 bool CmdCallback(String &cmd) {
@@ -391,6 +391,7 @@ bool CmdCallback(String &cmd) {
     else {
       DEBUG_EPRINTLN(SF("Command error. parameter<") + name + SF("> not found"));
     }
+    return true;
   }
 
   return false;
