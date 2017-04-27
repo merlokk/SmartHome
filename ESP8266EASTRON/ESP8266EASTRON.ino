@@ -450,25 +450,6 @@ void setup() {
   params.begin();
   params.LoadFromEEPROM();
   
-/*  params.SetParam(SF("pfstr"), SF("pval"));
-  params.SetParam(SF("pname"), "pval");
-  params.SetParam(F("pint"), 10);
-  params.SetParam(F("pdouble"), 11.12);
-
-  params.GetParam(SF("pint"), s);
-  s = "pint: " + s;
-  DEBUG_PRINTLN(s);
-  params.GetParam(SF("pdouble"), s);
-  s = "pdouble: " + s;
-  DEBUG_PRINTLN(s);
-  
-  params.GetParamsJsonStr(s);
-  s = "json:" + s;
-  DEBUG_PRINTLN(s);
-
-  params.SaveToEEPROM();
-*/
-
   // wifi setup with autoconnect
   wifiSetup(true);
 
