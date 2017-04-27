@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 #include <EEPROM.h>
-#include <ArduinoJson.h>
+#include <ArduinoJson.h>  // https://github.com/bblanchon/ArduinoJson
 #include <xlogger.h>
 
 #define DEBUG
@@ -24,41 +24,41 @@ public:
   bool GetParam(const TString &paramName, T &param);
   template<typename T, typename TString>
   bool GetParamDef(const TString &paramName, T &param, String &defaultParamValue);
-  bool GetParamStr(String &paramName, String &paramValue);
+  template<typename TString>
+  String GetParamStr(const TString &paramName);
 
-  bool LoadParamsFromEEPROM();
-  bool SaveParamsToEEPROM();
-  bool LoadParamsFromWeb(String &url);
+  void ClearAll();
+  bool LoadFromEEPROM();
+  bool SaveToEEPROM();
+  bool LoadFromWeb(String &url);
 
   void GetParamsJsonStr(String &str);
 
   void SetLogger(xLogger * _logger);
-  template <typename... Args>
-  void DEBUG_PRINTLN(Args... args);
-
 private:
   xLogger* logger = NULL;
   char jsonMem[JSON_MEM_BUFFER_LEN] = {0};
+
+  template <typename... Args>
+  void DEBUG_PRINTLN(Args... args);
 };
 
 // not in class
 
-uint8_t crc8(const uint8_t *data, uint8_t len);
-
+char crc8(const char *data, char len);
 
 // templates
 
 template<typename T, typename TString>
 bool xParam::SetParam(const TString &paramName, const T& paramValue) {
-
   StaticJsonBuffer<JSON_OBJ_BUFFER_LEN> jsonBuffer;
   JsonObject *root = &jsonBuffer.parseObject(String(jsonMem));
   if (!root->success()){
-    DEBUG_PRINTLN("SetParam: json load error.");
+    DEBUG_PRINTLN(llError, "SetParam: json load error.");
     root = &jsonBuffer.createObject();
   };
   if (!root->success())
-    DEBUG_PRINTLN("SetParam: json final check load error.");
+    DEBUG_PRINTLN(llError, "SetParam: json final check load error.");
 
   root->set(paramName, paramValue);
 
@@ -69,11 +69,10 @@ bool xParam::SetParam(const TString &paramName, const T& paramValue) {
 
 template<typename T, typename TString>
 bool xParam::GetParam(const TString &paramName, T &param) {
-
   StaticJsonBuffer<JSON_OBJ_BUFFER_LEN> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(String(jsonMem));
   if (!root.success() || !root.containsKey(paramName) ) {//|| !(root[paramName].is<T>()))
-    DEBUG_PRINTLN("GetParam: error loading json.");
+    DEBUG_PRINTLN(llError, "GetParam: error loading json.");
     return false;
   }
 
@@ -91,6 +90,15 @@ bool xParam::GetParamDef(const TString &paramName, T &param, String &defaultPara
   return true;
 }
 
+template<typename TString>
+String xParam::GetParamStr(const TString &paramName) {
+  String s = "";
+  if (GetParam(paramName, s))
+    return s;
+  else
+    return "";
+}
+
 template <typename... Args>
 void xParam::DEBUG_PRINTLN(Args... args) {
 #ifdef DEBUG
@@ -99,7 +107,5 @@ void xParam::DEBUG_PRINTLN(Args... args) {
   }
 #endif
 }
-
-
 
 #endif // __XPARAM_H

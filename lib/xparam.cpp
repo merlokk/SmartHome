@@ -5,40 +5,41 @@ xParam::xParam(){
 }
 
 void xParam::begin(){
-
+  ClearAll();
 }
 
-bool xParam::GetParamStr(String &paramName, String &paramValue) {
-
-  return true;
-}
-
-bool xParam::LoadParamsFromEEPROM() {
+void xParam::ClearAll() {
   memset(&jsonMem[0], 0x00, JSON_MEM_BUFFER_LEN);
+  jsonMem[0] = '{';
+  jsonMem[1] = '}';
+}
+
+bool xParam::LoadFromEEPROM() {
+  ClearAll();
 
   EEPROM.begin(JSON_MEM_BUFFER_LEN);
-//  EEPROM.get(0, jsonMem);
+  EEPROM.get(0, jsonMem);
   EEPROM.end();
 
-/*  if (jsonMem[JSON_MEM_BUFFER_LEN] != crc8(&jsonMem[0], JSON_MEM_BUFFER_LEN - 1)) {
-    memset(&jsonMem[0], 0x00, JSON_MEM_BUFFER_LEN);
-    DEBUG_PRINTLN(F("Invalid settings in EEPROM, settings was cleared."));
+  if (crc8(&jsonMem[0], JSON_MEM_BUFFER_LEN - 2) != jsonMem[JSON_MEM_BUFFER_LEN - 1]) {
+    ClearAll();
+    DEBUG_PRINTLN(llError, F("xParam: Invalid settings in EEPROM, settings was cleared."));
   }
-*/
+
   return true;
 }
 
-bool xParam::SaveParamsToEEPROM() {
-//  jsonMem[JSON_MEM_BUFFER_LEN] = crc8(&jsonMem[0], JSON_MEM_BUFFER_LEN - 1);
+bool xParam::SaveToEEPROM() {
+  jsonMem[JSON_MEM_BUFFER_LEN - 1] = crc8(&jsonMem[0], JSON_MEM_BUFFER_LEN - 2);
 
   EEPROM.begin(JSON_MEM_BUFFER_LEN);
-
+  EEPROM.put(0, jsonMem);
   EEPROM.end();
 
   return true;
 }
 
-bool xParam::LoadParamsFromWeb(String &url) {
+bool xParam::LoadFromWeb(String &url) {
 
   return true;
 }
@@ -52,12 +53,12 @@ void xParam::SetLogger(xLogger *_logger) {
 }
 
 // non class functions
-uint8_t crc8(const uint8_t *data, uint8_t len) {
-  uint8_t crc = 0x00;
+char crc8(const char *data, char len) {
+  char crc = 0x00;
   while (len--) {
-    uint8_t extract = *data++;
+    char extract = *data++;
     for (byte tempI = 8; tempI; tempI--) {
-      uint8_t sum = (crc ^ extract) & 0x01;
+      char sum = (crc ^ extract) & 0x01;
       crc >>= 1;
       if (sum) {
         crc ^= 0x8C;
