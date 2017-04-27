@@ -27,6 +27,11 @@ public:
   template<typename TString>
   String GetParamStr(const TString &paramName);
 
+  template<typename TString>
+  String operator[](const TString &paramName) {
+    return GetParamStr(paramName);
+  }
+
   void ClearAll();
   bool LoadFromEEPROM();
   bool SaveToEEPROM();
@@ -52,7 +57,7 @@ char crc8(const char *data, char len);
 template<typename T, typename TString>
 bool xParam::SetParam(const TString &paramName, const T& paramValue) {
   StaticJsonBuffer<JSON_OBJ_BUFFER_LEN> jsonBuffer;
-  JsonObject *root = &jsonBuffer.parseObject(String(jsonMem));
+  JsonObject *root = &jsonBuffer.parseObject((const char *)jsonMem);
   if (!root->success()){
     DEBUG_PRINTLN(llError, "SetParam: json load error.");
     root = &jsonBuffer.createObject();
@@ -70,7 +75,7 @@ bool xParam::SetParam(const TString &paramName, const T& paramValue) {
 template<typename T, typename TString>
 bool xParam::GetParam(const TString &paramName, T &param) {
   StaticJsonBuffer<JSON_OBJ_BUFFER_LEN> jsonBuffer;
-  JsonObject& root = jsonBuffer.parseObject(String(jsonMem));
+  JsonObject& root = jsonBuffer.parseObject((const char *)jsonMem);
   if (!root.success() || !root.containsKey(paramName) ) {//|| !(root[paramName].is<T>()))
     DEBUG_PRINTLN(llError, "GetParam: error loading json.");
     return false;

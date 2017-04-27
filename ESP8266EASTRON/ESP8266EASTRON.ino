@@ -76,7 +76,6 @@ const char*           MQTT_OFF_PAYLOAD      = "OFF";
 // vars
 bool inProgrammingMode = false;
 
-
 // objects
 Ticker           ticker;
 WiFiClient       wifiClient;
@@ -99,7 +98,7 @@ void mqttPublishInitialState() {
   mqttPublishState("MAC", str.c_str());
   mqttPublishState("HardwareId", HARDWARE_ID);  
   mqttPublishState("Version", PROGRAM_VERSION);  
-  mqttPublishState("DeviceType", params.GetParamStr(F("device_type")).c_str());  
+  mqttPublishState("DeviceType", params[F("device_type")].c_str());  
 
   mqttPublishRegularState();
 }
@@ -152,23 +151,25 @@ void mqttPublishState(const char *topic, const char *payload, bool retained) {
 */
 void reconnect() {
   uint8_t i = 0;
+  String srv = params[F("mqtt_server")];                                                                      // extend visiblity of the "mqtt_server" parameter
+  mqttClient.setServer(srv.c_str(), params[F("mqtt_port")].toInt());
   while (!mqttClient.connected()) {
-    if (mqttClient.connect(HARDWARE_ID, params.GetParamStr(F("mqtt_user")).c_str(), params.GetParamStr(F("mqtt_passwd")).c_str())) {
+    if (mqttClient.connect(HARDWARE_ID, params[F("mqtt_user")].c_str(), params[F("mqtt_passwd")].c_str())) {  // because connect doing here
       DEBUG_PRINTLN(F("The client is successfully connected to the MQTT broker"));
 
       // subscribe to control topic
       String vtopic = String(MQTT_STATE_TOPIC) + SF("control");
       mqttClient.subscribe(vtopic.c_str());
     } else {
-      DEBUG_EPRINTLN(F("The connection to the MQTT broker failed"));
-      DEBUG_EPRINT(F("Username: "));
-      DEBUG_EPRINT(params.GetParamStr(F("mqtt_user")));
+      DEBUG_EPRINT(F("The connection to the MQTT broker failed."));
+      DEBUG_EPRINT(F(" Username: "));
+      DEBUG_EPRINT(params[F("mqtt_user")]);
       DEBUG_EPRINT(F(" Password: "));
-      DEBUG_EPRINT(params.GetParamStr(F("mqtt_passwd")));
+      DEBUG_EPRINT(params[F("mqtt_passwd")]);
       DEBUG_EPRINT(F(" Broker: "));
-      DEBUG_EPRINT(params.GetParamStr(F("mqtt_server")));
+      DEBUG_EPRINT(srv);
       DEBUG_EPRINT(F(":"));
-      DEBUG_EPRINTLN(params.GetParamStr(F("mqtt_port")));
+      DEBUG_EPRINTLN(params[F("mqtt_port")]);
       delay(1000);
       if (i == 3) {
         restart(); 
@@ -253,17 +254,17 @@ void wifiSetup(bool withAutoConnect) {
 
   WiFiManagerParameter custom_mqtt_text("<br/>MQTT config: <br/>");
   wifiManager.addParameter(&custom_mqtt_text);
-  WiFiManagerParameter custom_mqtt_user("mqtt-user", "MQTT User", params.GetParamStr(F("mqtt_user")), 20);
+  WiFiManagerParameter custom_mqtt_user("mqtt-user", "MQTT User", params[F("mqtt_user")], 20);
   wifiManager.addParameter(&custom_mqtt_user);
-  WiFiManagerParameter custom_mqtt_password("mqtt-password", "MQTT Password", params.GetParamStr(F("mqtt_passwd")), 20, "type = \"password\"");
+  WiFiManagerParameter custom_mqtt_password("mqtt-password", "MQTT Password", params[F("mqtt_passwd")], 20, "type = \"password\"");
   wifiManager.addParameter(&custom_mqtt_password);
-  WiFiManagerParameter custom_mqtt_server("mqtt-server", "MQTT Broker Address", params.GetParamStr(F("mqtt_server")), 20);
+  WiFiManagerParameter custom_mqtt_server("mqtt-server", "MQTT Broker Address", params[F("mqtt_server")], 20);
   wifiManager.addParameter(&custom_mqtt_server);
-  WiFiManagerParameter custom_mqtt_port("mqtt-port", "MQTT Broker Port", params.GetParamStr(F("mqtt_port")), 20);
+  WiFiManagerParameter custom_mqtt_port("mqtt-port", "MQTT Broker Port", params[F("mqtt_port")], 20);
   wifiManager.addParameter(&custom_mqtt_port);
-  WiFiManagerParameter custom_mqtt_path("mqtt-path", "MQTT Path", params.GetParamStr(F("mqtt_path")), 20);
+  WiFiManagerParameter custom_mqtt_path("mqtt-path", "MQTT Path", params[F("mqtt_path")], 20);
   wifiManager.addParameter(&custom_mqtt_path);
-  WiFiManagerParameter custom_device_type("device-type", "Device type", params.GetParamStr(F("device_type")), 20);
+  WiFiManagerParameter custom_device_type("device-type", "Device type", params[F("device_type")], 20);
   wifiManager.addParameter(&custom_device_type);
 
   wifiManager.setAPCallback(configModeCallback);
@@ -311,6 +312,7 @@ void restart() {
 
 /*
   Function called to reset the configuration of the switch
+  Warning! It clears wifi connection parameters!
 */
 void reset() {
   DEBUG_PRINTLN(F("Reset..."));
@@ -467,7 +469,7 @@ void setup() {
   NTP.setInterval(30 * 60); // twice a hour
 
   // configure mqtt topic
-  String mqttPath = params.GetParamStr(F("mqtt_path"));
+  String mqttPath = params[F("mqtt_path")];
   if (mqttPath.length() == 0) {
     sprintf(MQTT_STATE_TOPIC, "%s/PowerMeter/", HARDWARE_ID);
   } else {
@@ -481,7 +483,6 @@ void setup() {
   DEBUG_PRINTLN(MQTT_STATE_TOPIC);
 
   // configure MQTT
-  mqttClient.setServer(params.GetParamStr(F("mqtt_server")).c_str(), atoi(params.GetParamStr(F("mqtt_port")).c_str()));
   mqttClient.setCallback(mqttCallback);
 
   // connect to the MQTT broker
