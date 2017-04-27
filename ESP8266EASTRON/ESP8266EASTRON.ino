@@ -171,7 +171,7 @@ void reconnect() {
       DEBUG_EPRINTLN(params.GetParamStr(F("mqtt_port")));
       delay(1000);
       if (i == 3) {
-        reset();  // TODO: here RESTART!!!!!!
+        restart(); 
       }
       i++;
     }
