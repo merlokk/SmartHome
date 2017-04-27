@@ -277,13 +277,15 @@ void wifiSetup(bool withAutoConnect) {
 
   if (withAutoConnect){
     if (!wifiManager.autoConnect()) { 
+      if (shouldSaveConfig) 
+        DEBUG_PRINTLN("shouldSaveConfig");    // TODO!!!!!!!!!!!!!!!!!!  #11
       restart();
     }
   } else {
     String ssid = SF("ESP") + String(ESP.getChipId());
     if (!wifiManager.startConfigPortal(ssid.c_str())) { 
       if (shouldSaveConfig) 
-        DEBUG_PRINTLN("shouldSaveConfig");      
+        DEBUG_PRINTLN("shouldSaveConfig");    // TODO!!!!!!!!!!!!!!!!!!  
       restart();
     }
   }
