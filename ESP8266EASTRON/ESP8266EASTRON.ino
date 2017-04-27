@@ -67,34 +67,15 @@ ADC_MODE(ADC_VCC);                            // set ADC to meassure esp8266 VCC
 #define LEDON    LOW
 #define LEDOFF   HIGH
 
-// MQTT defines
-#define               MQTT_CFG_CHAR_ARRAY_SIZE 24      // size of the arrays for MQTT username, password, etc.
-#define               MQTT_CFG_CHAR_ARRAY_SIZE_PORT 6  // size of the arrays for MQTT port
-#define               MQTT_CFG_CHAR_ARRAY_SIZE_TYPE 5  // size of eastron device type for MQTT
-
 // MQTT ID and topics
-char                  HARDWARE_ID[7]                             = {0};
-char                  MQTT_STATE_TOPIC[MQTT_CFG_CHAR_ARRAY_SIZE] = {0};
-const char*           MQTT_ON_PAYLOAD                            = "ON";
-const char*           MQTT_OFF_PAYLOAD                           = "OFF";
-
-// MQTT settings
-#define EEPROM_SALT 123321
-typedef struct {
-  char                mqttUser[MQTT_CFG_CHAR_ARRAY_SIZE]         = {0};
-  char                mqttPassword[MQTT_CFG_CHAR_ARRAY_SIZE]     = {0};
-  char                mqttServer[MQTT_CFG_CHAR_ARRAY_SIZE]       = {0};
-  char                mqttPort[MQTT_CFG_CHAR_ARRAY_SIZE_PORT]    = {0};
-  char                mqttPath[MQTT_CFG_CHAR_ARRAY_SIZE]         = {0};
-  char                deviceType[MQTT_CFG_CHAR_ARRAY_SIZE_TYPE]  = {0};
-  int                 salt                                       = EEPROM_SALT; 
-} EEPROM_settings;
+char                  HARDWARE_ID[7]        = {0};
+char                  MQTT_STATE_TOPIC[30]  = {0};
+const char*           MQTT_ON_PAYLOAD       = "ON";
+const char*           MQTT_OFF_PAYLOAD      = "OFF";
 
 // vars
 bool inProgrammingMode = false;
 
-// global vars
-EEPROM_settings  settings;
 
 // objects
 Ticker           ticker;
@@ -118,7 +99,7 @@ void mqttPublishInitialState() {
   mqttPublishState("MAC", str.c_str());
   mqttPublishState("HardwareId", HARDWARE_ID);  
   mqttPublishState("Version", PROGRAM_VERSION);  
-  mqttPublishState("DeviceType", settings.deviceType);  
+  mqttPublishState("DeviceType", params.GetParamStr(F("device_type")).c_str());  
 
   mqttPublishRegularState();
 }
@@ -172,7 +153,7 @@ void mqttPublishState(const char *topic, const char *payload, bool retained) {
 void reconnect() {
   uint8_t i = 0;
   while (!mqttClient.connected()) {
-    if (mqttClient.connect(HARDWARE_ID, settings.mqttUser, settings.mqttPassword)) {
+    if (mqttClient.connect(HARDWARE_ID, params.GetParamStr(F("mqtt_user")).c_str(), params.GetParamStr(F("mqtt_passwd")).c_str())) {
       DEBUG_PRINTLN(F("The client is successfully connected to the MQTT broker"));
 
       // subscribe to control topic
@@ -181,16 +162,16 @@ void reconnect() {
     } else {
       DEBUG_EPRINTLN(F("The connection to the MQTT broker failed"));
       DEBUG_EPRINT(F("Username: "));
-      DEBUG_EPRINT(settings.mqttUser);
+      DEBUG_EPRINT(params.GetParamStr(F("mqtt_user")));
       DEBUG_EPRINT(F(" Password: "));
-      DEBUG_EPRINT(settings.mqttPassword);
+      DEBUG_EPRINT(params.GetParamStr(F("mqtt_passwd")));
       DEBUG_EPRINT(F(" Broker: "));
-      DEBUG_EPRINT(settings.mqttServer);
+      DEBUG_EPRINT(params.GetParamStr(F("mqtt_server")));
       DEBUG_EPRINT(F(":"));
-      DEBUG_EPRINTLN(settings.mqttPort);
+      DEBUG_EPRINTLN(params.GetParamStr(F("mqtt_port")));
       delay(1000);
       if (i == 3) {
-        reset();
+        reset();  // TODO: here RESTART!!!!!!
       }
       i++;
     }
@@ -254,31 +235,10 @@ void configModeCallback (WiFiManager *myWiFiManager) {
   ticker.attach(0.2, tick);
 }
 
-void loadEepromSettings() {
-  EEPROM.begin(512);
-  EEPROM.get(0, settings);
-  EEPROM.end();
-
-  if (settings.salt != EEPROM_SALT) {
-    DEBUG_EPRINTLN(F("Invalid settings in EEPROM, settings was cleared."));
-    EEPROM_settings defaults;
-    settings = defaults;
-  }
-}
-
-void saveEepromSettings() {
-  EEPROM.begin(512);
-  EEPROM.put(0, settings);
-  EEPROM.end();
-}
-
 void changeDeviceType(const char* deviceType) {
-  // load custom params
-  loadEepromSettings();
-  
-  strncpy(settings.deviceType, deviceType, MQTT_CFG_CHAR_ARRAY_SIZE_TYPE);
-
-  saveEepromSettings();
+  params.LoadFromEEPROM();
+  params.SetParam(F("device_type"), deviceType);
+  params.SaveToEEPROM();
 }
 
 void wifiSetup(bool withAutoConnect) {
@@ -286,24 +246,24 @@ void wifiSetup(bool withAutoConnect) {
   ticker.attach(0.1, tick);
 
   // load custom params
-  loadEepromSettings();
+  params.LoadFromEEPROM();
 
   WiFiManager wifiManager(DEBUG_SERIAL);
   wifiManager.mainProgramVersion = PROGRAM_VERSION;
 
   WiFiManagerParameter custom_mqtt_text("<br/>MQTT config: <br/>");
   wifiManager.addParameter(&custom_mqtt_text);
-  WiFiManagerParameter custom_mqtt_user("mqtt-user", "MQTT User", settings.mqttUser, MQTT_CFG_CHAR_ARRAY_SIZE);
+  WiFiManagerParameter custom_mqtt_user("mqtt-user", "MQTT User", params.GetParamStr(F("mqtt_user")), 20);
   wifiManager.addParameter(&custom_mqtt_user);
-  WiFiManagerParameter custom_mqtt_password("mqtt-password", "MQTT Password", settings.mqttPassword, MQTT_CFG_CHAR_ARRAY_SIZE, "type = \"password\"");
+  WiFiManagerParameter custom_mqtt_password("mqtt-password", "MQTT Password", params.GetParamStr(F("mqtt_passwd")), 20, "type = \"password\"");
   wifiManager.addParameter(&custom_mqtt_password);
-  WiFiManagerParameter custom_mqtt_server("mqtt-server", "MQTT Broker Address", settings.mqttServer, MQTT_CFG_CHAR_ARRAY_SIZE);
+  WiFiManagerParameter custom_mqtt_server("mqtt-server", "MQTT Broker Address", params.GetParamStr(F("mqtt_server")), 20);
   wifiManager.addParameter(&custom_mqtt_server);
-  WiFiManagerParameter custom_mqtt_port("mqtt-port", "MQTT Broker Port", settings.mqttPort, MQTT_CFG_CHAR_ARRAY_SIZE_PORT);
+  WiFiManagerParameter custom_mqtt_port("mqtt-port", "MQTT Broker Port", params.GetParamStr(F("mqtt_port")), 20);
   wifiManager.addParameter(&custom_mqtt_port);
-  WiFiManagerParameter custom_mqtt_path("mqtt-path", "MQTT Path", settings.mqttPath, MQTT_CFG_CHAR_ARRAY_SIZE);
+  WiFiManagerParameter custom_mqtt_path("mqtt-path", "MQTT Path", params.GetParamStr(F("mqtt_path")), 20);
   wifiManager.addParameter(&custom_mqtt_path);
-  WiFiManagerParameter custom_device_type("device-type", "Device type", settings.deviceType, MQTT_CFG_CHAR_ARRAY_SIZE_TYPE);
+  WiFiManagerParameter custom_device_type("device-type", "Device type", params.GetParamStr(F("device_type")), 20);
   wifiManager.addParameter(&custom_device_type);
 
   wifiManager.setAPCallback(configModeCallback);
@@ -313,26 +273,25 @@ void wifiSetup(bool withAutoConnect) {
 
   if (withAutoConnect){
     if (!wifiManager.autoConnect()) { 
-      ESP.reset();
-      delay(1000);
+      restart();
     }
   } else {
     String ssid = SF("ESP") + String(ESP.getChipId());
     if (!wifiManager.startConfigPortal(ssid.c_str())) { 
-      ESP.reset();
-      delay(1000);
+      if (shouldSaveConfig) 
+        DEBUG_PRINTLN("shouldSaveConfig");      
+      restart();
     }
   }
-  
   if (shouldSaveConfig) {
-    strcpy(settings.mqttServer,   custom_mqtt_server.getValue());
-    strcpy(settings.mqttPort,     custom_mqtt_port.getValue());
-    strcpy(settings.mqttUser,     custom_mqtt_user.getValue());
-    strcpy(settings.mqttPassword, custom_mqtt_password.getValue());
-    strcpy(settings.mqttPath,     custom_mqtt_path.getValue());
-    strcpy(settings.deviceType,   custom_device_type.getValue());
+    params.SetParam(F("mqtt_server"), custom_mqtt_server.getValue());
+    params.SetParam(F("mqtt_port"), custom_mqtt_port.getValue());
+    params.SetParam(F("mqtt_user"), custom_mqtt_user.getValue());
+    params.SetParam(F("mqtt_passwd"), custom_mqtt_password.getValue());
+    params.SetParam(F("mqtt_path"), custom_mqtt_path.getValue());
+    params.SetParam(F("device_type"), custom_device_type.getValue());
 
-    saveEepromSettings();
+    params.SaveToEEPROM();
   }
 
   ticker.detach();
@@ -458,6 +417,9 @@ void setup() {
   DEBUG_PRINTLN(F(""));
   DEBUG_PRINTLN(F("Starting..."));
 
+  DEBUG_PRINT(F("ResetReason: "));
+  DEBUG_PRINTLN(ESP.getResetReason());
+
   DEBUG_PRINT(F("Hardware ID/Hostname: "));
   DEBUG_PRINTLN(HARDWARE_ID);
 
@@ -483,7 +445,29 @@ void setup() {
   }
 
   // setup xparam lib
+  String s;
+  params.SetLogger(&logger);
   params.begin();
+  params.LoadFromEEPROM();
+  
+/*  params.SetParam(SF("pfstr"), SF("pval"));
+  params.SetParam(SF("pname"), "pval");
+  params.SetParam(F("pint"), 10);
+  params.SetParam(F("pdouble"), 11.12);
+
+  params.GetParam(SF("pint"), s);
+  s = "pint: " + s;
+  DEBUG_PRINTLN(s);
+  params.GetParam(SF("pdouble"), s);
+  s = "pdouble: " + s;
+  DEBUG_PRINTLN(s);
+  
+  params.GetParamsJsonStr(s);
+  s = "json:" + s;
+  DEBUG_PRINTLN(s);
+
+  params.SaveToEEPROM();
+*/
 
   // wifi setup with autoconnect
   wifiSetup(true);
@@ -502,20 +486,21 @@ void setup() {
   NTP.setInterval(30 * 60); // twice a hour
 
   // configure mqtt topic
-  if (strlen(settings.mqttPath) == 0) {
+  String mqttPath = params.GetParamStr(F("mqtt_path"));
+  if (mqttPath.length() == 0) {
     sprintf(MQTT_STATE_TOPIC, "%s/PowerMeter/", HARDWARE_ID);
   } else {
-    if (settings.mqttPath[strlen(settings.mqttPath) - 1] == '/') {
-      sprintf(MQTT_STATE_TOPIC, "%s", settings.mqttPath);
+    if (mqttPath[mqttPath.length() - 1] == '/') {
+      sprintf(MQTT_STATE_TOPIC, "%s", mqttPath.c_str());
     } else {
-      sprintf(MQTT_STATE_TOPIC, "%s/", settings.mqttPath);
+      sprintf(MQTT_STATE_TOPIC, "%s/", mqttPath.c_str());
     }
   }
   DEBUG_PRINT(F("MQTT command topic: "));
   DEBUG_PRINTLN(MQTT_STATE_TOPIC);
 
   // configure MQTT
-  mqttClient.setServer(settings.mqttServer, atoi(settings.mqttPort));
+  mqttClient.setServer(params.GetParamStr(F("mqtt_server")).c_str(), atoi(params.GetParamStr(F("mqtt_port")).c_str()));
   mqttClient.setCallback(mqttCallback);
 
   // connect to the MQTT broker
@@ -532,8 +517,8 @@ void setup() {
   // eastron setup
   eastron.SetLogger(&logger);
   DEBUG_PRINT(F("DeviceType: "));
-  DEBUG_PRINTLN(settings.deviceType);
-  eastron.ModbusSetup(&settings.deviceType[0]);
+  DEBUG_PRINTLN(params.GetParamStr(F("device_type")));
+  eastron.ModbusSetup(params.GetParamStr(F("device_type")).c_str());
 
   String str;
   eastron.getStrModbusConfig(str);
