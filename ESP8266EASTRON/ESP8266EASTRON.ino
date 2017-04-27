@@ -389,7 +389,7 @@ bool CmdCallback(String &cmd) {
       params.SaveToEEPROM();
     }
     else {
-      DEBUG_EPRINTLN(SF("Command error. parameter<") + name + SF("> not found"));
+      DEBUG_EPRINTLN(SF("Command error. Parameter <") + name + SF("> not found"));
     }
     return true;
   }
@@ -451,7 +451,6 @@ void setup() {
   }
 
   // setup xparam lib
-  String s;
   params.SetLogger(&logger);
   params.begin();
   params.LoadFromEEPROM();
@@ -503,8 +502,8 @@ void setup() {
   // eastron setup
   eastron.SetLogger(&logger);
   DEBUG_PRINT(F("DeviceType: "));
-  DEBUG_PRINTLN(params.GetParamStr(F("device_type")));
-  eastron.ModbusSetup(params.GetParamStr(F("device_type")).c_str());
+  DEBUG_PRINTLN(params[F("device_type")]);
+  eastron.ModbusSetup(params[F("device_type")].c_str());
 
   String str;
   eastron.getStrModbusConfig(str);
