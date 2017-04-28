@@ -407,6 +407,7 @@ void generalSetup() {
 
   DEBUG_PRINT(F("Hardware ID/Hostname: "));
   DEBUG_PRINTLN(HARDWARE_ID);
+  WiFi.hostname(HARDWARE_ID);
 
   DEBUG_PRINT(F("MAC address: "));
   DEBUG_PRINTLN(WiFi.macAddress());
