@@ -8,6 +8,11 @@ Connect Datalogger AZ-7788 to MQTT
 ### ESP8266EASTRON
 Connect Eastron energy meters (SDM220, SDM230, SDM630) to MQTT
 
+[wiki](https://github.com/merlokk/SmartHome/wiki/ESP8266-to-Eastron-energy-meters)
+
+release in the box:
+![release](https://github.com/merlokk/SmartHome/blob/master/ESP8266EASTRON/images/DSC_0119.JPG)
+
 ### ESP8266DISABLECPU
 How do disable CPU and put it into deep sleep mode. It needs for debug ESP-14
 
