@@ -30,10 +30,6 @@
 #define               DEBUG                            // enable debugging
 #define               DEBUG_SERIAL      logger
 
-// ext
-extern Ticker ticker;
-extern xParam params;
-
 // poll
 #define MILLIS_TO_POLL          15*1000       //max time to wait for poll input registers (regular poll)
 #define MILLIS_TO_POLL_HOLD_REG 15*60*1000    //max time to wait for poll all

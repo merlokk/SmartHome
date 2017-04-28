@@ -302,6 +302,13 @@ bool CmdCallback(String &cmd) {
     return true;
   }
 
+  if (cmd == "resetcfg") {
+    DEBUG_PRINTLN(F("COMMAND: Reset wifi config..."));
+    reset();
+    delay(200);
+    return true;
+  }
+
   if (cmd == "startwificfg") {
     DEBUG_PRINTLN(F("COMMAND: start wifi config."));
     wifiSetup(false);
