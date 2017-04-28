@@ -263,8 +263,8 @@ void reset() {
 //   Update from WEB
 ///////////////////////////////////////////////////////////////////////////
 
-void UpdateFromWeb() {
-  t_httpUpdate_return ret = ESPhttpUpdate.update("192.168.0.2", 80, "/update/arduino.php", PROGRAM_VERSION);
+void UpdateFromWeb(const String &server) {
+  t_httpUpdate_return ret = ESPhttpUpdate.update(server, 80, "/update/arduino.php", PROGRAM_VERSION);
   switch(ret) {
   case HTTP_UPDATE_FAILED:
     DEBUG_EPRINTLN(F("[update] Update failed."));
@@ -320,7 +320,8 @@ const char* strCommandsDesc =
   "Command reboot reboots ESP.\r\n"\
   "Command startwificfg puts ESP to configure mode. Show configuration AP.\r\n"\
   "Command set <param_name> <value> writes parameter to ESP memory. \r\n"\
-  "parameters: mqtt_server, mqtt_port, mqtt_user, mqtt_passwd, mqtt_path, device_type";
+  "parameters: mqtt_server, mqtt_port, mqtt_user, mqtt_passwd, mqtt_path, device_type.\r\n"\
+  "System commands: resetcfg, webupdate, webupdatec. ";
   
 bool CmdCallback(String &cmd) {
   if (cmd == "reboot") {
@@ -345,6 +346,20 @@ bool CmdCallback(String &cmd) {
     return true;
   }
 
+  if (cmd.length() >= 15 && cmd.startsWith("webupdate ")) {
+    String srv = cmd.substring(10);
+    DEBUG_PRINTLN(SF("COMMAND: web update. server=") + srv);
+    UpdateFromWeb(srv);
+    return true;
+  }
+
+  if (cmd.length() >= 16 && cmd.startsWith("webupdatec ")) {
+    String srv = cmd.substring(10);
+    DEBUG_PRINTLN(SF("COMMAND: web update. server=") + srv);
+    params.LoadFromWeb(srv + "/update/arduinocfg.php");
+    return true;
+  }
+  
   // set <param> <value>. sample: set device_type 220
   if (cmd.length() > 7 && cmd.startsWith("set ")) {
     String name = cmd.substring(4);

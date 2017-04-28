@@ -39,7 +39,7 @@ bool xParam::SaveToEEPROM() {
   return true;
 }
 
-bool xParam::LoadFromWeb(String &url) {
+bool xParam::LoadFromWeb(const String &url) {
 
   return true;
 }
