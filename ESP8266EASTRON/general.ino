@@ -198,19 +198,17 @@ void wifiSetup(bool withAutoConnect) {
   wifiManager.setConfigPortalTimeout(180);
   // set config save notify callback
   wifiManager.setSaveConfigCallback(saveConfigCallback);
+  wifiManager.setBreakAfterConfig(true);
 
+  bool needsRestart = false;
   if (withAutoConnect){
     if (!wifiManager.autoConnect()) { 
-      if (shouldSaveConfig) 
-        DEBUG_PRINTLN("shouldSaveConfig");    // TODO!!!!!!!!!!!!!!!!!!  #11
-      restart();
+      needsRestart = true;
     }
   } else {
     String ssid = SF("ESP") + String(ESP.getChipId());
     if (!wifiManager.startConfigPortal(ssid.c_str())) { 
-      if (shouldSaveConfig) 
-        DEBUG_PRINTLN("shouldSaveConfig");    // TODO!!!!!!!!!!!!!!!!!!  
-      restart();
+      needsRestart = true;
     }
   }
   if (shouldSaveConfig) {
@@ -222,6 +220,10 @@ void wifiSetup(bool withAutoConnect) {
     params.SetParam(F("device_type"), custom_device_type.getValue());
 
     params.SaveToEEPROM();
+  }
+
+  if (needsRestart) {
+    restart();
   }
 
   ticker.detach();
