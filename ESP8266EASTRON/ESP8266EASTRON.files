@@ -1,3 +1,5 @@
+general.ino
+general.h
 ../lib/eastron.cpp
 ../lib/eastron.h
 ../lib/emodbus.cpp

@@ -1,3 +1,13 @@
+#include <ESP8266httpUpdate.h>  // http updater https://github.com/esp8266/Arduino/blob/master/libraries/ESP8266httpUpdate/src/ESP8266httpUpdate.h
+#include <DNSServer.h>          // Local DNS Server used for redirecting all requests to the configuration portal
+#include <WiFiManager.h>        // https://github.com/merlokk/WiFiManager original:https://github.com/tzapu/WiFiManager
+#include <PubSubClient.h>       // https://github.com/knolleary/pubsubclient/releases/tag/v2.6
+#include <Ticker.h>
+#include <EEPROM.h>
+#include <ArduinoOTA.h>
+#include <TimeLib.h>            // https://github.com/PaulStoffregen/Time 
+#include <NtpClientLib.h>       // https://github.com/gmag11/NtpClient
+
 // macros for debugging
 xLogger               logger;
 #ifdef DEBUG

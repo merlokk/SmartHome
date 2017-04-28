@@ -193,11 +193,16 @@ void wifiSetup(bool withAutoConnect) {
   wifiManager.addParameter(&custom_mqtt_path);
   WiFiManagerParameter custom_device_type("device-type", "Device type", params[F("device_type")], 20);
   wifiManager.addParameter(&custom_device_type);
+  WiFiManagerParameter custom_mqtt_text1("<br/>Development config: <br/>");
+  wifiManager.addParameter(&custom_mqtt_text1);
+  WiFiManagerParameter custom_passwd("device-paswd", "Device dev password", params[F("device_passwd")], 20);
+  wifiManager.addParameter(&custom_passwd);
 
   wifiManager.setAPCallback(configModeCallback);
   wifiManager.setConfigPortalTimeout(180);
   // set config save notify callback
   wifiManager.setSaveConfigCallback(saveConfigCallback);
+  // resets after 
   wifiManager.setBreakAfterConfig(true);
 
   bool needsRestart = false;
@@ -218,6 +223,7 @@ void wifiSetup(bool withAutoConnect) {
     params.SetParam(F("mqtt_passwd"), custom_mqtt_password.getValue());
     params.SetParam(F("mqtt_path"), custom_mqtt_path.getValue());
     params.SetParam(F("device_type"), custom_device_type.getValue());
+    params.SetParam(F("device_passwd"), custom_passwd.getValue());
 
     params.SaveToEEPROM();
   }
@@ -254,6 +260,25 @@ void reset() {
 }
 
 ///////////////////////////////////////////////////////////////////////////
+//   Update from WEB
+///////////////////////////////////////////////////////////////////////////
+
+void UpdateFromWeb() {
+  t_httpUpdate_return ret = ESPhttpUpdate.update("192.168.0.2", 80, "/update/arduino.php", PROGRAM_VERSION);
+  switch(ret) {
+  case HTTP_UPDATE_FAILED:
+    DEBUG_EPRINTLN(F("[update] Update failed."));
+    break;
+  case HTTP_UPDATE_NO_UPDATES:
+    DEBUG_PRINTLN(F("[update] Update no Update."));
+    break;
+  case HTTP_UPDATE_OK:
+    DEBUG_PRINTLN(F("[update] Update ok.")); // may not called we reboot the ESP
+    break;
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
 //   ArduinoOTA
 ///////////////////////////////////////////////////////////////////////////
 
@@ -282,7 +307,8 @@ void setupArduinoOTA() {
   // Port defaults to 8266
   // ArduinoOTA.setPort(8266);
   // No authentication by default
-  // ArduinoOTA.setPassword("admin123");  
+  if (params[F("device_passwd")].length() > 0)
+    ArduinoOTA.setPassword(params[F("device_passwd")].c_str());    
   ArduinoOTA.setHostname(HARDWARE_ID);
   ArduinoOTA.begin();
 }

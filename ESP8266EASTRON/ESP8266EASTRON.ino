@@ -6,17 +6,8 @@
  * original repository here https://github.com/merlokk/SmartHome/tree/master/ESP8266EASTRON
  * (c) Oleg Moiseenko 2017
  */
-
 #include <Arduino.h>
 #include <ESP8266WiFi.h>        // https://github.com/esp8266/Arduino
-#include <DNSServer.h>          // Local DNS Server used for redirecting all requests to the configuration portal
-#include <WiFiManager.h>        // https://github.com/merlokk/WiFiManager original:https://github.com/tzapu/WiFiManager
-#include <PubSubClient.h>       // https://github.com/knolleary/pubsubclient/releases/tag/v2.6
-#include <Ticker.h>
-#include <EEPROM.h>
-#include <ArduinoOTA.h>
-#include <TimeLib.h>            // https://github.com/PaulStoffregen/Time 
-#include <NtpClientLib.h>       // https://github.com/gmag11/NtpClient
 #include <xlogger.h>            // logger https://github.com/merlokk/xlogger
 // my libraries
 #include <etools.h>
@@ -84,7 +75,8 @@ void setup() {
   DEBUG_PRINTLN(str);
 
   // set password in work mode
-  logger.setPassword("123454321");
+  if (params[F("device_passwd")].length() > 0)
+    logger.setPassword(params[F("device_passwd")].c_str());
 
   ticker.detach();
   digitalWrite(LED1, LEDOFF);
