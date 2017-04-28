@@ -34,10 +34,11 @@
 #define LEDOFF   HIGH
 
 
+void setup() {  
+  Serial.begin(115200); 
+  // ESP.rtcUserMemoryWrite(offset, &data, sizeof(data)) and ESP.rtcUserMemoryRead(offset, &data, sizeof(data)) 512 bytes - live between sleeps
 
-void setup() {
-
-
+  ESP.deepSleep(50 * 1000000); // 50 sec
 }
 
 void loop() {
