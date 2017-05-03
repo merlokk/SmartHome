@@ -180,8 +180,8 @@ const mqttMapConfigS esp14t[] = {
   {"DI",          POLL_INPUT_REGISTERS, 0x05, MDB_2BYTE_HEX}
 };
 
-Eastron::Eastron(uint8_t _modbusAddress) {
-  modbusAddress = _modbusAddress;
+Eastron::Eastron(uint8_t _deviceAddress) {
+  deviceAddress = _deviceAddress;
   Connected = false;
   mapConfig = NULL;
   mapConfigLen = 0;
@@ -189,6 +189,10 @@ Eastron::Eastron(uint8_t _modbusAddress) {
 
 void Eastron::SetLogger(xLogger * _logger) {
   logger = _logger;
+}
+
+void Eastron::SetDeviceAddress(uint8_t _deviceAddress) {
+  deviceAddress = _deviceAddress;
 }
 
 template <typename... Args>
@@ -440,7 +444,7 @@ void Eastron::Poll(byte Command) {
   for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
     if (modbusArray[i].Command && 
         (Command == 0 || modbusArray[i].Command == Command) ){
-      uint8_t res = modbusNode.ModbusMasterTransaction(modbusAddress, modbusArray[i].Command, modbusArray[i].StartDiap, modbusArray[i].LengthDiap, modbusArray[i].Address);
+      uint8_t res = modbusNode.ModbusMasterTransaction(deviceAddress, modbusArray[i].Command, modbusArray[i].StartDiap, modbusArray[i].LengthDiap, modbusArray[i].Address);
       if (res != MBSuccess) {
         // debug output error here
         String s;

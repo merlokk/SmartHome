@@ -21,6 +21,9 @@
 #define               DEBUG                            // enable debugging
 #define               DEBUG_SERIAL      logger
 
+// device modbus address
+#define MODBUS_ADDRESS 1
+
 // poll
 #define MILLIS_TO_POLL          15*1000       //max time to wait for poll input registers (regular poll)
 #define MILLIS_TO_POLL_HOLD_REG 15*60*1000    //max time to wait for poll all
@@ -64,6 +67,7 @@ void setup() {
   digitalWrite(LED2, LEDOFF);
 
   // eastron setup
+  eastron.SetDeviceAddress(MODBUS_ADDRESS);
   eastron.SetLogger(&logger);
   DEBUG_PRINT(F("DeviceType: "));
   DEBUG_PRINTLN(params[F("device_type")]);

@@ -112,7 +112,7 @@ class Eastron {
     ModbusDiap modbusArray[MAX_MODBUS_DIAP];
     ModbusMaster modbusNode;
     xLogger * logger = NULL;
-    uint8_t modbusAddress = 1;
+    uint8_t deviceAddress = 1;
   public:
     uint8_t* getValueAddress(byte Command, word ModbusAddress);
   
@@ -120,8 +120,9 @@ class Eastron {
     const mqttMapConfigS *mapConfig;
     int mapConfigLen;
   
-    Eastron(uint8_t _modbusAddress = 1);
+    Eastron(uint8_t _deviceAddress = 1);
     void SetLogger(xLogger * _logger);
+    void SetDeviceAddress(uint8_t _deviceAddress);
     int AddModbusDiap(byte Command, word StartDiap, word LengthDiap);
     int getModbusDiapLength();
     void getStrModbusConfig(String &str);
