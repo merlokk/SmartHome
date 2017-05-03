@@ -432,7 +432,9 @@ void generalSetup() {
 
   // pause for connecting
   if (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
+    DEBUG_WPRINTLN(F("Wifi is not connected. Trying to reconnect..."));
+    WiFi.begin();
+    delay(5000);
   }
 
   // NTP config
