@@ -5,6 +5,7 @@
 #include <EEPROM.h>
 #include <ArduinoJson.h>  // https://github.com/bblanchon/ArduinoJson
 #include <xlogger.h>
+#include <etools.h>
 
 #define DEBUG
 
@@ -46,7 +47,8 @@ public:
   void SetLogger(xLogger * _logger);
 private:
   xLogger* logger = NULL;
-  char jsonMem[JSON_MEM_BUFFER_LEN] = {0};
+  // memory buffer 4-byte aligned
+  char jsonMem[JSON_MEM_BUFFER_LEN] STORE_ATTR = {0};
 
   template <typename... Args>
   void DEBUG_PRINTLN(Args... args);
