@@ -69,6 +69,11 @@ bool xParam::SetParam(const TString &paramName, const T& paramValue) {
 
   root->set(paramName, paramValue);
 
+  if (root->measureLength() > JSON_MEM_BUFFER_LEN - 1) {
+    DEBUG_PRINTLN(llError, "JSON too big. Can't save to memory.");
+    return false;
+  }
+
   int n = root->printTo(&jsonMem[0], JSON_MEM_BUFFER_LEN - 1);
   jsonMem[n] = 0x00;
   return root->success();
