@@ -171,7 +171,17 @@ const mqttMapConfigS eastron630[] = {
   {"SerialNumber",    POLL_HOLDING_REGISTERS, 0x2A, MDB_8BYTE_HEX}
 };
 
-Eastron::Eastron() {
+const mqttMapConfigS esp14t[] = {
+  {"Light",       POLL_INPUT_REGISTERS, 0x00, MDB_WORD},
+  {"Pressure",    POLL_INPUT_REGISTERS, 0x01, MDB_WORD},
+  {"PrTemp",      POLL_INPUT_REGISTERS, 0x02, MDB_WORD},
+  {"Humidity",    POLL_INPUT_REGISTERS, 0x03, MDB_WORD},
+  {"Temp",        POLL_INPUT_REGISTERS, 0x04, MDB_WORD},
+  {"DI",          POLL_INPUT_REGISTERS, 0x05, MDB_2BYTE_HEX}
+};
+
+Eastron::Eastron(uint8_t _modbusAddress) {
+  modbusAddress = _modbusAddress;
   Connected = false;
   mapConfig = NULL;
   mapConfigLen = 0;
@@ -249,7 +259,8 @@ uint16_t Eastron::getWordValue(byte Command, word ModbusAddress){
   }
   uint16_t w;
   memcpy(&w, ptr, 2);
-  return w;  
+  w = htons(w);
+  return w;
 }
 
 void Eastron::setWordValue(uint16_t value, byte Command, word ModbusAddress) {
@@ -329,7 +340,13 @@ void Eastron::getValue(String &str, byte Command, word ModbusAddress, byte value
     case MDB_FLOAT:   
       str = String(getFloatValue(Command, ModbusAddress));
       break;
-    case MDB_8BYTE_HEX:   
+    case MDB_2BYTE_HEX:
+      getMemoryHex(str, Command, ModbusAddress, 2);
+      break;
+    case MDB_4BYTE_HEX:
+      getMemoryHex(str, Command, ModbusAddress, 4);
+      break;
+    case MDB_8BYTE_HEX:
       getMemoryHex(str, Command, ModbusAddress, 8);
       break;
     case MDB_16BYTE_HEX:   
@@ -405,6 +422,13 @@ void Eastron::ModbusSetup(const char *deviceType) {
     mapConfigLen = sizeof(eastron630) / sizeof(mqttMapConfigS);
   }
   
+  // eastron 630 full
+  if (strncmp(deviceType, "esp14", 5) == 0) {
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x06);
+
+    mapConfig = esp14t;
+    mapConfigLen = sizeof(esp14t) / sizeof(mqttMapConfigS);
+  }
 
   Connect();
 }
@@ -416,7 +440,7 @@ void Eastron::Poll(byte Command) {
   for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
     if (modbusArray[i].Command && 
         (Command == 0 || modbusArray[i].Command == Command) ){
-      uint8_t res = modbusNode.ModbusMasterTransaction(1, modbusArray[i].Command, modbusArray[i].StartDiap, modbusArray[i].LengthDiap, modbusArray[i].Address);
+      uint8_t res = modbusNode.ModbusMasterTransaction(modbusAddress, modbusArray[i].Command, modbusArray[i].StartDiap, modbusArray[i].LengthDiap, modbusArray[i].Address);
       if (res != MBSuccess) {
         // debug output error here
         String s;

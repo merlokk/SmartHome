@@ -24,15 +24,16 @@
 #define POLL_INPUT_REGISTERS        MBReadInputRegisters
 
 // registers configuration
-#define MDB_WORD        1
-#define MDB_INT         2
-#define MDB_INT64       3
-#define MDB_FLOAT       4
-#define MDB_FLOAT8      5
-#define MDB_INT_HEX     6
-#define MDB_INT64_HEX   7
-#define MDB_8BYTE_HEX   8
-#define MDB_16BYTE_HEX  9
+#define MDB_WORD         1
+#define MDB_INT          2
+#define MDB_INT64        3
+#define MDB_FLOAT        4
+#define MDB_FLOAT8       5
+#define MDB_2BYTE_HEX    6
+#define MDB_4BYTE_HEX    7
+#define MDB_INT64_HEX    8
+#define MDB_8BYTE_HEX    9
+#define MDB_16BYTE_HEX  10
 struct mqttMapConfigS {
   const char * mqttTopicName;
   byte command;
@@ -111,6 +112,7 @@ class Eastron {
     ModbusDiap modbusArray[MAX_MODBUS_DIAP];
     ModbusMaster modbusNode;
     xLogger * logger = NULL;
+    uint8_t modbusAddress = 1;
   public:
     uint8_t* getValueAddress(byte Command, word ModbusAddress);
   
@@ -118,7 +120,7 @@ class Eastron {
     const mqttMapConfigS *mapConfig;
     int mapConfigLen;
   
-    Eastron();
+    Eastron(uint8_t _modbusAddress = 1);
     void SetLogger(xLogger * _logger);
     int AddModbusDiap(byte Command, word StartDiap, word LengthDiap);
     int getModbusDiapLength();
