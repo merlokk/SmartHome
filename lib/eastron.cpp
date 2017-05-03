@@ -422,7 +422,7 @@ void Eastron::ModbusSetup(const char *deviceType) {
     mapConfigLen = sizeof(eastron630) / sizeof(mqttMapConfigS);
   }
   
-  // eastron 630 full
+  // esp-14 with sensors https://github.com/merlokk/SmartHome/wiki/ESP14MES
   if (strncmp(deviceType, "esp14", 5) == 0) {
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x06);
 
