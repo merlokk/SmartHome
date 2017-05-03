@@ -431,6 +431,7 @@ void generalSetup() {
   wifiSetup(true);
 
   // pause for connecting
+  // By default, ESP will attempt to reconnect to Wi-Fi network whenever it is disconnected. There is no need to handle this by separate code. ?????  TODO: check
   if (WiFi.status() != WL_CONNECTED) {
     DEBUG_WPRINTLN(F("Wifi is not connected. Trying to reconnect..."));
     WiFi.begin();
