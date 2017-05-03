@@ -37,6 +37,8 @@ public:
   void ClearAll();
   bool LoadFromEEPROM();
   bool SaveToEEPROM();
+  bool LoadFromRTC();
+  bool SaveToRTC();
   bool LoadFromWeb(const String &url);
 
   void GetParamsJsonStr(String &str);

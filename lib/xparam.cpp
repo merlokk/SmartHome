@@ -24,6 +24,8 @@ bool xParam::LoadFromEEPROM() {
   if (crc8(&jsonMem[0], JSON_MEM_BUFFER_LEN - 2) != jsonMem[JSON_MEM_BUFFER_LEN - 1]) {
     ClearAll();
     DEBUG_PRINTLN(llError, F("xParam: Invalid settings in EEPROM, settings was cleared."));
+
+    return false;
   }
 
   return true;
@@ -37,6 +39,26 @@ bool xParam::SaveToEEPROM() {
   EEPROM.end();
 
   return true;
+}
+
+bool xParam::LoadFromRTC() {
+  ClearAll();
+  ESP.rtcUserMemoryRead(0, (uint32_t*)&jsonMem[0], JSON_MEM_BUFFER_LEN);
+
+  if (crc8(&jsonMem[0], JSON_MEM_BUFFER_LEN - 2) != jsonMem[JSON_MEM_BUFFER_LEN - 1]) {
+    ClearAll();
+    DEBUG_PRINTLN(llError, F("xParam: Invalid settings in RTC, settings was cleared."));
+
+    return false;
+  }
+
+  return true;
+}
+
+bool xParam::SaveToRTC() {
+  jsonMem[JSON_MEM_BUFFER_LEN - 1] = crc8(&jsonMem[0], JSON_MEM_BUFFER_LEN - 2);
+
+  ESP.rtcUserMemoryWrite(0, (uint32_t*)&jsonMem[0], JSON_MEM_BUFFER_LEN);
 }
 
 bool xParam::LoadFromWeb(const String &url) {
