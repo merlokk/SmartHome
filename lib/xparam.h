@@ -69,7 +69,7 @@ bool xParam::SetParam(const TString &paramName, const T& paramValue) {
 
   root->set(paramName, paramValue);
 
-  int n = root->printTo(&jsonMem[0], JSON_MEM_BUFFER_LEN);
+  int n = root->printTo(&jsonMem[0], JSON_MEM_BUFFER_LEN - 1);
   jsonMem[n] = 0x00;
   return root->success();
 }
