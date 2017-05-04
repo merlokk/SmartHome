@@ -27,18 +27,71 @@
 #define               DEBUG                            // enable debugging
 #define               DEBUG_SERIAL      logger
 
+// device modbus address
+#define               MODBUS_ADDRESS    42
+#define               MODBUS_OBJ_NAME   esp14
+
 // LEDs and pins
 #define PIN_PGM  0      // programming pin
-#define LED1     12     // led 1
+#define LED1     12     // led 1 TODO: delete leds
+#define LED2     13     // led 2
 #define LEDON    LOW
 #define LEDOFF   HIGH
 
+// objects
+ModbusPoll       esp14;
 
 void setup() {  
+  Serial.setDebugOutput(false);
+  Serial1.setDebugOutput(true);
   Serial.begin(115200); 
-  // ESP.rtcUserMemoryWrite(offset, &data, sizeof(data)) and ESP.rtcUserMemoryRead(offset, &data, sizeof(data)) 512 bytes - live between sleeps
+  Serial1.begin(115200); 
+
+  pinMode(PIN_PGM, OUTPUT);    
+  digitalWrite(PIN_PGM, LEDOFF);
+  
+  sprintf(HARDWARE_ID, "%06X", ESP.getChipId());
+
+  // start logger
+  initLogger();
+  
+  delay(200);
+  initPrintStartDebugInfo();
+
+  WiFi.hostname(HARDWARE_ID);
+
+  // setup xparam lib
+  initXParam();
+  
+  // connect to default wifi
+  WiFi.begin();
+
+  // modbus poll
+  esp14.SetDeviceAddress(MODBUS_ADDRESS);
+  esp14.SetLogger(&logger);
+  DEBUG_PRINT(F("DeviceType: "));
+  DEBUG_PRINTLN(params[F("device_type")]);
+  esp14.ModbusSetup(params[F("device_type")].c_str());
+
+  String str;
+  esp14.getStrModbusConfig(str);
+  DEBUG_PRINTLN(F("Modbus config:"));
+  DEBUG_PRINTLN(str);
+
+  // wait wifi to connect   
+  if (WiFi.status() != WL_CONNECTED) {
+    DEBUG_WPRINTLN(F("Wifi is not connected. Wait..."));
+    delay(5000);
+  }
+
+  // mqtt init and pub
+  initMQTT("esp14");
+
+
 
   ESP.deepSleep(60 * 1000000); // 60 sec
+
+  // config here
 }
 
 void loop() {
