@@ -2,14 +2,20 @@
 #define TX_PIN 1   // GPIO1
 
 void setup() {
+  Serial1.begin(115200); 
   pinMode(RX_PIN, INPUT);    
   pinMode(TX_PIN, INPUT);   
+  Serial1.println("Init...");
 
   // deepSleep time is defined in microseconds. Multiply
   // seconds by 1e6 
   // second param: WAKE_RF_DEFAULT, WAKE_RFCAL, WAKE_NO_RFCAL, WAKE_RF_DISABLED
-//  ESP.deepSleep(50 * 1000000); // 50 sec
-  ESP.deepSleep(0); // forever
+
+  Serial1.println("Go to 10s deepsleep...");
+  ESP.deepSleep(10 * 1000000); // 10 sec
+//  ESP.deepSleep(0); // forever
+  delay(1000);
+  Serial1.println("I cant be here!!!");
 
   //ESP.rtcUserMemoryWrite(offset, &data, sizeof(data)) and ESP.rtcUserMemoryRead(offset, &data, sizeof(data)) 
   //allow data to be stored in and retrieved from the RTC user memory of the chip respectively. Total size of 
