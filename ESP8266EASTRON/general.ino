@@ -259,6 +259,23 @@ void reset() {
   delay(1000);
 }
 
+void initPrintStartDebugInfo() {
+  DEBUG_PRINTLN(F(""));
+  DEBUG_PRINTLN(F("Starting..."));
+
+  DEBUG_PRINT(F("ResetReason: "));
+  DEBUG_PRINTLN(ESP.getResetReason());
+
+  DEBUG_PRINT(F("Hardware ID/Hostname: "));
+  DEBUG_PRINTLN(HARDWARE_ID);
+
+  DEBUG_PRINT(F("MAC address: "));
+  DEBUG_PRINTLN(WiFi.macAddress());
+
+  DEBUG_PRINT("Module VCC: ");
+  DEBUG_PRINTLN(ESP.getVcc());
+}
+
 ///////////////////////////////////////////////////////////////////////////
 //   Update from WEB
 ///////////////////////////////////////////////////////////////////////////
@@ -382,6 +399,25 @@ bool CmdCallback(String &cmd) {
   return false;
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+//  logger and xParam logic
+///////////////////////////////////////////////////////////////////////////
+
+void initLogger() {
+  logger.cmdCallback(CmdCallback, strCommandsDesc);
+  logger.begin(HARDWARE_ID, &Serial1, true);
+  logger.setProgramVersion(PROGRAM_VERSION);
+  logger.setTimeFormat(ltNone);
+}
+
+void initXParam() {
+  params.SetLogger(&logger);
+  params.begin();
+  params.LoadFromEEPROM();
+}
+
+
 ///////////////////////////////////////////////////////////////////////////
 //   generalSetup() and generalloop()
 ///////////////////////////////////////////////////////////////////////////
@@ -392,28 +428,13 @@ void generalSetup() {
   // client ID
   sprintf(HARDWARE_ID, "%06X", ESP.getChipId());
   // start logger
-  logger.cmdCallback(CmdCallback, strCommandsDesc);
-  logger.begin(HARDWARE_ID, &Serial1, true);
-  logger.setProgramVersion(PROGRAM_VERSION);
-  logger.setTimeFormat(ltNone);
+  initLogger();
   
   // for debug
   delay(200);
-  DEBUG_PRINTLN(F(""));
-  DEBUG_PRINTLN(F("Starting..."));
+  initPrintStartDebugInfo();
 
-  DEBUG_PRINT(F("ResetReason: "));
-  DEBUG_PRINTLN(ESP.getResetReason());
-
-  DEBUG_PRINT(F("Hardware ID/Hostname: "));
-  DEBUG_PRINTLN(HARDWARE_ID);
   WiFi.hostname(HARDWARE_ID);
-
-  DEBUG_PRINT(F("MAC address: "));
-  DEBUG_PRINTLN(WiFi.macAddress());
-
-  DEBUG_PRINT("Module VCC: ");
-  DEBUG_PRINTLN(ESP.getVcc());
 
   // 0 = programming mode
   pinMode(PIN_PGM, INPUT);   
@@ -423,9 +444,7 @@ void generalSetup() {
   }
 
   // setup xparam lib
-  params.SetLogger(&logger);
-  params.begin();
-  params.LoadFromEEPROM();
+  initXParam();
   
   // wifi setup with autoconnect
   wifiSetup(true);
