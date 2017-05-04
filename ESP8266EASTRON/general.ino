@@ -69,10 +69,12 @@ void mqttPublishRegularState() {
     s = NTP.getTimeDateString(NTP.getFirstSync());
     mqttPublishState("LastBootDateTime", s.c_str()); 
 
-    if (eastron.Connected) {
+#ifdef MODBUS_OBJ_NAME
+    if (MODBUS_OBJ_NAME.Connected) {
       s = NTP.getTimeDateString();
       mqttPublishState("LastConnectedDateTime", s.c_str()); 
     }
+#endif
   }
 
 #ifdef MODBUS_OBJ_NAME
