@@ -22,7 +22,8 @@
 #define               DEBUG_SERIAL      logger
 
 // device modbus address
-#define MODBUS_ADDRESS 1
+#define               MODBUS_ADDRESS    1
+#define               MODBUS_OBJ_NAME   eastron
 
 // poll
 #define MILLIS_TO_POLL          15*1000       //max time to wait for poll input registers (regular poll)
@@ -40,8 +41,6 @@
 
 // objects
 ModbusPoll       eastron;
-mqttMapConfigS   *eastronCfg = NULL;
-int              eastronCfgLength = 0;
 piTimer          ptimer;
 
 ///////////////////////////////////////////////////////////////////////////

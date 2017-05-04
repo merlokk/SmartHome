@@ -75,7 +75,9 @@ void mqttPublishRegularState() {
     }
   }
 
-  mqttPublishState("Connected", eastron.Connected ? MQTT_ON_PAYLOAD:MQTT_OFF_PAYLOAD);
+#ifdef MODBUS_OBJ_NAME
+  mqttPublishState("Connected", MODBUS_OBJ_NAME.Connected ? MQTT_ON_PAYLOAD:MQTT_OFF_PAYLOAD);
+#endif
 }
 
 void mqttPublishState(const char *topic, const char *payload) {
