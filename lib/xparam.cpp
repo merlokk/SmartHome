@@ -62,6 +62,13 @@ bool xParam::SaveToRTC() {
 }
 
 bool xParam::LoadFromWeb(const String &url) {
+  WiFiClient client;
+/*  if (client.connect(url, 80)) {
+
+  } else {
+    DEBUG_PRINTLN(llError, F("xParam: Can't connect to host."));
+    return false;
+  }*/
 
   return true;
 }
