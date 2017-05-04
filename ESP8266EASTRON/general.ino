@@ -15,6 +15,30 @@ ADC_MODE(ADC_VCC);                            // set ADC to meassure esp8266 VCC
 ///////////////////////////////////////////////////////////////////////////
 
 /*
+  Function called to init MQTT
+*/
+void initMQTT(const char * topicName) {
+  mqttClient.setCallback(mqttCallback);
+  
+  // configure mqtt topic
+  String mqttPath = params[F("mqtt_path")];
+  if (mqttPath.length() == 0) {
+    sprintf(MQTT_STATE_TOPIC, "%s/%s/", HARDWARE_ID, topicName);
+  } else {
+    if (mqttPath[mqttPath.length() - 1] == '/') {
+      sprintf(MQTT_STATE_TOPIC, "%s", mqttPath.c_str());
+    } else {
+      sprintf(MQTT_STATE_TOPIC, "%s/", mqttPath.c_str());
+    }
+  }
+  DEBUG_PRINT(F("MQTT command topic: "));
+  DEBUG_PRINTLN(MQTT_STATE_TOPIC);
+
+  // connect to the MQTT broker
+  reconnect();
+}
+
+/*
   Function called to publish the state of 
 */
 void mqttPublishInitialState() {
@@ -466,24 +490,7 @@ void generalSetup() {
   NTP.setInterval(30 * 60); // twice a hour
   
   // configure MQTT
-  mqttClient.setCallback(mqttCallback);
-  
-  // configure mqtt topic
-  String mqttPath = params[F("mqtt_path")];
-  if (mqttPath.length() == 0) {
-    sprintf(MQTT_STATE_TOPIC, "%s/PowerMeter/", HARDWARE_ID);
-  } else {
-    if (mqttPath[mqttPath.length() - 1] == '/') {
-      sprintf(MQTT_STATE_TOPIC, "%s", mqttPath.c_str());
-    } else {
-      sprintf(MQTT_STATE_TOPIC, "%s/", mqttPath.c_str());
-    }
-  }
-  DEBUG_PRINT(F("MQTT command topic: "));
-  DEBUG_PRINTLN(MQTT_STATE_TOPIC);
-
-  // connect to the MQTT broker
-  reconnect();
+  initMQTT("PowerMeter");
 
   ticker.detach();
   ticker.attach(0.1, tick);
