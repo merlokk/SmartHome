@@ -1,7 +1,8 @@
 general.ino
 general.h
-../lib/eastron.cpp
 ../lib/eastron.h
+../lib/modbuspoll.cpp
+../lib/modbuspoll.h
 ../lib/emodbus.cpp
 ../lib/emodbus.h
 ../lib/etools.cpp

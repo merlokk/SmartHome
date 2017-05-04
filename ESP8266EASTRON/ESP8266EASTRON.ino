@@ -12,7 +12,7 @@
 // my libraries
 #include <etools.h>
 #include <pitimer.h>     // timers
-#include <eastron.h>
+#include <modbuspoll.h>
 #include <xparam.h>
 #include "general.h"
 
@@ -39,11 +39,10 @@
 #define LEDOFF   HIGH
 
 // objects
-Eastron          eastron;
+ModbusPoll       eastron;
 mqttMapConfigS   *eastronCfg = NULL;
 int              eastronCfgLength = 0;
 piTimer          ptimer;
-
 
 ///////////////////////////////////////////////////////////////////////////
 //   Setup() and loop()

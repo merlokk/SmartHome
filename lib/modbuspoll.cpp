@@ -1,7 +1,7 @@
 
 
 #include <Arduino.h>
-#include <eastron.h>
+#include <modbuspoll.h>
 
 // devices configuration
 const mqttMapConfigS eastron220[] = {
@@ -180,31 +180,31 @@ const mqttMapConfigS esp14t[] = {
   {"DI",          POLL_INPUT_REGISTERS, 0x05, MDB_2BYTE_HEX}
 };
 
-Eastron::Eastron(uint8_t _deviceAddress) {
+ModbusPoll::ModbusPoll(uint8_t _deviceAddress) {
   deviceAddress = _deviceAddress;
   Connected = false;
   mapConfig = NULL;
   mapConfigLen = 0;
 }
 
-void Eastron::SetLogger(xLogger * _logger) {
+void ModbusPoll::SetLogger(xLogger * _logger) {
   logger = _logger;
 }
 
-void Eastron::SetDeviceAddress(uint8_t _deviceAddress) {
+void ModbusPoll::SetDeviceAddress(uint8_t _deviceAddress) {
   deviceAddress = _deviceAddress;
 }
 
 template <typename... Args>
-void Eastron::DEBUG_PRINTLN(Args... args) {
-#ifdef EASTRON_DEBUG
+void ModbusPoll::DEBUG_PRINTLN(Args... args) {
+#ifdef MODBUSPOLL_DEBUG
   if (logger) {
     logger->println(args...);
   }
 #endif
 }
 
-int Eastron::AddModbusDiap(byte Command, word StartDiap, word LengthDiap) {
+int ModbusPoll::AddModbusDiap(byte Command, word StartDiap, word LengthDiap) {
   for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
     if (modbusArray[i].Command == 0){
       modbusArray[i].Command = Command;
@@ -219,7 +219,7 @@ int Eastron::AddModbusDiap(byte Command, word StartDiap, word LengthDiap) {
   return -1;
 }
 
-int Eastron::getModbusDiapLength() {
+int ModbusPoll::getModbusDiapLength() {
   for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
     if (modbusArray[i].Command == 0){
       return i;
@@ -228,7 +228,7 @@ int Eastron::getModbusDiapLength() {
   return MAX_MODBUS_DIAP;
 }
 
-void Eastron::getStrModbusConfig(String &str) {
+void ModbusPoll::getStrModbusConfig(String &str) {
   str = "Max length: " + String(MAX_MODBUS_DIAP) + " Length: " + String(getModbusDiapLength());
   for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
     if (modbusArray[i].Command){
@@ -241,7 +241,7 @@ void Eastron::getStrModbusConfig(String &str) {
   }
 }
 
-uint8_t* Eastron::getValueAddress(byte Command, word ModbusAddress) {
+uint8_t* ModbusPoll::getValueAddress(byte Command, word ModbusAddress) {
   if (!Command) {
     return NULL;
   }
@@ -256,7 +256,7 @@ uint8_t* Eastron::getValueAddress(byte Command, word ModbusAddress) {
   return NULL;
 }
 
-uint16_t Eastron::getWordValue(byte Command, word ModbusAddress){
+uint16_t ModbusPoll::getWordValue(byte Command, word ModbusAddress){
   uint8_t *ptr = getValueAddress(Command, ModbusAddress);
   if (ptr == NULL) {
     return 0;
@@ -267,7 +267,7 @@ uint16_t Eastron::getWordValue(byte Command, word ModbusAddress){
   return w;
 }
 
-void Eastron::setWordValue(uint16_t value, byte Command, word ModbusAddress) {
+void ModbusPoll::setWordValue(uint16_t value, byte Command, word ModbusAddress) {
   uint8_t *ptr = getValueAddress(Command, ModbusAddress);
   if (ptr == NULL) {
     return;
@@ -275,7 +275,7 @@ void Eastron::setWordValue(uint16_t value, byte Command, word ModbusAddress) {
   memcpy(ptr, &value, 2); 
 }
 
-uint32_t Eastron::getIntValue(byte Command, word ModbusAddress) {
+uint32_t ModbusPoll::getIntValue(byte Command, word ModbusAddress) {
   uint8_t *ptr = getValueAddress(Command, ModbusAddress);
   if (ptr == NULL) {
     return 0;
@@ -286,7 +286,7 @@ uint32_t Eastron::getIntValue(byte Command, word ModbusAddress) {
   return i;  
 }
 
-uint64_t Eastron::getInt64Value(byte Command, word ModbusAddress) {
+uint64_t ModbusPoll::getInt64Value(byte Command, word ModbusAddress) {
   uint8_t *ptr = getValueAddress(Command, ModbusAddress);
   if (ptr == NULL) {
     return 0;
@@ -297,7 +297,7 @@ uint64_t Eastron::getInt64Value(byte Command, word ModbusAddress) {
   return li;  
 }
 
-float Eastron::getFloatValue(byte Command, word ModbusAddress) {
+float ModbusPoll::getFloatValue(byte Command, word ModbusAddress) {
   uint8_t *ptr = getValueAddress(Command, ModbusAddress);
   if (ptr == NULL) {
     return 0;
@@ -311,7 +311,7 @@ float Eastron::getFloatValue(byte Command, word ModbusAddress) {
   return df.f;  
 }
 
-void Eastron::getMemoryHex(String &str, byte Command, word ModbusAddress, int len) {
+void ModbusPoll::getMemoryHex(String &str, byte Command, word ModbusAddress, int len) {
   str = "";
   uint8_t *ptr = getValueAddress(Command, ModbusAddress);
   if (ptr == NULL) {
@@ -328,7 +328,7 @@ void Eastron::getMemoryHex(String &str, byte Command, word ModbusAddress, int le
   }
 }
 
-void Eastron::getValue(String &str, byte Command, word ModbusAddress, byte valueType) {
+void ModbusPoll::getValue(String &str, byte Command, word ModbusAddress, byte valueType) {
   switch (valueType) {
     case MDB_WORD:  
       str = String(getWordValue(Command, ModbusAddress));
@@ -360,17 +360,17 @@ void Eastron::getValue(String &str, byte Command, word ModbusAddress, byte value
   }
 }
 
-void Eastron::Connect() {
+void ModbusPoll::Connect() {
   // Initialize modbus communication settings etc...
   modbusNode.begin(&Serial, SERIAL_BAUD);
   modbusNode.ku16MBResponseTimeout = MODBUS_POLL_TIMEOUT;
-  DEBUG_PRINTLN(F("Eastron connected to com port."));
+  DEBUG_PRINTLN(F("ModbusPoll connected to com port."));
 }
 
-void Eastron::ModbusSetup(const char *deviceType) {
+void ModbusPoll::ModbusSetup(const char *deviceType) {
   mapConfig = NULL;
   mapConfigLen = 0;
-  DEBUG_PRINTLN(SF("Eastron modbus setup: ") + String(deviceType));
+  DEBUG_PRINTLN(SF("ModbusPoll modbus setup: ") + String(deviceType));
 
   // eastron 220
   if (strncmp(deviceType, "220", 5) == 0) {
@@ -437,9 +437,9 @@ void Eastron::ModbusSetup(const char *deviceType) {
   Connect();
 }
 
-void Eastron::Poll(byte Command) {
+void ModbusPoll::Poll(byte Command) {
   Connected = false;
-  DEBUG_PRINTLN(SF("Eastron poll: ") + String(Command));
+  DEBUG_PRINTLN(SF("ModbusPoll poll: ") + String(Command));
 
   for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
     if (modbusArray[i].Command && 
@@ -449,7 +449,7 @@ void Eastron::Poll(byte Command) {
         // debug output error here
         String s;
         strModbusError(s, res);
-        DEBUG_PRINTLN(llError, SF("Eastron modbus (c") + 
+        DEBUG_PRINTLN(llError, SF("ModbusPoll modbus (c") +
           String(modbusArray[i].Command) + SF(" ") + String(modbusArray[i].StartDiap) + SF("[") + String(modbusArray[i].LengthDiap) +
           SF("]) poll error: ") + s);
       }
