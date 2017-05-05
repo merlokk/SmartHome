@@ -32,7 +32,9 @@
 #define               MODBUS_OBJ_NAME      esp14
 
 // max deep sleep time ~71 minutes.
-#define               DEEPSLEEP_INTERVAL   10*1000000  // 60 sec
+#define               SLEEP_INTERVAL   60  // 10 sec
+#define               LIGHTSLEEP_INTERVAL   SLEEP_INTERVAL*1000 
+#define               DEEPSLEEP_INTERVAL   LIGHTSLEEP_INTERVAL*1000  
 
 // LEDs and pins
 #define PIN_PGM  0      // programming pin
@@ -60,16 +62,18 @@ struct Esp14Var {
 
 void PollAndPublish(bool withInit = false) {
   // modbus poll
-  esp14.SetDeviceAddress(MODBUS_ADDRESS);
-  esp14.SetLogger(&logger);
-  DEBUG_PRINT(F("DeviceType: "));
-  DEBUG_PRINTLN(params[F("device_type")]);
-  esp14.ModbusSetup(params[F("device_type")].c_str());
+  if (withInit) {
+    esp14.SetDeviceAddress(MODBUS_ADDRESS);
+    esp14.SetLogger(&logger);
+    DEBUG_PRINT(F("DeviceType: "));
+    DEBUG_PRINTLN(params[F("device_type")]);
+    esp14.ModbusSetup(params[F("device_type")].c_str());
 
-  String str;
-  esp14.getStrModbusConfig(str);
-  DEBUG_PRINTLN(F("Modbus config:"));
-  DEBUG_PRINTLN(str);
+    String str;
+    esp14.getStrModbusConfig(str);
+    DEBUG_PRINTLN(F("Modbus config:"));
+    DEBUG_PRINTLN(str);
+  }
 
   // poll
   esp14.Poll(POLL_INPUT_REGISTERS);
@@ -81,11 +85,12 @@ void PollAndPublish(bool withInit = false) {
   // get values and normalize
   var.vLight    = esp14.getWordValue(POLL_INPUT_REGISTERS, 0x00);
   var.vPressure = esp14.getWordValue(POLL_INPUT_REGISTERS, 0x01) + 60000;
-  var.vPrTemp   = esp14.getWordValue(POLL_INPUT_REGISTERS, 0x02) / 100;
-  var.vHumidity = esp14.getWordValue(POLL_INPUT_REGISTERS, 0x03) / 10;
-  var.vTemp     = esp14.getWordValue(POLL_INPUT_REGISTERS, 0x04) / 10;
+  var.vPrTemp   = (float)esp14.getWordValue(POLL_INPUT_REGISTERS, 0x02) / 100;
+  var.vHumidity = (float)esp14.getWordValue(POLL_INPUT_REGISTERS, 0x03) / 10;
+  var.vTemp     = (float)esp14.getWordValue(POLL_INPUT_REGISTERS, 0x04) / 10;
   var.vDI       = esp14.getWordValue(POLL_INPUT_REGISTERS, 0x05);
 
+  DEBUG_PRINTLN(SF("Temp=") + String(var.vTemp));
 
   // wait wifi to connect   
   int cnt = 0;
@@ -104,7 +109,10 @@ void PollAndPublish(bool withInit = false) {
   if (withInit) {
     initMQTT("esp14");
   }
-
+  if (!mqttClient.connected()) {
+    reconnect();
+  }
+  
   // publish some system vars
   if (withInit) {
     mqttPublishInitialState();
@@ -136,14 +144,14 @@ void setup() {
   Serial1.begin(115200); 
 
   pinMode(PIN_PGM, OUTPUT);    
-  digitalWrite(PIN_PGM, LEDOFF);
+  digitalWrite(PIN_PGM, 1);
   
   sprintf(HARDWARE_ID, "%06X", ESP.getChipId());
 
   // start logger
   initLogger();
   
-  delay(200);
+  delay(250);
   initPrintStartDebugInfo();
 
   WiFi.hostname(HARDWARE_ID);
@@ -156,10 +164,23 @@ void setup() {
 
   PollAndPublish(true);
   
+  digitalWrite(PIN_PGM, 0);
   if ((var.vDI & DI_NODEEPSLEEP) != 0) {
+#ifdef USE_DEEPSLEEP
     DEBUG_PRINTLN(F("Go to deep sleep..."));
     ESP.deepSleep(DEEPSLEEP_INTERVAL);
     delay(1000);
+#else
+    DEBUG_PRINTLN(F("Go to light sleep..."));
+    //wifi_station_disconnect();
+    //wifi_set_opmode(NULL_MODE);
+    wifi_set_sleep_type(LIGHT_SLEEP_T);
+    delay(LIGHTSLEEP_INTERVAL); 
+    wifi_set_sleep_type(NONE_SLEEP_T);
+    delay(100);
+    ESP.reset();
+    delay(200);
+#endif
   }
 
   // config here
@@ -169,6 +190,8 @@ void setup() {
 }
 
 void loop() {
+  digitalWrite(PIN_PGM, 1);
+
   ArduinoOTA.handle();
   logger.handle();
 
@@ -176,4 +199,12 @@ void loop() {
 
   PollAndPublish();
 
+  digitalWrite(PIN_PGM, 0);
+
+  if ((var.vDI & DI_NODEEPSLEEP) != 0) {
+    wifi_set_sleep_type(LIGHT_SLEEP_T);
+    delay(LIGHTSLEEP_INTERVAL); 
+    wifi_set_sleep_type(NONE_SLEEP_T);
+    delay(100);
+  }
 }
