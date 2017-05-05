@@ -1,20 +1,56 @@
+#include <Arduino.h>
+
+extern "C" {
+#include "user_interface.h"
+}
+
+//#define USE_DEEPSLEEP
+
+uint32_t counter;
+uint32_t salt = 12345;
+
 #define RX_PIN 3   // GPIO3
 #define TX_PIN 1   // GPIO1
 
 void setup() {
-  Serial1.begin(115200); 
-  pinMode(RX_PIN, INPUT);    
-  pinMode(TX_PIN, INPUT);   
+  Serial1.begin(74880); //74880 
+//  pinMode(RX_PIN, INPUT);    
+//  pinMode(TX_PIN, INPUT);   
+  while(!Serial1) { };
   Serial1.println("Init...");
+  Serial1.println("ms from start=" + String(millis()));
+
+  uint32_t check = 0;
+  ESP.rtcUserMemoryRead(0, &check, sizeof(uint32_t));
+  if (check != salt) {
+    ESP.rtcUserMemoryWrite(0, &salt, sizeof(uint32_t));
+    counter = 0;
+    Serial1.println("Error RTC memory. Counter cleared.");
+  } else {
+    ESP.rtcUserMemoryRead(4, &counter, sizeof(uint32_t));
+    Serial1.println("RTC counter=" + String(counter));
+  }
+  counter ++;
+  ESP.rtcUserMemoryWrite(4, &counter, sizeof(uint32_t));
 
   // deepSleep time is defined in microseconds. Multiply
   // seconds by 1e6 
   // second param: WAKE_RF_DEFAULT, WAKE_RFCAL, WAKE_NO_RFCAL, WAKE_RF_DISABLED
 
+#ifdef USE_DEEPSLEEP
   Serial1.println("Go to 10s deepsleep...");
-  ESP.deepSleep(10 * 1000000); // 10 sec
+  ESP.deepSleep(10 * 1000000, WAKE_RF_DEFAULT); // 10 sec, max ~71 minutes.
 //  ESP.deepSleep(0); // forever
   delay(1000);
+#else
+  Serial1.println("Go to 10s lightsleep...");
+  wifi_set_sleep_type(LIGHT_SLEEP_T);
+  delay(10 * 1000); // 10 sec
+  wifi_set_sleep_type(NONE_SLEEP_T);
+  delay(200);
+  ESP.reset();
+  delay(200);
+#endif
   Serial1.println("I cant be here!!!");
 
   //ESP.rtcUserMemoryWrite(offset, &data, sizeof(data)) and ESP.rtcUserMemoryRead(offset, &data, sizeof(data)) 

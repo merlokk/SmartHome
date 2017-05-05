@@ -31,6 +31,7 @@
 #define               MODBUS_ADDRESS       42
 #define               MODBUS_OBJ_NAME      esp14
 
+// max deep sleep time ~71 minutes.
 #define               DEEPSLEEP_INTERVAL   10*1000000  // 60 sec
 
 // LEDs and pins
