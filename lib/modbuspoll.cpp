@@ -124,7 +124,7 @@ const mqttMapConfigS eastron630[] = {
   {"Frequency",             POLL_INPUT_REGISTERS, 0x46, MDB_FLOAT},
   {"ImportkWhLastReset",     POLL_INPUT_REGISTERS, 0x48, MDB_FLOAT},
   {"ExportkWhLastReset",     POLL_INPUT_REGISTERS, 0x4A, MDB_FLOAT},
-  {"ImportkVAhLastReset",    POLL_INPUT_REGISTERS, 0x5C, MDB_FLOAT},
+  {"ImportkVAhLastReset",    POLL_INPUT_REGISTERS, 0x4C, MDB_FLOAT},
   {"ExportkVAhLastReset",    POLL_INPUT_REGISTERS, 0x4E, MDB_FLOAT},
   {"kVAhLastReset",          POLL_INPUT_REGISTERS, 0x50, MDB_FLOAT},
   {"kAhLastReset",           POLL_INPUT_REGISTERS, 0x52, MDB_FLOAT},
