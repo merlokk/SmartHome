@@ -122,12 +122,12 @@ const mqttMapConfigS eastron630[] = {
   {"PhaseAngleTotal", POLL_INPUT_REGISTERS, 0x42, MDB_FLOAT},
 
   {"Frequency",             POLL_INPUT_REGISTERS, 0x46, MDB_FLOAT},
-  {"ImportWhLastReset",     POLL_INPUT_REGISTERS, 0x48, MDB_FLOAT},
-  {"ExportWhLastReset",     POLL_INPUT_REGISTERS, 0x4A, MDB_FLOAT},
-  {"ImportVAhLastReset",    POLL_INPUT_REGISTERS, 0x5C, MDB_FLOAT},
-  {"ExportVAhLastReset",    POLL_INPUT_REGISTERS, 0x4E, MDB_FLOAT},
-  {"VAhLastReset",          POLL_INPUT_REGISTERS, 0x50, MDB_FLOAT},
-  {"AhLastReset",           POLL_INPUT_REGISTERS, 0x54, MDB_FLOAT},
+  {"ImportkWhLastReset",     POLL_INPUT_REGISTERS, 0x48, MDB_FLOAT},
+  {"ExportkWhLastReset",     POLL_INPUT_REGISTERS, 0x4A, MDB_FLOAT},
+  {"ImportkVAhLastReset",    POLL_INPUT_REGISTERS, 0x5C, MDB_FLOAT},
+  {"ExportkVAhLastReset",    POLL_INPUT_REGISTERS, 0x4E, MDB_FLOAT},
+  {"kVAhLastReset",          POLL_INPUT_REGISTERS, 0x50, MDB_FLOAT},
+  {"kAhLastReset",           POLL_INPUT_REGISTERS, 0x54, MDB_FLOAT},
 
   {"PowerTotalDem",         POLL_INPUT_REGISTERS, 0x54, MDB_FLOAT},
   {"MaxPowerTotalDem",      POLL_INPUT_REGISTERS, 0x56, MDB_FLOAT},
