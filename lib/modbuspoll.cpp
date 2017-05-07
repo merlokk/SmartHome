@@ -166,7 +166,7 @@ const mqttMapConfigS eastron630[] = {
   {"THD/LineToLineVolts/Avg", POLL_INPUT_REGISTERS, 0x0154, MDB_FLOAT},
 
   // Holding registers 
-  {"Dem/Interval",            POLL_HOLDING_REGISTERS, 0x04, MDB_FLOAT},
+  {"Dem/Interval",            POLL_HOLDING_REGISTERS, 0x02, MDB_FLOAT},
   {"System/Voltage",          POLL_HOLDING_REGISTERS, 0x06, MDB_FLOAT},
   {"System/Type",             POLL_HOLDING_REGISTERS, 0x08, MDB_FLOAT},
   {"System/SerialNumber",     POLL_HOLDING_REGISTERS, 0x2A, MDB_8BYTE_HEX}
@@ -420,8 +420,8 @@ void ModbusPoll::ModbusSetup(const char *deviceType) {
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x064, 0x08); // 101-107   = 8 registers
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x0C8, 0x4E); // 201-269   = 70 registers
     AddModbusDiap(POLL_INPUT_REGISTERS, 0x14E, 0x4E); // 335-341   = 8 registers
-    AddModbusDiap(POLL_HOLDING_REGISTERS, 0x006, 0x04); // voltage and system type
-    AddModbusDiap(POLL_HOLDING_REGISTERS, 0x02A, 0x04); // serial number*/
+    AddModbusDiap(POLL_HOLDING_REGISTERS, 0x002, 0x08); // demand period, voltage and system type
+    AddModbusDiap(POLL_HOLDING_REGISTERS, 0x02A, 0x04); // serial number
 
     mapConfig = eastron630;
     mapConfigLen = sizeof(eastron630) / sizeof(mqttMapConfigS);
