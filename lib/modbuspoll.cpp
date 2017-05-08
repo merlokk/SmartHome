@@ -143,13 +143,13 @@ const mqttMapConfigS eastron630[] = {
   {"LineToLineVolts/Avg",     POLL_INPUT_REGISTERS, 0xCE, MDB_FLOAT},
   {"NeutralCurrent",          POLL_INPUT_REGISTERS, 0xE0, MDB_FLOAT},
 
-  {"THD/LNVolts/1",           POLL_INPUT_REGISTERS, 0xEA, MDB_FLOAT},
-  {"THD/LNVolts/2",           POLL_INPUT_REGISTERS, 0xEC, MDB_FLOAT},
-  {"THD/LNVolts/3",           POLL_INPUT_REGISTERS, 0xEE, MDB_FLOAT},
+  {"THD/Voltage/1",           POLL_INPUT_REGISTERS, 0xEA, MDB_FLOAT},
+  {"THD/Voltage/2",           POLL_INPUT_REGISTERS, 0xEC, MDB_FLOAT},
+  {"THD/Voltage/3",           POLL_INPUT_REGISTERS, 0xEE, MDB_FLOAT},
   {"THD/Current/1",           POLL_INPUT_REGISTERS, 0xF0, MDB_FLOAT},
   {"THD/Current/2",           POLL_INPUT_REGISTERS, 0xF2, MDB_FLOAT},
   {"THD/Current/3",           POLL_INPUT_REGISTERS, 0xF4, MDB_FLOAT},
-  {"THD/LNVolts/Avg",         POLL_INPUT_REGISTERS, 0xF8, MDB_FLOAT},
+  {"THD/Voltage/Avg",         POLL_INPUT_REGISTERS, 0xF8, MDB_FLOAT},
   {"THD/Current/Avg",         POLL_INPUT_REGISTERS, 0xFA, MDB_FLOAT},
   
   {"PowerFactor/Total",       POLL_INPUT_REGISTERS, 0xFE, MDB_FLOAT},
