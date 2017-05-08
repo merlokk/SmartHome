@@ -9,19 +9,25 @@ class xMQTT {
 public:
   xMQTT();
 
-  void begin();
-  void initMQTT(const char * topicName);
+  void begin(const char * topicName, xLogger * _logger = NULL, bool _postAsJson = false, bool retained = false);
+  void init(const char * topicName);
   void SetLogger(xLogger * _logger);
-  void SetPostJson();
+  void SetPostAsJson(bool _postAsJson);
+  void SetTopicName(const char * topicName);
 
   bool Connect();
-  bool Reconnect;
+  bool Disconnect();
+  bool Reconnect();
 
-  void mqttPublishState(const char *topic, const char *payload, bool retained);
-  void Commit();
+  void BeginPublish();                     // works for json push
+  void PublishState(const char *topic, const char *payload);
+  void PublishState(String &topic, String &payload);
+  void Commit(String &topicAdd);           // works for json push
 
 private:
   xLogger * logger = NULL;
+  bool postAsJson = false;
+  bool retained = false;
 
   void mqttCallback(char* topic, byte* payload, unsigned int length);
 
