@@ -163,27 +163,27 @@ bool xMQTT::jsonInternalPublish(const String &topic, const String &payload) {
   if (topic.indexOf("/") < 0) {
     root->set(topic, payload);
   } else {
-    String tp = topic;
-    String s = "";
+    String str = topic;
+    String sNode = "";
 
-    if (tp.indexOf("/") == 0)
-      tp = tp.substring(1);
+    if (str.indexOf("/") == 0)
+      str = str.substring(1);
 
     JsonObject *jobj = root;
-    while (tp.indexOf("/") >= 0) {
-      int indx = tp.indexOf("/");
-      s = tp.substring(0, indx);
-      tp = tp.substring(indx + 1);
+    while (str.indexOf("/") >= 0) {
+      int indx = str.indexOf("/");
+      sNode = str.substring(0, indx);
+      str = str.substring(indx + 1);
 
-DEBUG_PRINTLN("s=" + s + " tp=" + tp);
-      JsonObject *o = &(*jobj)[s].asObject();
+DEBUG_PRINTLN("node=" + sNode + " str=" + str);
+      JsonObject *o = &(*jobj)[sNode].asObject();
       if (!o->success())
-        o = &jobj->createNestedObject(s);
+        o = &jobj->createNestedObject(sNode);
 
       jobj = o;
     }
-    DEBUG_PRINTLN("set tp=" + tp + " payload=" + payload);
-    jobj->set(tp, payload);
+    DEBUG_PRINTLN("set str=" + str + " payload=" + payload);
+    jobj->set(str, payload);
 
   }
 
