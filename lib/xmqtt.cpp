@@ -2,6 +2,9 @@
 
 xMQTT::xMQTT() {
   mqttClient.setClient(wifiClient);
+
+  using namespace std::placeholders;
+  mqttClient.setCallback(std::bind(&xMQTT::mqttCallback, this, _1, _2, _3));
 }
 
 void xMQTT::begin(const char *_hwID, const char *_topicName, xParam *_params, xLogger *_logger, bool _postAsJson, bool retained) {
@@ -65,7 +68,7 @@ bool xMQTT::execCmdCallback(String &cmd) {
   return false;
 }
 
-void xMQTT::mqttCallback(char* topic, byte* payload, unsigned int length) {
+void xMQTT::mqttCallback(char* topic, uint8_t* payload, unsigned int length) {
   String sPayload;
   BufferToString(sPayload, (char*)payload, length);
 

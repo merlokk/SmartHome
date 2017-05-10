@@ -63,7 +63,7 @@ private:
 
   cmdCallback _cmdCallback;
   bool execCmdCallback(String &cmd);
-  void mqttCallback(char* topic, byte* payload, unsigned int length);
+  void mqttCallback(char* topic, uint8_t *payload, unsigned int length);
 
   template <typename... Args>
   void DEBUG_PRINTLN(Args... args);
