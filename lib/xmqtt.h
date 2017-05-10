@@ -3,11 +3,13 @@
 
 #include <Arduino.h>
 #include <PubSubClient.h>       // https://github.com/knolleary/pubsubclient/releases/tag/v2.6
+#include <ArduinoJson.h>        // https://github.com/bblanchon/ArduinoJson
 #include <etools.h>
 #include <xparam.h>
 #include <xlogger.h>            // logger https://github.com/merlokk/xlogger
 
 #define MQTT_DEBUG
+#define JSON_OBJ_BUFFER_LEN 500 // json buffer length
 #define BUF_RESERVE_LEN 256 // reserve for json string
 
 typedef bool (*cmdCallback)(String &cmd);
@@ -50,7 +52,7 @@ private:
   bool postAsJson = false;
   bool retained = false;
   int resetErrorCnt = 0;  // connect error counter
-  String jsonBuffer = "";
+  String jsonStrBuffer = "";
 
   String mqttTopic;
   String hardwareID;
@@ -60,6 +62,7 @@ private:
   PubSubClient mqttClient;
 
   void mqttInternalPublish(const String &topic, const String &payload);
+  bool jsonInternalPublish(const String &topic, const String &payload);
 
   cmdCallback _cmdCallback;
   bool execCmdCallback(String &cmd);

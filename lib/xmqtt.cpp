@@ -8,7 +8,7 @@ xMQTT::xMQTT() {
 }
 
 void xMQTT::begin(const char *_hwID, const char *_topicName, xParam *_params, xLogger *_logger, bool _postAsJson, bool retained) {
-  // here right order!!!
+  // here is the right order!!!
   SetHardwareID(String(_hwID));
   SetLogger(_logger);
   SetParamStorage(_params);
@@ -150,12 +150,35 @@ void xMQTT::mqttInternalPublish(const String &topic, const String &payload) {
   }
 }
 
+bool xMQTT::jsonInternalPublish(const String &topic, const String &payload) {
+  StaticJsonBuffer<JSON_OBJ_BUFFER_LEN> jsonBuffer;
+  JsonObject *root = &jsonBuffer.parseObject(jsonStrBuffer);
+  if (!root->success()){
+    DEBUG_PRINTLN(llError, "xMQTT: json load error.");
+    root = &jsonBuffer.createObject();
+  };
+  if (!root->success())
+    DEBUG_PRINTLN(llError, F("xMQTT: json final check load error."));
+
+  root->set(topic, payload);
+/*
+  if (root->measureLength() > JSON_MEM_BUFFER_LEN - 1) {
+    DEBUG_PRINTLN(llError, "xMQTT: JSON too big. Can't save to memory.");
+    return false;
+  }
+*/
+
+  jsonStrBuffer = "";
+  int n = root->printTo(jsonStrBuffer);
+  return root->success();
+}
+
 void xMQTT::BeginPublish() {
   if (!postAsJson)
     return;
 
-  jsonBuffer.reserve(BUF_RESERVE_LEN);
-  jsonBuffer = "{";
+  jsonStrBuffer.reserve(BUF_RESERVE_LEN);
+  jsonStrBuffer = "{}";
 }
 
 void xMQTT::PublishState(const char *topic, const char *payload) {
@@ -168,7 +191,7 @@ void xMQTT::PublishState(const char *topic, const String &payload) {
 
 void xMQTT::PublishState(const String &topic, const String &payload) {
   if (postAsJson) {
-    jsonBuffer += "\"" + topic + "\":\"" + payload + "\",";
+    jsonInternalPublish(topic, payload);
   } else {
     mqttInternalPublish(topic, payload);
   }
@@ -178,11 +201,7 @@ void xMQTT::Commit(const String &topicAdd) {
   if (!postAsJson)
     return;
 
-  if (jsonBuffer[jsonBuffer.length() - 1] = ',')
-    jsonBuffer.remove(jsonBuffer.length() - 1);
-  jsonBuffer += "}";
-
-  mqttInternalPublish(topicAdd, jsonBuffer);
+  mqttInternalPublish(topicAdd, jsonStrBuffer);
 }
 
 void xMQTT::Commit(const char *topicAdd) {
