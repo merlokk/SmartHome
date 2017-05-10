@@ -160,13 +160,38 @@ bool xMQTT::jsonInternalPublish(const String &topic, const String &payload) {
   if (!root->success())
     DEBUG_PRINTLN(llError, F("xMQTT: json final check load error."));
 
-  root->set(topic, payload);
-/*
-  if (root->measureLength() > JSON_MEM_BUFFER_LEN - 1) {
+  if (topic.indexOf("/") < 0) {
+    root->set(topic, payload);
+  } else {
+    String tp = topic;
+    String s = "";
+
+    if (tp.indexOf("/") == 0)
+      tp = tp.substring(1);
+
+    JsonObject *jobj = root;
+    while (tp.indexOf("/") >= 0) {
+      int indx = tp.indexOf("/");
+      s = tp.substring(0, indx);
+      tp = tp.substring(indx + 1);
+
+DEBUG_PRINTLN("s=" + s + " tp=" + tp);
+      JsonObject *o = &(*jobj)[s].asObject();
+      if (!o->success())
+        o = &jobj->createNestedObject(s);
+
+      jobj = o;
+    }
+    DEBUG_PRINTLN("set tp=" + tp + " payload=" + payload);
+    jobj->set(tp, payload);
+
+  }
+
+  if (root->measureLength() > 1500) {  // TODO!!!!!
     DEBUG_PRINTLN(llError, "xMQTT: JSON too big. Can't save to memory.");
     return false;
   }
-*/
+
 
   jsonStrBuffer = "";
   int n = root->printTo(jsonStrBuffer);

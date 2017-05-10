@@ -34,7 +34,7 @@ void mqttPublishRegularState() {
   mqtt.PublishState(SF("WIFI/RSSI"), String(WiFi.RSSI())); 
 
   if (timeStatus() == timeSet){
-    mqtt.PublishState(SF("Last/SeenDateTime"), NTP.getTimeDateString()); 
+    mqtt.PublishState(SF("Last/Seen/DateTime"), NTP.getTimeDateString()); 
     mqtt.PublishState(SF("Last/BootDateTime"), NTP.getTimeDateString(NTP.getFirstSync())); 
 
 #ifdef MODBUS_OBJ_NAME
