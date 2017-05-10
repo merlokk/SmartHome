@@ -1,13 +1,15 @@
 #include "xmqtt.h"
 
 xMQTT::xMQTT() {
-
+  mqttClient.setClient(wifiClient);
 }
 
-void xMQTT::begin(const char *_topicName, xParam *_params, xLogger *_logger, bool _postAsJson, bool retained) {
-  SetTopicName(_topicName);
-  SetParamStorage(_params);
+void xMQTT::begin(const char *_hwID, const char *_topicName, xParam *_params, xLogger *_logger, bool _postAsJson, bool retained) {
+  // here right order!!!
+  SetHardwareID(String(_hwID));
   SetLogger(_logger);
+  SetParamStorage(_params);
+  SetTopicName(_topicName);
   SetPostAsJson(_postAsJson);
 }
 
@@ -24,10 +26,10 @@ void xMQTT::SetPostAsJson(bool _postAsJson) {
 }
 
 void xMQTT::SetTopicName(const char *defaultTopicName) {
-  mqttClient.setCallback(mqttCallback);
+  if (!params)
+    return;
 
-  // configure mqtt topic
-  String mqttPath = params[F("mqtt_path")];
+  String mqttPath = (*params)[F("mqtt_path")];
   if (mqttPath.length() == 0) {
     mqttTopic = hardwareID + "/" + defaultTopicName + "/";
   } else {
@@ -44,14 +46,23 @@ void xMQTT::SetDefaultRetained(bool _retained) {
   retained = _retained;
 }
 
-void xMQTT::SetCmdCallback(cmdCallback) {
-  _cmdCallback = cmdCallback;
+void xMQTT::SetProgramVersion(char *_programVersion){
+  programVersion = _programVersion;
 }
 
-void xMQTT::execCmdCallback(String &cmd) {
+void xMQTT::SetHardwareID(const String &value){
+  hardwareID = value;
+}
+
+void xMQTT::SetCmdCallback(cmdCallback callback) {
+  _cmdCallback = callback;
+}
+
+bool xMQTT::execCmdCallback(String &cmd) {
   if (_cmdCallback) {
-    _cmdCallback(cmd);
+    return _cmdCallback(cmd);
   }
+  return false;
 }
 
 void xMQTT::mqttCallback(char* topic, byte* payload, unsigned int length) {
@@ -69,12 +80,16 @@ bool xMQTT::Connect() {
   if (mqttClient.connected()) {
     return true;
   }
+  if (!params) {
+    return false;
+  }
 
+  auto &lparams = *params;
   uint8_t i = 0;
-  String srv = params[F("mqtt_server")];                                                                      // extend visiblity of the "mqtt_server" parameter
-  mqttClient.setServer(srv.c_str(), params[F("mqtt_port")].toInt());
+  String srv = lparams[F("mqtt_server")];                                                                             // extend visiblity of the "mqtt_server" parameter
+  mqttClient.setServer(srv.c_str(), lparams[F("mqtt_port")].toInt());
   while (!mqttClient.connected()) {
-    if (mqttClient.connect(hardwareID.c_str(), params[F("mqtt_user")].c_str(), params[F("mqtt_passwd")].c_str())) {  // because connect doing here
+    if (mqttClient.connect(hardwareID.c_str(), lparams[F("mqtt_user")].c_str(), lparams[F("mqtt_passwd")].c_str())) {  // because connect doing here
       DEBUG_PRINTLN(F("The client is successfully connected to the MQTT broker"));
 
       // subscribe to control topic
@@ -82,8 +97,8 @@ bool xMQTT::Connect() {
       mqttClient.subscribe(vtopic.c_str());
       resetErrorCnt = 0;
     } else {
-      DEBUG_PRINTLN(llError, SF("The connection to the MQTT broker failed. User: ") + params[F("mqtt_user")] +
-        SF(" Passwd: ") + params[F("mqtt_passwd")] +  SF(" Broker: ") + srv + SF(":") + params[F("mqtt_port")]);
+      DEBUG_PRINTLN(llError, SF("The connection to the MQTT broker failed. User: ") + lparams[F("mqtt_user")] +
+        SF(" Passwd: ") + lparams[F("mqtt_passwd")] +  SF(" Broker: ") + srv + SF(":") + lparams[F("mqtt_port")]);
 
       delay(1000);
 
@@ -93,7 +108,9 @@ bool xMQTT::Connect() {
       i++;
 
       if (resetErrorCnt >= 50) {
-        restart();
+        DEBUG_PRINTLN(F("ESP reset..."));
+        ESP.reset();
+        delay(1000);
       }
       resetErrorCnt++;
     }
@@ -113,6 +130,23 @@ bool xMQTT::Reconnect() {
   return false;
 }
 
+bool xMQTT::Connected(){
+  return mqttClient.connected();
+}
+
+void xMQTT::mqttInternalPublish(const String &topic, const String &payload) {
+  if (!mqttClient.connected()) {
+    return;
+  }
+
+  String vtopic = mqttTopic + topic;
+  if (mqttClient.publish(vtopic.c_str(), payload.c_str(), retained)) {
+    DEBUG_PRINTLN(SF("MQTT publish ok. Topic: ") + vtopic + SF(" Payload: ") + payload);
+  } else {
+    DEBUG_PRINTLN(llError, F("MQTT message publish failed"));
+  }
+}
+
 void xMQTT::BeginPublish() {
   if (!postAsJson)
     return;
@@ -122,34 +156,54 @@ void xMQTT::BeginPublish() {
 }
 
 void xMQTT::PublishState(const char *topic, const char *payload) {
-  PublishState(String(topic), String(payload))
+  PublishState(String(topic), String(payload));
 }
 
-void xMQTT::PublishState(String &topic, String &payload) {
+void xMQTT::PublishState(const char *topic, const String &payload) {
+  PublishState(String(topic), payload);
+}
+
+void xMQTT::PublishState(const String &topic, const String &payload) {
   if (postAsJson) {
     jsonBuffer += "\"" + topic + "\":\"" + payload + "\",";
   } else {
-    String vtopic = mqttTopic + topic;
-    if (mqttClient.publish(vtopic.c_str(), payload.c_str(), retained)) {
-      DEBUG_PRINTLN(SF("MQTT publish ok. Topic: ") + vtopic + SF(" Payload: ") + payload);
-    } else {
-      DEBUG_PRINTLN(llError, F("MQTT message publish failed"));
-    }
+    mqttInternalPublish(topic, payload);
   }
-
 }
 
-void xMQTT::Commit(String &topicAdd) {
+void xMQTT::Commit(const String &topicAdd) {
   if (!postAsJson)
     return;
+
   if (jsonBuffer[jsonBuffer.length() - 1] = ',')
     jsonBuffer.remove(jsonBuffer.length() - 1);
   jsonBuffer += "}";
 
-  String vtopic = mqttTopic + topicAdd;
-  if (mqttClient.publish(vtopic.c_str(), jsonBuffer.c_str(), retained)) {
-    DEBUG_PRINTLN(SF("MQTT publish ok. Topic: ") + vtopic + SF(" Payload: ") + jsonBuffer);
-  } else {
-    DEBUG_PRINTLN(llError, F("MQTT message publish failed"));
-  }
+  mqttInternalPublish(topicAdd, jsonBuffer);
 }
+
+void xMQTT::Commit(const char *topicAdd) {
+  Commit(String(topicAdd));
+}
+
+void xMQTT::Commit() {
+  Commit("");
+}
+
+void xMQTT::PublishInitialState() {
+  BeginPublish();
+  PublishState(SF("MAC"), WiFi.macAddress());
+  PublishState(SF("HardwareId"), hardwareID);
+  PublishState(SF("Version"), programVersion);
+  PublishState(SF("DeviceType"), (*params)[F("device_type")]);
+  Commit(SF("System"));
+}
+
+void xMQTT::handle() {
+  if (!mqttClient.connected()) {
+    Connect();
+  }
+
+  mqttClient.loop();
+}
+

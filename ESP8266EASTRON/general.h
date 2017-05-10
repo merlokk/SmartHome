@@ -7,6 +7,7 @@
 #include <ArduinoOTA.h>
 #include <TimeLib.h>            // https://github.com/PaulStoffregen/Time 
 #include <NtpClientLib.h>       // https://github.com/gmag11/NtpClient
+#include <xmqtt.h>
 
 // macros for debugging
 xLogger               logger;
@@ -40,9 +41,8 @@ bool inProgrammingMode = false;
 
 // objects
 Ticker           ticker;
-WiFiClient       wifiClient;
-PubSubClient     mqttClient(wifiClient);
 xParam           params;
+xMQTT            mqtt;
 
 
 

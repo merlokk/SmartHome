@@ -50,7 +50,7 @@ void setup() {
   Serial.setDebugOutput(false);
   Serial1.setDebugOutput(true);
   Serial.begin(115200); //74880
-  Serial1.begin(115200); 
+  Serial1.begin(230400); // high speed logging port
 
   generalSetup();
 
@@ -87,11 +87,12 @@ void setup() {
 // the loop function runs over and over again forever
 void loop() {
   digitalWrite(LED2, LEDON);
-  generalLoop();
+  if (!generalLoop()) {
+    digitalWrite(LED2, LEDOFF);
+    return;
+  }
 
   if (ptimer.isArmed(TID_POLL)) {
-    digitalWrite(LED2, LEDON);
-
     // modbus poll function
     if (ptimer.isArmed(TID_HOLD_REG)) {
       eastron.Poll(POLL_ALL);
@@ -103,6 +104,7 @@ void loop() {
     yield();
 
     // publish some system vars
+    mqtt.BeginPublish();
     mqttPublishRegularState();
 
     // publish vars from configuration
@@ -114,12 +116,12 @@ void loop() {
           eastron.mapConfig[i].command,
           eastron.mapConfig[i].modbusAddress,
           eastron.mapConfig[i].valueType);
-        mqttPublishState(eastron.mapConfig[i].mqttTopicName, str.c_str());        
+        mqtt.PublishState(eastron.mapConfig[i].mqttTopicName, str);        
       }    
     };
+    mqtt.Commit();
   
     ptimer.Reset(TID_POLL);
-    digitalWrite(LED2, LEDOFF);
   }
   
   digitalWrite(LED2, LEDOFF);

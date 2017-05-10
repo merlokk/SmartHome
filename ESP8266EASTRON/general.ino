@@ -18,141 +18,35 @@ ADC_MODE(ADC_VCC);                            // set ADC to meassure esp8266 VCC
   Function called to init MQTT
 */
 void initMQTT(const char * topicName) {
-  mqttClient.setCallback(mqttCallback);
+  mqtt.begin(HARDWARE_ID, topicName, &params, &logger, true, false);  // hardwareID, topicName, xParam, xLogger, postAsJson, retained
+  mqtt.SetProgramVersion(PROGRAM_VERSION);
+  mqtt.SetCmdCallback(CmdCallback);
   
-  // configure mqtt topic
-  String mqttPath = params[F("mqtt_path")];
-  if (mqttPath.length() == 0) {
-    sprintf(MQTT_STATE_TOPIC, "%s/%s/", HARDWARE_ID, topicName);
-  } else {
-    if (mqttPath[mqttPath.length() - 1] == '/') {
-      sprintf(MQTT_STATE_TOPIC, "%s", mqttPath.c_str());
-    } else {
-      sprintf(MQTT_STATE_TOPIC, "%s/", mqttPath.c_str());
-    }
-  }
-  DEBUG_PRINT(F("MQTT command topic: "));
-  DEBUG_PRINTLN(MQTT_STATE_TOPIC);
-
-  // connect to the MQTT broker
-  reconnect();
-}
-
-/*
-  Function called to publish the state of 
-*/
-void mqttPublishInitialState() {
-  String str = WiFi.macAddress();
-  mqttPublishState("MAC", str.c_str());
-  mqttPublishState("HardwareId", HARDWARE_ID);  
-  mqttPublishState("Version", PROGRAM_VERSION);  
-  mqttPublishState("DeviceType", params[F("device_type")].c_str());  
-
-  mqttPublishRegularState();
+  mqtt.Connect();
+  mqtt.PublishInitialState();
 }
 
 void mqttPublishRegularState() {
   String s = "";
   eTimeToStr(s, millis() / 1000);
-  mqttPublishState("Uptime", s.c_str()); 
-  
-  s = String(ESP.getVcc());
-  mqttPublishState("VCC", s.c_str()); 
-  
-  s = String(WiFi.RSSI());
-  mqttPublishState("RSSI", s.c_str()); 
+  mqtt.PublishState(SF("Uptime"), s); 
+  mqtt.PublishState(SF("VCC"), String(ESP.getVcc())); 
+  mqtt.PublishState(SF("RSSI"), String(WiFi.RSSI())); 
 
   if (timeStatus() == timeSet){
-    s = NTP.getTimeDateString();
-    mqttPublishState("LastSeenDateTime", s.c_str()); 
-  
-    s = NTP.getTimeDateString(NTP.getFirstSync());
-    mqttPublishState("LastBootDateTime", s.c_str()); 
+    mqtt.PublishState(SF("LastSeenDateTime"), NTP.getTimeDateString()); 
+    mqtt.PublishState(SF("LastBootDateTime"), NTP.getTimeDateString(NTP.getFirstSync())); 
 
 #ifdef MODBUS_OBJ_NAME
     if (MODBUS_OBJ_NAME.Connected) {
-      s = NTP.getTimeDateString();
-      mqttPublishState("LastConnectedDateTime", s.c_str()); 
+      mqtt.PublishState(SF("LastConnectedDateTime"), NTP.getTimeDateString()); 
     }
 #endif
   }
 
 #ifdef MODBUS_OBJ_NAME
-  mqttPublishState("Connected", MODBUS_OBJ_NAME.Connected ? MQTT_ON_PAYLOAD:MQTT_OFF_PAYLOAD);
+  mqtt.PublishState(SF("Connected"), MODBUS_OBJ_NAME.Connected ? MQTT_ON_PAYLOAD:MQTT_OFF_PAYLOAD);
 #endif
-}
-
-void mqttPublishState(const char *topic, const char *payload) {
-  mqttPublishState(topic, payload, false);                             // true - for release!!!!
-}
-
-void mqttPublishState(const char *topic, const char *payload, bool retained) {
-  String vtopic = String(MQTT_STATE_TOPIC) + String(topic);
-  if (mqttClient.publish(vtopic.c_str(), payload, retained)) {
-    DEBUG_PRINT(F("MQTT publish ok. Topic: "));
-    DEBUG_PRINT(vtopic);
-    DEBUG_PRINT(F(" Payload: "));
-    DEBUG_PRINTLN(payload);
-  } else {
-    DEBUG_EPRINTLN(F("MQTT message publish failed"));
-  }
-}
-
-/*
-  Function called to connect/reconnect to the MQTT broker
-*/
-int resetErrorCnt = 0;
-void reconnect() {
-  uint8_t i = 0;
-  String srv = params[F("mqtt_server")];                                                                      // extend visiblity of the "mqtt_server" parameter
-  mqttClient.setServer(srv.c_str(), params[F("mqtt_port")].toInt());
-  while (!mqttClient.connected()) {
-    if (mqttClient.connect(HARDWARE_ID, params[F("mqtt_user")].c_str(), params[F("mqtt_passwd")].c_str())) {  // because connect doing here
-      DEBUG_PRINTLN(F("The client is successfully connected to the MQTT broker"));
-
-      // subscribe to control topic
-      String vtopic = String(MQTT_STATE_TOPIC) + SF("control");
-      mqttClient.subscribe(vtopic.c_str());
-      resetErrorCnt = 0;
-    } else {
-      DEBUG_EPRINT(F("The connection to the MQTT broker failed."));
-      DEBUG_EPRINT(F(" Username: "));
-      DEBUG_EPRINT(params[F("mqtt_user")]);
-      DEBUG_EPRINT(F(" Password: "));
-      DEBUG_EPRINT(params[F("mqtt_passwd")]);
-      DEBUG_EPRINT(F(" Broker: "));
-      DEBUG_EPRINT(srv);
-      DEBUG_EPRINT(F(":"));
-      DEBUG_EPRINTLN(params[F("mqtt_port")]);
-      
-      delay(1000);
-      
-      if (i >= 2) {
-        break;
-      }
-      i++;
-
-      if (resetErrorCnt >= 50) {
-        restart(); 
-      }
-      resetErrorCnt++;
-    }
-  }
-}
-
-/*
-  Callback for receive message from MQTT broker
-*/
-void mqttCallback(char* topic, byte* payload, unsigned int length) {
-  String sPayload;
-  BufferToString(sPayload, (char*)payload, length);
-
-  DEBUG_PRINT(F("MQTT message arrived ["));
-  DEBUG_PRINT(topic);
-  DEBUG_PRINTLN(SF("] ") + sPayload);
-
-  // commands
-  CmdCallback(sPayload); 
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -493,22 +387,18 @@ void generalSetup() {
   NTP.begin("ua.pool.ntp.org", 0, false);
   NTP.setInterval(30 * 60); // twice a hour
   
-  // configure MQTT
-  initMQTT("PowerMeter");
-
   ticker.detach();
   ticker.attach(0.1, tick);
 
-  mqttPublishInitialState();
+  // configure MQTT
+  initMQTT("PowerMeter");
   
   // ArduinoOTA
   setupArduinoOTA();
   
 }
 
-void generalLoop() {
-  // work loop
-  digitalWrite(LED2, LEDON);
+bool generalLoop() {
 
   // Programming pin activates setup
   if (!inProgrammingMode && (!digitalRead(PIN_PGM))) {
@@ -516,11 +406,16 @@ void generalLoop() {
 
     wifiSetup(false);
     delay(1000);
+    return false;
+  }
+
+  // check wifi connection
+  if (WiFi.status() != WL_CONNECTED) {
+    delay(100);
   }
 
   ArduinoOTA.handle();
   logger.handle();
-  digitalWrite(LED2, LEDOFF);
 
   yield();
 
@@ -530,27 +425,15 @@ void generalLoop() {
     syncEventTriggered = false;
   }
 
-  // keep the MQTT client connected to the broker
-  if (!mqttClient.connected()) {
-    digitalWrite(LED2, LEDON);
-    reconnect();
-    digitalWrite(LED2, LEDOFF);
-  }
-
-  mqttClient.loop();
-
-  // check wifi connection
-  if (WiFi.status() != WL_CONNECTED) {
-    delay(100);
-  }
-
   yield();
 
-  if (!mqttClient.connected()){
-    digitalWrite(LED2, LEDOFF);
-    return;
+  // MQTT
+  mqtt.handle();
+  if (!mqtt.Connected()){
+    return false;
   }
-  
+
+  return true;
 }
 
 

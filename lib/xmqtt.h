@@ -2,40 +2,51 @@
 #define XMQTT_H
 
 #include <Arduino.h>
+#include <PubSubClient.h>       // https://github.com/knolleary/pubsubclient/releases/tag/v2.6
 #include <etools.h>
 #include <xparam.h>
-#include <xlogger.h>        // logger https://github.com/merlokk/xlogger
+#include <xlogger.h>            // logger https://github.com/merlokk/xlogger
 
 #define MQTT_DEBUG
 #define BUF_RESERVE_LEN 256 // reserve for json string
 
-typedef void (*cmdCallback)(String &cmd);
+typedef bool (*cmdCallback)(String &cmd);
 
 class xMQTT {
 public:
   xMQTT();
 
-  void begin(const char *_topicName, xParam *_params, xLogger *_logger = NULL, bool _postAsJson = false, bool retained = false);
+  void begin(const char *_hwID, const char *_topicName, xParam *_params, xLogger *_logger = NULL, bool _postAsJson = false, bool retained = false);
   void SetParamStorage(xParam *_params);
   void SetLogger(xLogger *_logger);
   void SetPostAsJson(bool _postAsJson);
   void SetTopicName(const char * topicName);
   void SetDefaultRetained(bool _retained);
+  void SetProgramVersion(char * _programVersion);
+  void SetHardwareID(const String &value);
 
-  void SetCmdCallback(cmdCallback);
+  void SetCmdCallback(cmdCallback callback);
 
   bool Connect();
   bool Disconnect();
   bool Reconnect();
+  bool Connected();
 
-  void BeginPublish();                     // works for json push
+  void BeginPublish();                           // works for json push
   void PublishState(const char *topic, const char *payload);
-  void PublishState(String &topic, String &payload);
-  void Commit(String &topicAdd);           // works for json push
+  void PublishState(const char *topic, const String &payload);
+  void PublishState(const String &topic, const String &payload);
+  void Commit();                                // works for json push
+  void Commit(const String &topicAdd);
+  void Commit(const char *topicAdd);
+
+  void PublishInitialState();
+
+  void handle();
 
 private:
-  xParam * params = NULL;
-  xLogger * logger = NULL;
+  xParam *params = NULL;
+  xLogger *logger = NULL;
   bool postAsJson = false;
   bool retained = false;
   int resetErrorCnt = 0;  // connect error counter
@@ -43,10 +54,15 @@ private:
 
   String mqttTopic;
   String hardwareID;
+  const char * programVersion = NULL;
+
+  WiFiClient wifiClient;
+  PubSubClient mqttClient;
+
+  void mqttInternalPublish(const String &topic, const String &payload);
 
   cmdCallback _cmdCallback;
-  void execCmdCallback(String &cmd);
-
+  bool execCmdCallback(String &cmd);
   void mqttCallback(char* topic, byte* payload, unsigned int length);
 
   template <typename... Args>
