@@ -2,15 +2,16 @@
 #define XMQTT_H
 
 #include <Arduino.h>
-#include <PubSubClient.h>       // https://github.com/knolleary/pubsubclient/releases/tag/v2.6
-#include <ArduinoJson.h>        // https://github.com/bblanchon/ArduinoJson
+#include <PubSubClient.h>        // https://github.com/knolleary/pubsubclient/releases/tag/v2.6
+#include <ArduinoJson.h>         // https://github.com/bblanchon/ArduinoJson
 #include <etools.h>
 #include <xparam.h>
-#include <xlogger.h>            // logger https://github.com/merlokk/xlogger
+#include <xlogger.h>             // logger https://github.com/merlokk/xlogger
 
 #define MQTT_DEBUG
-#define JSON_OBJ_BUFFER_LEN 500 // json buffer length
-#define BUF_RESERVE_LEN 256 // reserve for json string
+#define JSON_OBJ_BUFFER_LEN 500  // json buffer length
+#define BUF_RESERVE_LEN 256      // reserve for json string
+#define MAX_JSON_LENGTH 1500     // maximum json length in bytes
 
 typedef bool (*cmdCallback)(String &cmd);
 
