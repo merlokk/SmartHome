@@ -18,7 +18,7 @@ ADC_MODE(ADC_VCC);                            // set ADC to meassure esp8266 VCC
   Function called to init MQTT
 */
 void initMQTT(const char * topicName) {
-  mqtt.begin(HARDWARE_ID, topicName, &params, &logger, true, false);  // hardwareID, topicName, xParam, xLogger, postAsJson, retained
+  mqtt.begin(HARDWARE_ID, topicName, &params, &logger, false, false);  // hardwareID, topicName, xParam, xLogger, postAsJson, retained
   mqtt.SetProgramVersion(PROGRAM_VERSION);
   mqtt.SetCmdCallback(CmdCallback);
   
@@ -394,8 +394,7 @@ void generalSetup() {
   initMQTT("PowerMeter");
   
   // ArduinoOTA
-  setupArduinoOTA();
-  
+  setupArduinoOTA();  
 }
 
 bool generalLoop() {

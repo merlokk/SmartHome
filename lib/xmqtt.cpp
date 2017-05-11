@@ -42,7 +42,7 @@ void xMQTT::SetTopicName(const char *defaultTopicName) {
       mqttTopic = mqttPath + "/";
     }
   }
-  DEBUG_PRINTLN(SF("MQTT command topic: ") + mqttTopic);
+  DEBUG_PRINTLN(SF("MQTT topic: ") + mqttTopic);
 }
 
 void xMQTT::SetDefaultRetained(bool _retained) {
@@ -75,6 +75,11 @@ void xMQTT::mqttCallback(char* topic, uint8_t* payload, unsigned int length) {
   DEBUG_PRINTLN(SF("MQTT message arrived [") + topic + SF("] ") + sPayload);
 
   // commands
+  // execute logger commands
+  if (logger && logger->ExecCommand(sPayload)) {
+    return;
+  }
+  // execute callback commands
   execCmdCallback(sPayload);
 }
 
@@ -165,13 +170,13 @@ bool xMQTT::jsonInternalPublish(const String &topic, const String &payload) {
   if (topic.indexOf("/") < 0) {
     root->set(topic, payload);
   } else {
+    JsonObject *jobj = root;
     String str = topic;
     String sNode = "";
 
     if (str.indexOf("/") == 0)
       str = str.substring(1);
 
-    JsonObject *jobj = root;
     while (str.indexOf("/") >= 0) {
       int indx = str.indexOf("/");
       sNode = str.substring(0, indx);
