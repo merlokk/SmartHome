@@ -27,6 +27,8 @@
 #define               DEBUG                            // enable debugging
 #define               DEBUG_SERIAL         logger
 
+#define USE_DEEPSLEEP
+
 // device modbus address
 #define               MODBUS_ADDRESS       42
 #define               MODBUS_OBJ_NAME      esp14
@@ -79,6 +81,17 @@ void PollAndPublish(bool withInit = false) {
   esp14.Poll(POLL_INPUT_REGISTERS);
   if (!esp14.Connected) {
     DEBUG_EPRINTLN(F("Modbus device is not connected."));
+
+    delay(1000);
+    // if cant connect to STM8 - do setup
+    esp14.Poll(POLL_INPUT_REGISTERS);
+    if (!esp14.Connected) {
+      DEBUG_EPRINTLN(F("Modbus device is not connected. Start confog portal..."));
+      wifiSetup(false);
+      delay(1000);
+      restart();
+    }
+    
     return;
   }
 
@@ -102,56 +115,49 @@ void PollAndPublish(bool withInit = false) {
     DEBUG_WPRINTLN(F("Wifi is not connected."));
     return;
   } else {
-    DEBUG_EPRINTLN(SF("Wifi is connected. Timeout ms=") + String(cnt * 100));
+    DEBUG_PRINTLN(SF("Wifi is connected. Timeout ms=") + String(cnt * 100));
   }
 
   // mqtt init and pub
   if (withInit) {
     initMQTT("esp14");
   }
-  if (!mqttClient.connected()) {
-    reconnect();
-  }
+  mqtt.handle();
   
   // publish some system vars
-  if (withInit) {
-    mqttPublishInitialState();
-  }
+  mqtt.BeginPublish();
   mqttPublishRegularState();
 
   // publish vars from configuration
   if (esp14.Connected) {
-    String str;
-    str = String(var.vLight);
-    mqttPublishState("Light", str.c_str());        
-    str = String(var.vPressure);
-    mqttPublishState("Pressure", str.c_str());        
-    str = String(var.vPrTemp);
-    mqttPublishState("PrTemp", str.c_str());        
-    str = String(var.vHumidity);
-    mqttPublishState("Humidity", str.c_str());        
-    str = String(var.vTemp);
-    mqttPublishState("Temp", str.c_str());        
-    str = String(var.vDI, HEX);
-    mqttPublishState("DI", str.c_str());        
+    mqtt.PublishState(SF("Light"), String(var.vLight));        
+    mqtt.PublishState(SF("Pressure"), String(var.vPressure));        
+    mqtt.PublishState(SF("PrTemp"), String(var.vPrTemp));        
+    mqtt.PublishState(SF("Humidity"), String(var.vHumidity));        
+    mqtt.PublishState(SF("Temp"), String(var.vTemp));        
+    mqtt.PublishState(SF("DI"), String(var.vDI, HEX));        
   };
+  mqtt.Commit();
 }
 
 void setup() {  
   Serial.setDebugOutput(false);
   Serial1.setDebugOutput(true);
   Serial.begin(115200); 
-  Serial1.begin(115200); 
+  Serial1.begin(230400); 
 
   pinMode(PIN_PGM, OUTPUT);    
   digitalWrite(PIN_PGM, 1);
   
   sprintf(HARDWARE_ID, "%06X", ESP.getChipId());
+  bool goSleep = true;
 
+  // serial ports delay
+  delay(100);
+  
   // start logger
   initLogger();
   
-  delay(250);
   initPrintStartDebugInfo();
 
   WiFi.hostname(HARDWARE_ID);
@@ -162,11 +168,19 @@ void setup() {
   // connect to default wifi
   WiFi.begin();
 
+  // delay for rs-485 ready
+  delay(500);
+
   PollAndPublish(true);
+
+  // disable sleep
+  goSleep = !(params[F("device_type")].length() == 0) || !(params[F("mqtt_server")].length() == 0);
   
   digitalWrite(PIN_PGM, 0);
-  if ((var.vDI & DI_NODEEPSLEEP) != 0) {
+//  if ((var.vDI & DI_NODEEPSLEEP) != 0) {
+  if (goSleep) {
 #ifdef USE_DEEPSLEEP
+    DEBUG_PRINTLN(SF("Time from start ms=") + String(millis()));
     DEBUG_PRINTLN(F("Go to deep sleep..."));
     ESP.deepSleep(DEEPSLEEP_INTERVAL);
     delay(1000);
@@ -183,8 +197,12 @@ void setup() {
 #endif
   }
 
-  // config here
-  
+  if ((var.vDI & DI_WIFISETUP) != 0) {
+    wifiSetup(false);
+    delay(1000);
+    restart();
+  }
+
   // ArduinoOTA
   setupArduinoOTA();
 }
@@ -201,10 +219,11 @@ void loop() {
 
   digitalWrite(PIN_PGM, 0);
 
+/*
   if ((var.vDI & DI_NODEEPSLEEP) != 0) {
     wifi_set_sleep_type(LIGHT_SLEEP_T);
     delay(LIGHTSLEEP_INTERVAL); 
     wifi_set_sleep_type(NONE_SLEEP_T);
     delay(100);
-  }
+  }*/
 }
