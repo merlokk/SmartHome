@@ -31,15 +31,15 @@ void mqttPublishRegularState() {
   eTimeToStr(s, millis() / 1000);
   mqtt.PublishState(SF("Uptime"), s); 
   mqtt.PublishState(SF("VCC"), String(ESP.getVcc())); 
-  mqtt.PublishState(SF("WIFI/RSSI"), String(WiFi.RSSI())); 
+  mqtt.PublishState(SF("RSSI"), String(WiFi.RSSI())); 
 
   if (timeStatus() == timeSet){
-    mqtt.PublishState(SF("Last/Seen/DateTime"), NTP.getTimeDateString()); 
-    mqtt.PublishState(SF("Last/BootDateTime"), NTP.getTimeDateString(NTP.getFirstSync())); 
+    mqtt.PublishState(SF("LastSeenDateTime"), NTP.getTimeDateString()); 
+    mqtt.PublishState(SF("LastBootDateTime"), NTP.getTimeDateString(NTP.getFirstSync())); 
 
 #ifdef MODBUS_OBJ_NAME
     if (MODBUS_OBJ_NAME.Connected) {
-      mqtt.PublishState(SF("Last/ConnectedDateTime"), NTP.getTimeDateString()); 
+      mqtt.PublishState(SF("LastConnectedDateTime"), NTP.getTimeDateString()); 
     }
 #endif
   }
