@@ -1,5 +1,7 @@
 general.ino
 general.h
+../lib/az7798.cpp
+../lib/az7798.h
 ../lib/eastron.h
 ../lib/modbuspoll.cpp
 ../lib/modbuspoll.h
