@@ -205,12 +205,6 @@ void setup() {
 #endif
   }
 
-  if ((var.vDI & DI_WIFISETUP) != 0) {
-    wifiSetup(false);
-    delay(1000);
-    restart();
-  }
-
   ptimer.Add(TID_POLL, MILLIS_TO_POLL);
   
   // ArduinoOTA
@@ -227,6 +221,13 @@ void loop() {
 
   if (ptimer.isArmed(TID_POLL)) {
     PollAndPublish();
+
+    // check if we need wifi setup
+    if ((var.vDI & DI_WIFISETUP) == 0) {
+      wifiSetup(false);
+      delay(1000);
+      restart();
+    }
 
     ptimer.Reset(TID_POLL);
   }
