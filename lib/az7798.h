@@ -43,6 +43,8 @@ public:
 
 
 private:
+  AZState state = azInit;
+  AZProcessCommands processingCommand = acNone;
 };
 
 #endif // AZ7798_H
