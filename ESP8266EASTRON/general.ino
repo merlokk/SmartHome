@@ -31,7 +31,8 @@ void mqttPublishRegularState() {
   eTimeToStr(s, millis() / 1000);
   mqtt.PublishState(SF("Uptime"), s); 
   mqtt.PublishState(SF("VCC"), String(ESP.getVcc())); 
-  mqtt.PublishState(SF("RSSI"), String(WiFi.RSSI())); 
+  RSSItoStr(s, WiFi.RSSI());
+  mqtt.PublishState(SF("RSSI"), s); 
 
   if (timeStatus() == timeSet){
     mqtt.PublishState(SF("LastSeenDateTime"), NTP.getTimeDateString()); 

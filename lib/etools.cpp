@@ -9,4 +9,20 @@ void BufferToString(String & str, const char* buf, int len) {
   }  
 }
 
+// https://www.speedguide.net/faq/how-does-rssi-dbm-relate-to-signal-quality-percent-439
+// rssi -100 = 0%; -50=100%
+int RSSItoQuality(const int RSSI) {
+  int quality = 2 * (RSSI + 100);
 
+  if (quality < 0) {
+    quality = 0;
+  }
+  if (quality > 100) {
+    quality = 100;
+  }
+  return quality;
+}
+
+void RSSItoStr(String &str, const int RSSI) {
+  str = String(RSSI) + " (" + RSSItoQuality(RSSI) + "%)";
+}

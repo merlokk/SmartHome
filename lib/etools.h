@@ -45,5 +45,9 @@ union dataDouble
 // String
 void BufferToString(String & str, const char* buf, int len);
 
+// tools
+int RSSItoQuality(const int RSSI);
+void RSSItoStr(String &str, const int RSSI);
+
 #endif // ifndef __ETOOLS_H__
 
