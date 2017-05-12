@@ -82,7 +82,7 @@ void PollAndPublish(bool withInit = false) {
   if (!esp14.Connected) {
     DEBUG_EPRINTLN(F("Modbus device is not connected."));
 
-    delay(1000);
+    delay(1500);
     // if cant connect to STM8 - do setup
     esp14.Poll(POLL_INPUT_REGISTERS);
     if (!esp14.Connected) {
@@ -92,7 +92,8 @@ void PollAndPublish(bool withInit = false) {
       restart();
     }
     
-    return;
+    if (!esp14.Connected) 
+      return;
   }
 
   // get values and normalize
@@ -169,7 +170,7 @@ void setup() {
   WiFi.begin();
 
   // delay for rs-485 ready
-  delay(500);
+  delay(600);
 
   PollAndPublish(true);
 
