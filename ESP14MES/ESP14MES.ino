@@ -38,6 +38,11 @@
 #define               LIGHTSLEEP_INTERVAL   SLEEP_INTERVAL*1000 
 #define               DEEPSLEEP_INTERVAL   LIGHTSLEEP_INTERVAL*1000  
 
+// poll
+#define MILLIS_TO_POLL          15*1000       //max time to wait for poll
+// timers
+#define TID_POLL                0x0001        // timer UID for poll 
+
 // LEDs and pins
 #define PIN_PGM  0      // programming pin
 #define LED1     12     // led 1 TODO: delete leds
@@ -52,6 +57,7 @@
 
 // objects
 ModbusPoll       esp14;
+piTimer          ptimer;
 
 struct Esp14Var {
   int vLight;
@@ -138,6 +144,7 @@ void PollAndPublish(bool withInit = false) {
     mqtt.PublishState(SF("Temp"), String(var.vTemp));        
     mqtt.PublishState(SF("DI"), String(var.vDI, HEX));        
   };
+  mqtt.PublishState(SF("Uptimems"), String(millis()));        
   mqtt.Commit();
 }
 
@@ -175,10 +182,10 @@ void setup() {
   PollAndPublish(true);
 
   // disable sleep
-  goSleep = !(params[F("device_type")].length() == 0) || !(params[F("mqtt_server")].length() == 0);
+  goSleep = (params[F("device_type")].length() != 0) && (params[F("mqtt_server")].length() != 0) &&
+    ((var.vDI & DI_NODEEPSLEEP) != 0);
   
   digitalWrite(PIN_PGM, 0);
-//  if ((var.vDI & DI_NODEEPSLEEP) != 0) {
   if (goSleep) {
 #ifdef USE_DEEPSLEEP
     DEBUG_PRINTLN(SF("Time from start ms=") + String(millis()));
@@ -204,6 +211,8 @@ void setup() {
     restart();
   }
 
+  ptimer.Add(TID_POLL, MILLIS_TO_POLL);
+  
   // ArduinoOTA
   setupArduinoOTA();
 }
@@ -216,9 +225,15 @@ void loop() {
 
   yield();
 
-  PollAndPublish();
+  if (ptimer.isArmed(TID_POLL)) {
+    PollAndPublish();
+
+    ptimer.Reset(TID_POLL);
+  }
 
   digitalWrite(PIN_PGM, 0);
+
+  delay(50);
 
 /*
   if ((var.vDI & DI_NODEEPSLEEP) != 0) {
