@@ -7,11 +7,11 @@ az7798::az7798() {
 void az7798::begin() {
 
 
-  state = azWait;
+  state = asWait;
 }
 
 void az7798::handle() {
-  if (state == azInit)
+  if (state == asInit)
     return;
 
 

@@ -1,6 +1,8 @@
 #ifndef AZ7798_H
 #define AZ7798_H
 
+#include <Arduino.h>
+
 #define AZ_DEBUG
 
 enum AZState {
@@ -43,7 +45,7 @@ public:
 
 
 private:
-  AZState state = azInit;
+  AZState state = asInit;
   AZProcessCommands processingCommand = acNone;
 };
 
