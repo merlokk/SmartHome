@@ -2,8 +2,18 @@
 #define AZ7798_H
 
 #include <Arduino.h>
+#include <pitimer.h>
 
 #define AZ_DEBUG
+
+//timer
+piTimer atimer;
+// poll
+#define MILLIS_TO_POLL          15*1000       // max time to wait for poll
+#define MILLIS_TIMEOUT          700           // AZ response timeout
+// timers
+#define TID_POLL                0x0001        // timer UID for poll
+#define TID_TIMEOUT             0x0002        // timer UID for response timeout
 
 enum AZState {
   asInit         = 0x00,
@@ -47,6 +57,11 @@ public:
 private:
   AZState state = asInit;
   AZProcessCommands processingCommand = acNone;
+  String responseBuffer;
+
+  void SendCommand(AZProcessCommands cmd);
+  void ProcessCommand(AZProcessCommands cmd);
+  void ExtractMeasurements();
 };
 
 #endif // AZ7798_H
