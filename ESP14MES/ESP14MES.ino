@@ -56,6 +56,7 @@
 #define DI_NODEEPSLEEP DI_PD3
 
 // objects
+xParam           rtcParams;
 ModbusPoll       esp14;
 piTimer          ptimer;
 
@@ -144,7 +145,19 @@ void PollAndPublish(bool withInit = false) {
     mqtt.PublishState(SF("Temp"), String(var.vTemp));        
     mqtt.PublishState(SF("DI"), String(var.vDI, HEX));        
   };
-  mqtt.PublishState(SF("Uptimems"), String(millis()));        
+
+  // ms from start
+  mqtt.PublishState(SF("Uptimems"), String(millis()));   
+       
+  // rtc clock
+  int cyclesCnt = 0;
+  rtcParams.LoadFromRTC();
+  rtcParams.GetParam(SF("Cycles"), cyclesCnt);
+  cyclesCnt++;
+  rtcParams.SetParam(SF("Cycles"), cyclesCnt);
+  rtcParams.SaveToRTC();
+  mqtt.PublishState(SF("Cycles"), String(cyclesCnt));        
+  
   mqtt.Commit();
 }
 
