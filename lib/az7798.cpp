@@ -86,7 +86,7 @@ void az7798::SetSerial(Stream *_serial) {
 }
 
 bool az7798::Connected() {
-//  return millis() - LastGetMeasurements < 20000; // 20s timeout
+//  return millis() - LastGetMeasurements < MILLIS_TO_POLL * 3;
   return true;
 }
 
@@ -157,8 +157,6 @@ void az7798::SendCommand(AZProcessCommands cmd) {
 }
 
 void az7798::ProcessCommand(AZProcessCommands cmd) {
-  DEBUG_PRINTLN(SF("Process:") + cmd);
-
   switch (cmd) {
   case acNone:
     break;
