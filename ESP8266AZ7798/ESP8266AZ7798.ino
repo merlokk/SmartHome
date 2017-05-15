@@ -8,6 +8,7 @@
  */
 #include <Arduino.h>
 #include <ESP8266WiFi.h>  // https://github.com/esp8266/Arduino
+#include <SoftwareSerial.h>
 #include <xlogger.h>      // logger https://github.com/merlokk/xlogger
 // my libraries
 #include <etools.h>
@@ -41,6 +42,8 @@ piTimer stimer;
 // timers
 #define TID_SEND                0x0001        // timer UID for send data to mqtt 
 
+SoftwareSerial hwSerial(12, 15); // RX, TX (13,15)
+
 ///////////////////////////////////////////////////////////////////////////
 //   Setup() and loop()
 ///////////////////////////////////////////////////////////////////////////
@@ -48,12 +51,12 @@ void setup() {
   Serial.setDebugOutput(false);
   Serial1.setDebugOutput(true);
   Serial.begin(9600); 
-  Serial.swap();
+//  Serial.swap();
   Serial1.begin(115200); // high speed logging port
+  hwSerial.begin(9600);
+  delay(1000); // wait for serial
 
   generalSetup();
-
-  az.begin(&Serial, &logger);
 
   //timer
   stimer.Add(TID_SEND, MILLIS_TO_SEND);
@@ -64,6 +67,7 @@ void setup() {
   digitalWrite(LED1, LEDOFF);
   digitalWrite(LED2, LEDOFF);
 
+  az.begin(&hwSerial, &logger);
 
   // set password in work mode
   if (params[F("device_passwd")].length() > 0)
@@ -103,23 +107,13 @@ void loop() {
       mqtt.PublishState(SF("Humidity"), String(az.GetHumidity()));        
       mqtt.PublishState(SF("CO2"), String(az.GetCO2()));        
     };
-/*    if (eastron.mapConfigLen && eastron.mapConfig && eastron.Connected) {
-      String str;
-      for(int i = 0; i < eastron.mapConfigLen; i++) {
-        eastron.getValue(
-          str,
-          eastron.mapConfig[i].command,
-          eastron.mapConfig[i].modbusAddress,
-          eastron.mapConfig[i].valueType);
-        mqtt.PublishState(eastron.mapConfig[i].mqttTopicName, str);        
-      }    
-    };*/
     mqtt.Commit();
     stimer.Reset(TID_SEND);
   }
 
+  digitalWrite(LED1, LEDOFF);
   digitalWrite(LED2, LEDOFF);
-  delay(100);
+  delay(90);
 }
 
 
