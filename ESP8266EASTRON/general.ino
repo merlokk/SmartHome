@@ -392,7 +392,7 @@ void generalSetup() {
   ticker.attach(0.1, tick);
 
   // configure MQTT
-  initMQTT("PowerMeter");
+  initMQTT(MQTT_DEFAULT_TOPIC);
   
   // ArduinoOTA
   setupArduinoOTA();  

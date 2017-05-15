@@ -25,6 +25,8 @@
 #define               MODBUS_ADDRESS    1
 #define               CONNECTED_OBJ     eastron.Connected
 
+#define               MQTT_DEFAULT_TOPIC "PowerMeter"
+
 // poll
 #define MILLIS_TO_POLL          15*1000       //max time to wait for poll input registers (regular poll)
 #define MILLIS_TO_POLL_HOLD_REG 15*60*1000    //max time to wait for poll all
