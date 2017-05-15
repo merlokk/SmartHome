@@ -17,7 +17,7 @@
 #include <xlogger.h>            // logger https://github.com/merlokk/xlogger
 // my libraries
 #include <etools.h>
-#include <pitimer.h>     // timers
+#include <pitimer.h>            // timers
 #include <modbuspoll.h>
 #include <xparam.h>
 #include "general.h"
@@ -31,7 +31,7 @@
 
 // device modbus address
 #define               MODBUS_ADDRESS       42
-#define               MODBUS_OBJ_NAME      esp14
+#define               CONNECTED_OBJ        esp14.Connected
 
 // max deep sleep time ~71 minutes.
 #define               SLEEP_INTERVAL   60  // 10 sec

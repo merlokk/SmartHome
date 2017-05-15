@@ -23,7 +23,7 @@
 
 // device modbus address
 #define               MODBUS_ADDRESS    1
-#define               MODBUS_OBJ_NAME   eastron
+#define               CONNECTED_OBJ     eastron.Connected
 
 // poll
 #define MILLIS_TO_POLL          15*1000       //max time to wait for poll input registers (regular poll)

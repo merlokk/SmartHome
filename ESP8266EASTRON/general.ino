@@ -38,15 +38,15 @@ void mqttPublishRegularState() {
     mqtt.PublishState(SF("LastSeenDateTime"), NTP.getTimeDateString()); 
     mqtt.PublishState(SF("LastBootDateTime"), NTP.getTimeDateString(NTP.getFirstSync())); 
 
-#ifdef MODBUS_OBJ_NAME
-    if (MODBUS_OBJ_NAME.Connected) {
+#ifdef CONNECTED_OBJ
+    if (CONNECTED_OBJ) {
       mqtt.PublishState(SF("LastConnectedDateTime"), NTP.getTimeDateString()); 
     }
 #endif
   }
 
-#ifdef MODBUS_OBJ_NAME
-  mqtt.PublishState(SF("Connected"), MODBUS_OBJ_NAME.Connected ? MQTT_ON_PAYLOAD:MQTT_OFF_PAYLOAD);
+#ifdef CONNECTED_OBJ
+  mqtt.PublishState(SF("Connected"), CONNECTED_OBJ ? MQTT_ON_PAYLOAD:MQTT_OFF_PAYLOAD);
 #endif
 }
 
