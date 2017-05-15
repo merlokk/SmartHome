@@ -7,11 +7,11 @@
  * (c) Oleg Moiseenko 2017
  */
 #include <Arduino.h>
-#include <ESP8266WiFi.h>        // https://github.com/esp8266/Arduino
-#include <xlogger.h>            // logger https://github.com/merlokk/xlogger
+#include <ESP8266WiFi.h>  // https://github.com/esp8266/Arduino
+#include <xlogger.h>      // logger https://github.com/merlokk/xlogger
 // my libraries
 #include <etools.h>
-#include <pitimer.h>     // timers
+#include <pitimer.h>      // timers
 #include <xparam.h>
 #include "general.h"
 
