@@ -204,9 +204,28 @@ void az7798::ProcessCommand(AZProcessCommands cmd) {
   while (serial->read() != -1);
 }
 
+void ExtractStr(const String &in, String &out, const String &sFrom, const String &sTo) {
+  out = "";
+
+  int i1 = in.indexOf(sFrom);
+  int i2 = in.indexOf(sTo);
+  if (i1 < 0 || i2 < 0 || i1 >= i2) {
+    return;
+  }
+
+  out = in.substring(i1 + sFrom.length(), i2);
+}
+
 void az7798::ExtractMeasurements() {
   Temperature = 0;
   Humidity = 0;
   CO2 = 0;
 
+  String s;
+  ExtractStr(Measurements, s, "T", "C:");
+  Temperature = s.toFloat();
+  ExtractStr(Measurements, s, ":C", "ppm");
+  CO2 = s.toInt();
+  ExtractStr(Measurements, s, "H", "%");
+  Humidity = s.toFloat();
 }
