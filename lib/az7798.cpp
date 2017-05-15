@@ -44,7 +44,7 @@ void az7798::handle() {
   case asSentCommand:
     while (serial->available()) {
       char c = serial->read();
-      if (c == '\r') {
+      if (c == '\r' || c == '\0') {
         state = asGotResponse;
         break;
       }
@@ -111,7 +111,7 @@ int az7798::GetCO2() const {
 }
 
 void az7798::SendCommand(AZProcessCommands cmd) {
-  Serial.flush();
+  serial->flush();
 
   switch (cmd) {
   case acNone:
@@ -119,7 +119,7 @@ void az7798::SendCommand(AZProcessCommands cmd) {
     break;
 
   case acGetVersion:
-    serial->println("I\r\n");
+    serial->print("I\r");
     DEBUG_PRINTLN(SF("Sent command: info."));
     processingCommand = acGetVersion;
     state = asSentCommand;
@@ -131,7 +131,7 @@ void az7798::SendCommand(AZProcessCommands cmd) {
   case acSetDateTime:
     // number of seconds from 1 jan 2000.
     // ">"
-    serial->println("C %d\r");
+    serial->print("C %d\r");
     DEBUG_PRINTLN(SF("Sent command: set datetime ") + String(0));
     processingCommand = acSetDateTime;
     state = asSentCommand;
@@ -139,7 +139,7 @@ void az7798::SendCommand(AZProcessCommands cmd) {
 
   case acGetMeasurements:
     //": T20.4C:C1753ppm:H47.5%"
-    serial->println(":\r");
+    serial->print(":\r");
     DEBUG_PRINTLN(SF("Sent command: GetMeasurements."));
     processingCommand = acGetMeasurements;
     state = asSentCommand;
@@ -165,6 +165,12 @@ void az7798::ProcessCommand(AZProcessCommands cmd) {
 
   case acGetVersion:
     Version = responseBuffer;
+    if (Version.startsWith("i ")) {
+      Version = Version.substring(2);
+    } else {
+      DEBUG_PRINTLN(llWarning, SF("AZ strange version information..."));
+    }
+    DEBUG_PRINTLN(SF("AZ version: ") + Version);
     break;
 
   case acGetDateTime:
@@ -177,10 +183,15 @@ void az7798::ProcessCommand(AZProcessCommands cmd) {
     break;
 
   case acGetMeasurements:
-    Measurements = responseBuffer;
-    if (Measurements.length() >= 15)
-      ExtractMeasurements();
-    LastGetMeasurements = millis();
+    if (responseBuffer.startsWith(": ")) {
+      Measurements = responseBuffer.substring(2);
+      DEBUG_PRINTLN(SF("AZ mes: ") + Measurements);
+      if (Measurements.length() >= 15)
+        ExtractMeasurements();
+      LastGetMeasurements = millis();
+    } else {
+      DEBUG_PRINTLN(llError, SF("AZ invalid mes data:") + String(responseBuffer));
+    }
     break;
 
   default:
