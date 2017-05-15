@@ -23,15 +23,17 @@
 
 // for "connected"
 #define               CONNECTED_OBJ      az.Connected()
+#define               MQTT_DEFAULT_TOPIC "az7798"
 
 // LEDs and pins
 #define PIN_PGM  0      // programming pin and jumper
-#define LED1     12     // led 1
-#define LED2     14     // led 2
+#define LED1     5      // led 1
+#define LED2     4      // led 2
 #define LEDON    LOW
 #define LEDOFF   HIGH
 
 az7798 az;
+bool sentVersion = false;
 
 piTimer stimer;
 // poll
@@ -46,6 +48,7 @@ void setup() {
   Serial.setDebugOutput(false);
   Serial1.setDebugOutput(true);
   Serial.begin(9600); 
+  Serial.swap();
   Serial1.begin(115200); // high speed logging port
 
   generalSetup();
@@ -91,6 +94,11 @@ void loop() {
 
     // publish vars 
     if (az.Connected()) {
+      if (!sentVersion && az.GetVersion() != "") {
+        mqtt.PublishState(SF("AZversion"), String(az.GetVersion()));        
+        sentVersion = true;
+      }
+      
       mqtt.PublishState(SF("Temp"), String(az.GetTemperature()));        
       mqtt.PublishState(SF("Humidity"), String(az.GetHumidity()));        
       mqtt.PublishState(SF("CO2"), String(az.GetCO2()));        

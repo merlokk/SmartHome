@@ -6,6 +6,7 @@ az7798::az7798() {
 
 void az7798::begin(Stream *_serial, xLogger *_logger) {
   atimer.Add(TID_POLL, MILLIS_TO_POLL);
+  atimer.Add(TID_TIMEOUT, MILLIS_TIMEOUT);
 
   SetSerial(_serial);
   SetLogger(_logger);
@@ -19,7 +20,10 @@ void az7798::handle() {
 
   switch (state) {
   case asWait:
-    //here check timer to send command
+    if (!atimer.isArmed(TID_POLL)) {
+      break;
+    }
+    DEBUG_PRINTLN("awa:" + String(processingCommand));
 
     if (processingCommand == acNone){
       if (Version.length() == 0) {
@@ -30,6 +34,8 @@ void az7798::handle() {
 
       SendCommand(acGetMeasurements);
       return;
+    } else {
+      processingCommand = acNone;
     }
 
 
@@ -44,16 +50,25 @@ void az7798::handle() {
       }
       responseBuffer += c;
     }
-    //here if timeout state = asTimeout;
+
+    if (atimer.isArmed(TID_TIMEOUT)) {
+      state = asTimeout;
+    }
     break;
 
   case asGotResponse:
     ProcessCommand(processingCommand);
+
+    atimer.Reset(TID_POLL);
+    processingCommand = acNone;
     state = asWait;
     break;
 
   case asTimeout:
     DEBUG_PRINTLN(llError, SF("Receive command timeout. Buffer:") + responseBuffer);
+
+    atimer.Reset(TID_POLL);
+    processingCommand = acNone;
     state = asWait;
     break;
 
@@ -104,7 +119,7 @@ void az7798::SendCommand(AZProcessCommands cmd) {
     break;
 
   case acGetVersion:
-    serial->println("I\r");
+    serial->println("I\r\n");
     DEBUG_PRINTLN(SF("Sent command: info."));
     processingCommand = acGetVersion;
     state = asSentCommand;
@@ -137,6 +152,8 @@ void az7798::SendCommand(AZProcessCommands cmd) {
 
   responseBuffer = "";
   while (serial->read() != -1);
+  atimer.Reset(TID_POLL);
+  atimer.Reset(TID_TIMEOUT);
 }
 
 void az7798::ProcessCommand(AZProcessCommands cmd) {
