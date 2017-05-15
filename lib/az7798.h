@@ -3,11 +3,11 @@
 
 #include <Arduino.h>
 #include <pitimer.h>
+#include <etools.h>
+#include <xlogger.h>        // logger https://github.com/merlokk/xlogger
 
 #define AZ_DEBUG
 
-//timer
-piTimer atimer;
 // poll
 #define MILLIS_TO_POLL          15*1000       // max time to wait for poll
 #define MILLIS_TIMEOUT          700           // AZ response timeout
@@ -35,10 +35,29 @@ class az7798 {
 public:
   az7798();
 
-  void begin();
+  void begin(Stream *_serial = NULL, xLogger *_logger = NULL);
   void handle();
+  void SetLogger(xLogger * _logger);
+  void SetSerial(Stream *_serial);
 
+  //last connect to AZ
+  int LastGetMeasurements;
+  bool Connected();
 
+  String GetVersion() const;
+  String GetMeasurements() const;
+  float GetTemperature() const;
+  float GetHumidity() const;
+  int GetCO2() const;
+
+private:
+  xLogger *logger = NULL;
+  Stream  *serial = NULL;
+  piTimer atimer;
+
+  AZState state = asInit;
+  AZProcessCommands processingCommand = acNone;
+  String responseBuffer;
 
   // strings from AZ
   String Version;
@@ -50,18 +69,21 @@ public:
   float Humidity;
   int CO2;
 
-  //last connect to AZ
-  int LastGetMeasurements;
-
-
-private:
-  AZState state = asInit;
-  AZProcessCommands processingCommand = acNone;
-  String responseBuffer;
-
   void SendCommand(AZProcessCommands cmd);
   void ProcessCommand(AZProcessCommands cmd);
   void ExtractMeasurements();
+
+  template <typename... Args>
+  void DEBUG_PRINTLN(Args... args);
 };
+
+template <typename... Args>
+void az7798::DEBUG_PRINTLN(Args... args) {
+#ifdef AZ_DEBUG
+  if (logger) {
+    logger->println(args...);
+  }
+#endif
+}
 
 #endif // AZ7798_H

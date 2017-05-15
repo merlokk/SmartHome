@@ -4,15 +4,17 @@ az7798::az7798() {
   responseBuffer.reserve(22);
 }
 
-void az7798::begin() {
-
+void az7798::begin(Stream *_serial, xLogger *_logger) {
   atimer.Add(TID_POLL, MILLIS_TO_POLL);
+
+  SetSerial(_serial);
+  SetLogger(_logger);
 
   state = asWait;
 }
 
 void az7798::handle() {
-  if (state == asInit)
+  if (state == asInit || !serial)
     return;
 
   switch (state) {
@@ -34,8 +36,8 @@ void az7798::handle() {
     break;
 
   case asSentCommand:
-    while (Serial.available()) {
-      char c = Serial.read();
+    while (serial->available()) {
+      char c = serial->read();
       if (c == '\r') {
         state = asGotResponse;
         break;
@@ -51,13 +53,46 @@ void az7798::handle() {
     break;
 
   case asTimeout:
-    // add log
+    DEBUG_PRINTLN(llError, SF("Receive command timeout. Buffer:") + responseBuffer);
     state = asWait;
     break;
 
   default:
     break;
   }
+}
+
+void az7798::SetLogger(xLogger *_logger) {
+  logger = _logger;
+}
+
+void az7798::SetSerial(Stream *_serial) {
+  serial = _serial;
+}
+
+bool az7798::Connected() {
+//  return millis() - LastGetMeasurements < 20000; // 20s timeout
+  return true;
+}
+
+String az7798::GetVersion() const {
+  return Version;
+}
+
+String az7798::GetMeasurements() const {
+  return Measurements;
+}
+
+float az7798::GetTemperature() const {
+  return Temperature;
+}
+
+float az7798::GetHumidity() const {
+  return Humidity;
+}
+
+int az7798::GetCO2() const {
+  return CO2;
 }
 
 void az7798::SendCommand(AZProcessCommands cmd) {
@@ -69,7 +104,8 @@ void az7798::SendCommand(AZProcessCommands cmd) {
     break;
 
   case acGetVersion:
-    Serial.println("I\r");
+    serial->println("I\r");
+    DEBUG_PRINTLN(SF("Sent command: info."));
     processingCommand = acGetVersion;
     state = asSentCommand;
     break;
@@ -80,14 +116,16 @@ void az7798::SendCommand(AZProcessCommands cmd) {
   case acSetDateTime:
     // number of seconds from 1 jan 2000.
     // ">"
-    Serial.println("C %d\r");
+    serial->println("C %d\r");
+    DEBUG_PRINTLN(SF("Sent command: set datetime ") + String(0));
     processingCommand = acSetDateTime;
     state = asSentCommand;
     break;
 
   case acGetMeasurements:
     //": T20.4C:C1753ppm:H47.5%"
-    Serial.println(":\r");
+    serial->println(":\r");
+    DEBUG_PRINTLN(SF("Sent command: GetMeasurements."));
     processingCommand = acGetMeasurements;
     state = asSentCommand;
     break;
@@ -98,10 +136,12 @@ void az7798::SendCommand(AZProcessCommands cmd) {
   }
 
   responseBuffer = "";
-  while (Serial.read() != -1);
+  while (serial->read() != -1);
 }
 
 void az7798::ProcessCommand(AZProcessCommands cmd) {
+  DEBUG_PRINTLN(SF("Process:") + cmd);
+
   switch (cmd) {
   case acNone:
     break;
@@ -133,7 +173,7 @@ void az7798::ProcessCommand(AZProcessCommands cmd) {
   processingCommand = acNone;
 
   responseBuffer = "";
-  while (Serial.read() != -1);
+  while (serial->read() != -1);
 }
 
 void az7798::ExtractMeasurements() {
