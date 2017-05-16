@@ -11,8 +11,9 @@
 #define AZ_DEBUG
 
 // time zones
-//#define AUTO_TIMEZONE
+#define AUTO_TIMEZONE
 #ifdef AUTO_TIMEZONE
+#include <Timezone.h>    //https://github.com/JChristensen/Timezone
 #else
 #define TIMEZONE                +3            // in hours
 #endif

@@ -1,5 +1,12 @@
 #include "az7798.h"
 
+#ifdef AUTO_TIMEZONE
+//UA Ukraine
+TimeChangeRule myDST = {"EEST", Last, Sun, Mar, 3, 180};    //Daylight time = UTC + 3 hours
+TimeChangeRule mySTD = {"EET",  Last, Sun, Oct, 4, 120};    //Standard time = UTC + 2 hours
+Timezone myTZ(myDST, mySTD);
+#endif
+
 az7798::az7798() {
   responseBuffer.reserve(22);
 }
@@ -141,7 +148,10 @@ void az7798::SendCommand(AZProcessCommands cmd) {
     // ">"
     if (timeStatus() == timeSet) {
       time_t dt = now();
-#ifdef TIMEZONE
+
+#ifdef AUTO_TIMEZONE
+      dt = myTZ.toLocal(dt);
+#else
       dt = dt + (TIMEZONE * 60 * 60);
 #endif
       int32_t azdt = dt - TIMESTAMP_01_01_2000;
