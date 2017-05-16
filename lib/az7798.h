@@ -10,16 +10,23 @@
 
 #define AZ_DEBUG
 
+// time zones
+//#define AUTO_TIMEZONE
+#ifdef AUTO_TIMEZONE
+#else
+#define TIMEZONE                +3            // in hours
+#endif
+
+#define TIMESTAMP_01_01_2000    946684800     // start time of AZ time.  01/01/2000 @ 12:00am (UTC)
+
 // poll
 #define MILLIS_TO_POLL          15*1000       // max time to wait for poll
-#define MILLIS_TO_SET_TIME      30*60*1000    // settime interval
+#define MILLIS_TO_SET_TIME      12*60*60*1000 // settime interval 12 hours
 #define MILLIS_TIMEOUT          700           // AZ response timeout
 // timers
 #define TID_POLL                0x0001        // timer UID for poll
 #define TID_SET_TIME            0x0002        // timer UID for set time
 #define TID_TIMEOUT             0x0003        // timer UID for response timeout
-
-#define TIMESTAMP_01_01_2000    946684800     // start time of AZ time.  01/01/2000 @ 12:00am (UTC)
 
 enum AZState {
   asInit         = 0x00,

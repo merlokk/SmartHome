@@ -141,6 +141,9 @@ void az7798::SendCommand(AZProcessCommands cmd) {
     // ">"
     if (timeStatus() == timeSet) {
       time_t dt = now();
+#ifdef TIMEZONE
+      dt = dt + (TIMEZONE * 60 * 60);
+#endif
       int32_t azdt = dt - TIMESTAMP_01_01_2000;
 
       serial->print("C " + String(azdt) + "\r");
