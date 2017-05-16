@@ -85,6 +85,10 @@ void loop() {
     return;
   }
 
+  if (az.Connected()) {
+    digitalWrite(LED1, LEDON);
+  }
+  
   yield();
 
   az.handle();

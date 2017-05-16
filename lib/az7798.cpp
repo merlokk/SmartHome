@@ -6,6 +6,7 @@ az7798::az7798() {
 
 void az7798::begin(Stream *_serial, xLogger *_logger) {
   atimer.Add(TID_POLL, MILLIS_TO_POLL);
+  atimer.Add(TID_SET_TIME, MILLIS_TO_SET_TIME);
   atimer.Add(TID_TIMEOUT, MILLIS_TIMEOUT);
 
   SetSerial(_serial);
@@ -23,15 +24,22 @@ void az7798::handle() {
     if (!atimer.isArmed(TID_POLL)) {
       break;
     }
-    DEBUG_PRINTLN("awa:" + String(processingCommand));
 
     if (processingCommand == acNone){
+      // get version
       if (Version.length() == 0) {
         SendCommand(acGetVersion);
         return;
       }
-      //here set datetime. if timer and needs...
 
+      // set time
+      if (timeStatus() == timeSet && atimer.isArmed(TID_SET_TIME)) {
+        SendCommand(acSetDateTime);
+        atimer.Reset(TID_SET_TIME);
+        return;
+      }
+
+      // get measurements
       SendCommand(acGetMeasurements);
       return;
     } else {
@@ -86,8 +94,7 @@ void az7798::SetSerial(Stream *_serial) {
 }
 
 bool az7798::Connected() {
-//  return millis() - LastGetMeasurements < MILLIS_TO_POLL * 3;
-  return true;
+  return millis() - LastGetMeasurements < MILLIS_TO_POLL * 3;
 }
 
 String az7798::GetVersion() const {
@@ -126,15 +133,21 @@ void az7798::SendCommand(AZProcessCommands cmd) {
     break;
 
   case acGetDateTime:
+    //can't (
     break;
 
   case acSetDateTime:
     // number of seconds from 1 jan 2000.
     // ">"
-    serial->print("C %d\r");
-    DEBUG_PRINTLN(SF("Sent command: set datetime ") + String(0));
-    processingCommand = acSetDateTime;
-    state = asSentCommand;
+    if (timeStatus() == timeSet) {
+      time_t dt = now();
+      int32_t azdt = dt - TIMESTAMP_01_01_2000;
+
+      serial->print("C " + String(azdt) + "\r");
+      DEBUG_PRINTLN(SF("Sent command: set datetime ") + String(azdt) + " dt:" + NTP.getTimeDateString(dt));
+      processingCommand = acSetDateTime;
+      state = asSentCommand;
+    }
     break;
 
   case acGetMeasurements:
@@ -177,7 +190,11 @@ void az7798::ProcessCommand(AZProcessCommands cmd) {
   case acSetDateTime:
     // number of seconds from 1 jan 2000.
     // ">"
-
+    if (responseBuffer == ">") {
+      DEBUG_PRINTLN(SF("AZ time set."));
+    } else {
+      DEBUG_PRINTLN(llError, SF("AZ time set error:") + responseBuffer);
+    }
     break;
 
   case acGetMeasurements:
