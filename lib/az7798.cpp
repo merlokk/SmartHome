@@ -157,6 +157,7 @@ void az7798::SendCommand(AZProcessCommands cmd) {
       time_t dt = now();
 
 #ifdef AUTO_TIMEZONE
+      dt = dt + (atz.getCurrentOffset() * 60); // offset in minutes
 #else
       dt = myTZ.toLocal(dt);
 //      dt = dt + (TIMEZONE * 60 * 60);

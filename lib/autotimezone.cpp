@@ -148,8 +148,9 @@ int AutoTimeZone::getCurrentOffset() const {
 }
 
 void AutoTimeZone::GetStr(String &s) {
-  s = IanaTimezone + " [" + TimezoneShortName + "] IP:" + IP +
-      " (" + CountryCode + ")" + Country + "-" + City +
+  s = IanaTimezone + " [" + TimezoneShortName + "] offset:" + String(CurrentOffset) +
+      " b/d: " + String(BaseOffset) + "/" + String(DSTOffset) +
+      " IP:" + IP + " (" + CountryCode + ")" + Country + "-" + City +
       " c:" + lat + ":" + lon;
 }
 
