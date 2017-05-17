@@ -1,3 +1,5 @@
+../lib/autotimezone.cpp
+../lib/autotimezone.h
 general.ino
 general.h
 ../lib/az7798.cpp

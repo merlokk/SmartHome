@@ -1,3 +1,11 @@
+/*
+ * AZ7798 library.
+ * Get measurements and set date time.
+ * It works via HardwareSerial/SoftwareSerial. ESP-8266 tested.
+ *
+ * (c) Oleg Moiseenko 2017
+ */
+
 #ifndef AZ7798_H
 #define AZ7798_H
 
@@ -13,9 +21,9 @@
 // time zones
 #define AUTO_TIMEZONE
 #ifdef AUTO_TIMEZONE
-#include <Timezone.h>    //https://github.com/JChristensen/Timezone
+#include <autotimezone.h>
 #else
-#define TIMEZONE                +3            // in hours
+#include <Timezone.h>    //https://github.com/JChristensen/Timezone
 #endif
 
 #define TIMESTAMP_01_01_2000    946684800     // start time of AZ time.  01/01/2000 @ 12:00am (UTC)
@@ -87,6 +95,9 @@ private:
   void ProcessCommand(AZProcessCommands cmd);
   void ExtractMeasurements();
 
+#ifdef AUTO_TIMEZONE
+  AutoTimeZone atz;
+#endif
   template <typename... Args>
   void DEBUG_PRINTLN(Args... args);
 };

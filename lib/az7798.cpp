@@ -1,6 +1,6 @@
 #include "az7798.h"
 
-#ifdef AUTO_TIMEZONE
+#ifndef AUTO_TIMEZONE
 //UA Ukraine
 TimeChangeRule myDST = {"EEST", Last, Sun, Mar, 3, 180};    //Daylight time = UTC + 3 hours
 TimeChangeRule mySTD = {"EET",  Last, Sun, Oct, 4, 120};    //Standard time = UTC + 2 hours
@@ -19,12 +19,19 @@ void az7798::begin(Stream *_serial, xLogger *_logger) {
   SetSerial(_serial);
   SetLogger(_logger);
 
+#ifdef AUTO_TIMEZONE
+  atz.begin(logger);
+#endif
   state = asWait;
 }
 
 void az7798::handle() {
   if (state == asInit || !serial)
     return;
+
+#ifdef AUTO_TIMEZONE
+  atz.handle();
+#endif
 
   switch (state) {
   case asWait:
@@ -150,9 +157,9 @@ void az7798::SendCommand(AZProcessCommands cmd) {
       time_t dt = now();
 
 #ifdef AUTO_TIMEZONE
-      dt = myTZ.toLocal(dt);
 #else
-      dt = dt + (TIMEZONE * 60 * 60);
+      dt = myTZ.toLocal(dt);
+//      dt = dt + (TIMEZONE * 60 * 60);
 #endif
       int32_t azdt = dt - TIMESTAMP_01_01_2000;
 
