@@ -153,12 +153,15 @@ void az7798::SendCommand(AZProcessCommands cmd) {
   case acSetDateTime:
     // number of seconds from 1 jan 2000.
     // ">"
+#ifdef AUTO_TIMEZONE
+    if (timeStatus() == timeSet && atz.GotData) {
+      time_t dt = now();
+
+      dt = dt + (atz.getCurrentOffset() * 60); // offset in minutes
+#else
     if (timeStatus() == timeSet) {
       time_t dt = now();
 
-#ifdef AUTO_TIMEZONE
-      dt = dt + (atz.getCurrentOffset() * 60); // offset in minutes
-#else
       dt = myTZ.toLocal(dt);
 //      dt = dt + (TIMEZONE * 60 * 60);
 #endif

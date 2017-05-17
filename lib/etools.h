@@ -44,6 +44,7 @@ union dataDouble
 
 // String
 void BufferToString(String & str, const char* buf, int len);
+String IntToStr(int i, int digits = 2);
 
 // tools
 int RSSItoQuality(const int RSSI);

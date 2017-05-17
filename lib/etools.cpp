@@ -9,6 +9,15 @@ void BufferToString(String & str, const char* buf, int len) {
   }  
 }
 
+String IntToStr(int i, int digits) {
+  String s = String(i);
+  if (s.length() < digits) {
+    for(int k = 0; k < digits - s.length(); k++)
+      s = '0' + s;
+  }
+  return s;
+}
+
 // https://www.speedguide.net/faq/how-does-rssi-dbm-relate-to-signal-quality-percent-439
 // rssi -100 = 0%; -50=100%
 int RSSItoQuality(const int RSSI) {

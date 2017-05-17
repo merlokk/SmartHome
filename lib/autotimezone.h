@@ -16,6 +16,7 @@
 #include <NtpClientLib.h>   // https://github.com/gmag11/NtpClient
 #include <xlogger.h>        // logger https://github.com/merlokk/xlogger
 #include <pitimer.h>
+#include <etools.h>
 
 // stage 1
 // http://ip-api.com/json

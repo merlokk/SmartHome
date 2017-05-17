@@ -10,6 +10,13 @@ void AutoTimeZone::begin(xLogger *_logger) {
   state = tzWait;
 }
 
+// 2017-05-17T14:32:25Z
+String GetJSDate(time_t dt) {
+  String s = IntToStr(year(dt), 4) + '-' + IntToStr(month(dt)) + '-' + IntToStr(day(dt)) + 'T' +
+      IntToStr(hour(dt)) + ':' + IntToStr(minute(dt)) + ':' + IntToStr(second(dt)) + 'Z';
+  return s;
+}
+
 void AutoTimeZone::handle() {
   if (state == tzInit)
     return;
@@ -32,7 +39,7 @@ void AutoTimeZone::handle() {
       // file found at server
       if(httpCode == HTTP_CODE_OK) {
          if (ProcessStage1(http.getString())) {
-           state = tzStage2Send;
+           state = tzWaitStage2;
          } else {
            ttimer.Reset(TID_ERROR_TIMEOUT);
            state = tzWait;
@@ -47,11 +54,7 @@ void AutoTimeZone::handle() {
   }
 
   case tzWaitStage2:
-    if (timeStatus() != timeSet) {
-      break;
-    }
-
-    if (ttimer.isArmed(TID_ERROR_TIMEOUT)) {
+    if (timeStatus() == timeSet && ttimer.isArmed(TID_ERROR_TIMEOUT)) {
       state = tzStage2Send;
     }
 
@@ -60,9 +63,9 @@ void AutoTimeZone::handle() {
   case tzStage2Send:{
     HTTPClient http;
     String ia = IanaTimezone;
-    DEBUG_PRINTLN(SF("TZ:HTTP GET stage 2. iana:") + ia);
+    DEBUG_PRINTLN(SF("TZ:HTTP GET stage 2. iana:") + ia + SF(" now:") + GetJSDate(now()));
     ia.replace("/", "%2F");
-    http.begin(SF("http://api.teleport.org/api/timezones/iana:") + ia + SF("/offsets/?date=2017-05-17T14:32:25Z"));
+    http.begin(SF("http://api.teleport.org/api/timezones/iana:") + ia + SF("/offsets/?date=") + GetJSDate(now()));
     int httpCode = http.GET();
     if(httpCode > 0) {
       DEBUG_PRINTLN(SF("TZ:HTTP GET ok: ") + String(httpCode));
@@ -114,6 +117,10 @@ void AutoTimeZone::handle() {
     String s;
     GetStr(s);
     DEBUG_PRINTLN(SF("TZ: ok. ") + s);
+
+    // all is OK
+    GotData = true;
+
     state = tzSleep;
     break;
   }
