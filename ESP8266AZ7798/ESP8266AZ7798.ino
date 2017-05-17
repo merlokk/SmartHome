@@ -8,7 +8,6 @@
  */
 #include <Arduino.h>
 #include <ESP8266WiFi.h>  // https://github.com/esp8266/Arduino
-#include <SoftwareSerial.h>
 #include <xlogger.h>      // logger https://github.com/merlokk/xlogger
 // my libraries
 #include <etools.h>
@@ -21,6 +20,12 @@
 
 #define               DEBUG                            // enable debugging
 #define               DEBUG_SERIAL      logger
+
+#define USE_SOFTWARE_SERIAL
+#ifdef USE_SOFTWARE_SERIAL
+#include <SoftwareSerial.h>
+SoftwareSerial azSerial(12, 15); // RX, TX (13,15)
+#endif
 
 // for "connected"
 #define               CONNECTED_OBJ      az.Connected()
@@ -42,18 +47,23 @@ piTimer stimer;
 // timers
 #define TID_SEND                0x0001        // timer UID for send data to mqtt 
 
-SoftwareSerial hwSerial(12, 15); // RX, TX (13,15)
-
 ///////////////////////////////////////////////////////////////////////////
 //   Setup() and loop()
 ///////////////////////////////////////////////////////////////////////////
 void setup() {
   Serial.setDebugOutput(false);
   Serial1.setDebugOutput(true);
-  Serial.begin(9600); 
-//  Serial.swap();
   Serial1.begin(115200); // high speed logging port
-  hwSerial.begin(9600);
+  
+#ifdef USE_SOFTWARE_SERIAL
+  azSerial.begin(9600);
+  Stream *ser = &azSerial;
+#else
+  Serial.begin(9600); 
+  Serial.swap();
+  Stream *ser = &Serial;
+#endif
+  
   delay(1000); // wait for serial
 
   generalSetup();
@@ -67,7 +77,7 @@ void setup() {
   digitalWrite(LED1, LEDOFF);
   digitalWrite(LED2, LEDOFF);
 
-  az.begin(&hwSerial, &logger);
+  az.begin(ser, &logger);
 
   // set password in work mode
   if (params[F("device_passwd")].length() > 0)
