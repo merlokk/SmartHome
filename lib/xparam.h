@@ -69,8 +69,10 @@ bool xParam::SetParam(const TString &paramName, const T& paramValue) {
     DEBUG_PRINTLN(llError, "SetParam: json load error.");
     root = &jsonBuffer.createObject();
   };
-  if (!root->success())
+  if (!root->success()) {
     DEBUG_PRINTLN(llError, "SetParam: json final check load error.");
+    return false;
+  }
 
   root->set(paramName, paramValue);
 
