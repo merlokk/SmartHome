@@ -62,13 +62,29 @@ bool xParam::SaveToRTC() {
 }
 
 bool xParam::LoadFromWeb(const String &url) {
-  WiFiClient client;
-/*  if (client.connect(url, 80)) {
+  DEBUG_PRINTLN(SF("xParam: load from web: ") + url);
+  HTTPClient http;
+  http.begin(url);
+  int httpCode = http.GET();
+  if(httpCode > 0) {
+    DEBUG_PRINTLN(SF("xParam: GET ok: ") + String(httpCode));
 
+    // file found at server
+    if (httpCode == HTTP_CODE_OK) {
+      String s = http.getString();
+      int n = min((int)s.length(), JSON_MEM_BUFFER_LEN - 1);
+      s.toCharArray(&jsonMem[0], n);
+      jsonMem[n] = 0x00;
+      DEBUG_PRINTLN(SF("xParam: loaded ok. length: ") + String(n);
+    } else {
+      return false;
+    }
   } else {
-    DEBUG_PRINTLN(llError, F("xParam: Can't connect to host."));
+    DEBUG_PRINTLN(llError, SF("xParam: GET error: ") + http.errorToString(httpCode));
     return false;
-  }*/
+  }
+
+  http.end();
 
   return true;
 }

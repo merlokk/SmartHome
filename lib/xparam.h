@@ -2,6 +2,7 @@
 #define __XPARAM_H
 
 #include <Arduino.h>
+#include <ESP8266HTTPClient.h>
 #include <EEPROM.h>
 #include <ArduinoJson.h>  // https://github.com/bblanchon/ArduinoJson
 #include <xlogger.h>
