@@ -75,7 +75,7 @@ bool xParam::LoadFromWeb(const String &url) {
       int n = min((int)s.length(), JSON_MEM_BUFFER_LEN - 1);
       s.toCharArray(&jsonMem[0], n);
       jsonMem[n] = 0x00;
-      DEBUG_PRINTLN(SF("xParam: loaded ok. length: ") + String(n);
+      DEBUG_PRINTLN(SF("xParam: loaded ok. length: ") + String(n));
     } else {
       return false;
     }

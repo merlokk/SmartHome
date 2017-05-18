@@ -261,7 +261,7 @@ const char* strCommandsDesc =
   "Command startwificfg puts ESP to configure mode. Show configuration AP.\r\n"\
   "Command set <param_name> <value> writes parameter to ESP memory. \r\n"\
   "parameters: mqtt_server, mqtt_port, mqtt_user, mqtt_passwd, mqtt_path, device_type.\r\n"\
-  "System commands: resetcfg, webupdate, webupdatec. ";
+  "System commands: resetcfg, webupdate, webupdatec, showcfg. ";
   
 bool CmdCallback(String &cmd) {
   if (cmd == "reboot") {
@@ -300,6 +300,14 @@ bool CmdCallback(String &cmd) {
     return true;
   }
   
+  if (cmd == "showcfg") {
+    DEBUG_PRINTLN(F("COMMAND: show config."));
+    String s;
+    params.GetParamsJsonStr(s);
+    DEBUG_PRINTLN(s);
+    return true;
+  }
+
   // set <param> <value>. sample: set device_type 220
   if (cmd.length() > 7 && cmd.startsWith("set ")) {
     String name = cmd.substring(4);
