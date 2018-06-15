@@ -9,6 +9,8 @@
 #define __EMODBUS_H__
 
 #include <Arduino.h>
+#define htons(x) ( ((x)<< 8 & 0xFF00) | \
+                   ((x)>> 8 & 0x00FF) )
 
 enum ModbusError {
   MBSuccess                    = 0x00,

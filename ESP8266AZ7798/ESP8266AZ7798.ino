@@ -24,7 +24,7 @@
 #define USE_SOFTWARE_SERIAL
 #ifdef USE_SOFTWARE_SERIAL
 #include <SoftwareSerial.h>
-SoftwareSerial azSerial(12, 15); // RX, TX (13,15)
+SoftwareSerial azSerial(13, 15); // RX, TX (13,15)
 #endif
 
 // for "connected"
@@ -89,16 +89,17 @@ void setup() {
 
 // the loop function runs over and over again forever
 void loop() {
-  digitalWrite(LED2, LEDON);
+  digitalWrite(LED1, LEDON);
+  digitalWrite(LED2, LEDOFF);
   if (!generalLoop()) {
-    digitalWrite(LED2, LEDOFF);
+    digitalWrite(LED1, LEDOFF);
     return;
   }
 
   if (az.Connected()) {
-    digitalWrite(LED1, LEDON);
+    digitalWrite(LED2, LEDON);
   }
-  
+    
   yield();
 
   az.handle();
@@ -126,8 +127,7 @@ void loop() {
   }
 
   digitalWrite(LED1, LEDOFF);
-  digitalWrite(LED2, LEDOFF);
-  delay(90);
+  delay(200);
 }
 
 
