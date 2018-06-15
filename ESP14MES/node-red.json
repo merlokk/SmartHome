@@ -1,0 +1,620 @@
+[
+    {
+        "id": "defeb2cd.9607a",
+        "type": "mqtt in",
+        "z": "cf46c3c9.0721b",
+        "name": "LastConnectedDateTime",
+        "topic": "CO2/LastConnectedDateTime",
+        "qos": "0",
+        "broker": "ebb24325.efd6e",
+        "x": 170,
+        "y": 160,
+        "wires": [
+            [
+                "8d0a50d8.c29d2"
+            ]
+        ]
+    },
+    {
+        "id": "8d0a50d8.c29d2",
+        "type": "ui_text",
+        "z": "cf46c3c9.0721b",
+        "group": "477dfe8d.9ccaa",
+        "order": 5,
+        "width": "0",
+        "height": "0",
+        "name": "",
+        "label": "Last connect",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "x": 370,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "e62791b.f06d77",
+        "type": "mqtt in",
+        "z": "cf46c3c9.0721b",
+        "name": "Temp",
+        "topic": "CO2/Temp",
+        "qos": "0",
+        "broker": "ebb24325.efd6e",
+        "x": 110,
+        "y": 340,
+        "wires": [
+            [
+                "9e36eed0.1ab2a",
+                "e23661e2.184a5",
+                "d455c064.c61c4"
+            ]
+        ]
+    },
+    {
+        "id": "9e36eed0.1ab2a",
+        "type": "ui_text",
+        "z": "cf46c3c9.0721b",
+        "group": "477dfe8d.9ccaa",
+        "order": 9,
+        "width": "2",
+        "height": "1",
+        "name": "",
+        "label": "Temp",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "x": 350,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "1eedb10b.d79bff",
+        "type": "mqtt in",
+        "z": "cf46c3c9.0721b",
+        "name": "Humidity",
+        "topic": "CO2/Humidity",
+        "qos": "0",
+        "broker": "ebb24325.efd6e",
+        "x": 120,
+        "y": 440,
+        "wires": [
+            [
+                "1b851d81.e65272",
+                "1be01ab.a9945e5",
+                "d455c064.c61c4"
+            ]
+        ]
+    },
+    {
+        "id": "1b851d81.e65272",
+        "type": "ui_text",
+        "z": "cf46c3c9.0721b",
+        "group": "477dfe8d.9ccaa",
+        "order": 10,
+        "width": "2",
+        "height": "1",
+        "name": "",
+        "label": "Humidity",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "x": 360,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "72a271d5.e9131",
+        "type": "mqtt in",
+        "z": "cf46c3c9.0721b",
+        "name": "LastSeenDateTime",
+        "topic": "CO2/LastSeenDateTime",
+        "qos": "0",
+        "broker": "ebb24325.efd6e",
+        "x": 150,
+        "y": 100,
+        "wires": [
+            [
+                "cf70086e.79e208"
+            ]
+        ]
+    },
+    {
+        "id": "cf70086e.79e208",
+        "type": "ui_text",
+        "z": "cf46c3c9.0721b",
+        "group": "477dfe8d.9ccaa",
+        "order": 4,
+        "width": "0",
+        "height": "0",
+        "name": "",
+        "label": "Last seen",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "x": 360,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "3c0baa32.149596",
+        "type": "mqtt in",
+        "z": "cf46c3c9.0721b",
+        "name": "Uptime",
+        "topic": "CO2/Uptime",
+        "qos": "0",
+        "broker": "ebb24325.efd6e",
+        "x": 110,
+        "y": 40,
+        "wires": [
+            [
+                "fc877d01.9d97f"
+            ]
+        ]
+    },
+    {
+        "id": "fc877d01.9d97f",
+        "type": "ui_text",
+        "z": "cf46c3c9.0721b",
+        "group": "477dfe8d.9ccaa",
+        "order": 6,
+        "width": "2",
+        "height": "1",
+        "name": "",
+        "label": "Uptime",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "x": 360,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "d141a8c8.9f2ce8",
+        "type": "mqtt in",
+        "z": "cf46c3c9.0721b",
+        "name": "CO2",
+        "topic": "CO2/CO2",
+        "qos": "0",
+        "broker": "ebb24325.efd6e",
+        "x": 110,
+        "y": 540,
+        "wires": [
+            [
+                "6995d28f.208d0c",
+                "d6a20dcb.3fd3b",
+                "1c110754.2cdcf9",
+                "d455c064.c61c4"
+            ]
+        ]
+    },
+    {
+        "id": "6995d28f.208d0c",
+        "type": "ui_text",
+        "z": "cf46c3c9.0721b",
+        "group": "477dfe8d.9ccaa",
+        "order": 11,
+        "width": "2",
+        "height": "1",
+        "name": "",
+        "label": "CO2",
+        "format": "<font color={{(msg.payload > 1000)?'orange':'green'}}>{{msg.payload}}</font>",
+        "layout": "col-center",
+        "x": 350,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "25289fc3.93cb1",
+        "type": "mqtt in",
+        "z": "cf46c3c9.0721b",
+        "name": "VCC",
+        "topic": "CO2/VCC",
+        "qos": "0",
+        "broker": "ebb24325.efd6e",
+        "x": 110,
+        "y": 220,
+        "wires": [
+            [
+                "63d4ee02.4f7be",
+                "d455c064.c61c4"
+            ]
+        ]
+    },
+    {
+        "id": "63d4ee02.4f7be",
+        "type": "ui_text",
+        "z": "cf46c3c9.0721b",
+        "group": "477dfe8d.9ccaa",
+        "order": 7,
+        "width": "2",
+        "height": "1",
+        "name": "",
+        "label": "VCC",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "x": 350,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "d6a20dcb.3fd3b",
+        "type": "ui_chart",
+        "z": "cf46c3c9.0721b",
+        "name": "",
+        "group": "8d2ce4c4.fa6338",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "label": "CO2",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "4",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "useOldStyle": false,
+        "x": 350,
+        "y": 580,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "1be01ab.a9945e5",
+        "type": "ui_chart",
+        "z": "cf46c3c9.0721b",
+        "name": "",
+        "group": "8d2ce4c4.fa6338",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "label": "Humidity",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "4",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "useOldStyle": false,
+        "x": 360,
+        "y": 480,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "e23661e2.184a5",
+        "type": "ui_chart",
+        "z": "cf46c3c9.0721b",
+        "name": "",
+        "group": "8d2ce4c4.fa6338",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "label": "Temperature",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "4",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "useOldStyle": false,
+        "x": 370,
+        "y": 380,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "1c110754.2cdcf9",
+        "type": "ui_gauge",
+        "z": "cf46c3c9.0721b",
+        "name": "",
+        "group": "477dfe8d.9ccaa",
+        "order": 12,
+        "width": 0,
+        "height": 0,
+        "gtype": "donut",
+        "title": "CO2",
+        "label": "units",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "4000",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "1200",
+        "seg2": "3000",
+        "x": 350,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "a0a76e36.36a8",
+        "type": "influxdb batch",
+        "z": "cf46c3c9.0721b",
+        "influxdb": "ff84a2bf.b8dd5",
+        "precision": "s",
+        "retentionPolicy": "",
+        "name": "",
+        "x": 880,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "a1ce8f08.81dda",
+        "type": "mqtt in",
+        "z": "cf46c3c9.0721b",
+        "name": "Connected",
+        "topic": "CO2/Connected",
+        "qos": "0",
+        "broker": "ebb24325.efd6e",
+        "x": 120,
+        "y": 280,
+        "wires": [
+            [
+                "5a826667.b98e88",
+                "d455c064.c61c4"
+            ]
+        ]
+    },
+    {
+        "id": "5a826667.b98e88",
+        "type": "ui_text",
+        "z": "cf46c3c9.0721b",
+        "group": "477dfe8d.9ccaa",
+        "order": 8,
+        "width": "2",
+        "height": "1",
+        "name": "",
+        "label": "Connected",
+        "format": "<font color={{(msg.payload == 'OFF')?'red':'green'}}>{{msg.payload}}</font>",
+        "layout": "col-center",
+        "x": 370,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "fe929f12.e3a4c",
+        "type": "mqtt in",
+        "z": "cf46c3c9.0721b",
+        "name": "DeviceType",
+        "topic": "CO2/DeviceType",
+        "qos": "0",
+        "broker": "ebb24325.efd6e",
+        "x": 570,
+        "y": 160,
+        "wires": [
+            [
+                "f6072e29.c47ff"
+            ]
+        ]
+    },
+    {
+        "id": "f6072e29.c47ff",
+        "type": "ui_text",
+        "z": "cf46c3c9.0721b",
+        "group": "477dfe8d.9ccaa",
+        "order": 3,
+        "width": "2",
+        "height": "1",
+        "name": "",
+        "label": "DeviceType",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "x": 810,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "f4ea4604.c92fa8",
+        "type": "mqtt in",
+        "z": "cf46c3c9.0721b",
+        "name": "Version",
+        "topic": "CO2/Version",
+        "qos": "0",
+        "broker": "ebb24325.efd6e",
+        "x": 550,
+        "y": 100,
+        "wires": [
+            [
+                "6badfce7.70eea4"
+            ]
+        ]
+    },
+    {
+        "id": "6badfce7.70eea4",
+        "type": "ui_text",
+        "z": "cf46c3c9.0721b",
+        "group": "477dfe8d.9ccaa",
+        "order": 2,
+        "width": "2",
+        "height": "1",
+        "name": "",
+        "label": "Version",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "x": 800,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "405d91f.eecf27",
+        "type": "mqtt in",
+        "z": "cf46c3c9.0721b",
+        "name": "MAC",
+        "topic": "CO2/MAC",
+        "qos": "0",
+        "broker": "ebb24325.efd6e",
+        "x": 550,
+        "y": 40,
+        "wires": [
+            [
+                "280b4921.19e1d6"
+            ]
+        ]
+    },
+    {
+        "id": "280b4921.19e1d6",
+        "type": "ui_text",
+        "z": "cf46c3c9.0721b",
+        "group": "477dfe8d.9ccaa",
+        "order": 1,
+        "width": "2",
+        "height": "1",
+        "name": "",
+        "label": "MAC",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "x": 790,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "d455c064.c61c4",
+        "type": "function",
+        "z": "cf46c3c9.0721b",
+        "name": "insert script",
+        "func": "const topics = [\n{t: 'str', topic: 'CO2/Connected', area: 'az', vname: 'connected'},\n{t: 'int', topic: 'CO2/VCC', area: 'az', vname: 'vcc'},\n{t: 'float', topic: 'CO2/Temp', area: 'az', vname: 'temperature'},\n{t: 'float', topic: 'CO2/Humidity', area: 'az', vname: 'humidity'},\n{t: 'int', topic: 'CO2/CO2', area: 'az', vname: 'co2'}\n]\n\nfor (var t in topics) {\n    if (topics[t].topic == msg.topic) {\n        var value = msg.payload;\n        msg.payload = [{\n            measurement: 'mes',\n            tags: {'area': topics[t].area},\n            fields: {}\n        }];\n        switch (topics[t].t) {\n            case 'int': msg.payload[0].fields[topics[t].vname] = parseInt(value); break;\n            case 'float': msg.payload[0].fields[topics[t].vname] = parseFloat(value); break;\n            default: msg.payload[0].fields[topics[t].vname] = value;\n        }\n        return msg;\n    }\n}\n\nreturn ",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 650,
+        "y": 660,
+        "wires": [
+            [
+                "a0a76e36.36a8",
+                "1355607b.0a2d3"
+            ]
+        ]
+    },
+    {
+        "id": "1355607b.0a2d3",
+        "type": "debug",
+        "z": "cf46c3c9.0721b",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 860,
+        "y": 720,
+        "wires": []
+    },
+    {
+        "id": "ebb24325.efd6e",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "local mqtt",
+        "broker": "18.0.0.11",
+        "port": "1883",
+        "clientid": "node-red",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": ""
+    },
+    {
+        "id": "477dfe8d.9ccaa",
+        "type": "ui_group",
+        "z": "",
+        "name": "AZ7798",
+        "tab": "b2c1d58b.5da018",
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "8d2ce4c4.fa6338",
+        "type": "ui_group",
+        "z": "",
+        "name": "Graphs",
+        "tab": "b2c1d58b.5da018",
+        "order": 2,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "ff84a2bf.b8dd5",
+        "type": "influxdb",
+        "z": "",
+        "hostname": "18.0.0.11",
+        "port": "8086",
+        "protocol": "http",
+        "database": "office",
+        "name": "",
+        "usetls": false,
+        "tls": ""
+    },
+    {
+        "id": "b2c1d58b.5da018",
+        "type": "ui_tab",
+        "z": "",
+        "name": "CO2 meter",
+        "icon": "dashboard"
+    }
+]
