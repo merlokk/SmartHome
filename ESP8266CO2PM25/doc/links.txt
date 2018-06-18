@@ -1,0 +1,21 @@
+https://github.com/nara256/mhz19_uart
+https://revspace.nl/MHZ19
+https://habr.com/post/401363/
+
+
+
+http://aqicn.org/sensor/pms5003-7003/
+https://revspace.nl/DustSensor
+https://www.letscontrolit.com/wiki/index.php/PMSx003
+https://github.com/less-smog/ESP8266-AirQuality/wiki/Plantower-PMS7003 -- разъемы тут
+
+https://github.com/less-smog/ESP8266-AirQuality/tree/master/src/sensors
+
+
+
+
+
+
+https://github.com/avaldebe/AQmon
+https://arduino.stackexchange.com/questions/47554/checksum-is-wrong-air-quality-monitoring-station-pms5003-bme280-code-review/47558
+http://www.instructables.com/id/AtmoScan/
