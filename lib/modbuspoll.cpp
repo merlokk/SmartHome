@@ -181,6 +181,18 @@ const mqttMapConfigS esp14t[] = {
   {"DI",          POLL_INPUT_REGISTERS, 0x05, MDB_2BYTE_HEX}
 };
 
+const mqttMapConfigS senseair_s8[] = {
+  {"MeterStatus",  POLL_INPUT_REGISTERS, 0x00, MDB_WORD},
+  {"AlarmStatus",  POLL_INPUT_REGISTERS, 0x01, MDB_WORD},
+  {"CO2",          POLL_INPUT_REGISTERS, 0x03, MDB_WORD},
+
+  // versions
+  {"SensorTypeID", POLL_INPUT_REGISTERS, 0x19, MDB_2BYTE_HEX},
+  {"MemoryMapVer", POLL_INPUT_REGISTERS, 0x1B, MDB_WORD},
+  {"FWVer",        POLL_INPUT_REGISTERS, 0x1C, MDB_WORD},
+  {"SensorID",     POLL_INPUT_REGISTERS, 0x1D, MDB_2BYTE_HEX}
+};
+
 ModbusPoll::ModbusPoll(uint8_t _deviceAddress) {
   deviceAddress = _deviceAddress;
   Connected = false;
@@ -433,6 +445,15 @@ void ModbusPoll::ModbusSetup(const char *deviceType) {
 
     mapConfig = esp14t;
     mapConfigLen = sizeof(esp14t) / sizeof(mqttMapConfigS);
+  }
+
+  // senseair s8
+  if (strncmp(deviceType, "s8", 5) == 0) {
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x04);
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x019, 0x06);
+
+    mapConfig = senseair_s8;
+    mapConfigLen = sizeof(senseair_s8) / sizeof(mqttMapConfigS);
   }
 
   Connect();

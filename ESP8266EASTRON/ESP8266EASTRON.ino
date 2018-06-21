@@ -16,7 +16,7 @@
 #include <xparam.h>
 #include "general.h"
 
-#define               PROGRAM_VERSION   "1.00"
+#define               PROGRAM_VERSION   "1.01"
 
 #define               DEBUG                            // enable debugging
 #define               DEBUG_SERIAL      logger
