@@ -42,10 +42,15 @@ ModbusMaster::ModbusMaster(void) {
   _serial = NULL;
 }
 
-void ModbusMaster::begin(HardwareSerial *serial, int SerialSpeed)
+void ModbusMaster::begin(Stream *serial, int SerialSpeed)
 {
   _serial = serial;
-  _serial->begin(SerialSpeed);
+
+#ifdef USE_SOFTWARE_SERIAL
+  static_cast<SoftwareSerial*>(serial)->begin(SerialSpeed);
+#else
+  static_cast<HardwareSerial*>(serial)->begin(SerialSpeed);
+#endif
 }
 
 // callbacks

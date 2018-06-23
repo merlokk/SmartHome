@@ -54,6 +54,7 @@ class ModbusPoll {
     ModbusDiap modbusArray[MAX_MODBUS_DIAP];
     ModbusMaster modbusNode;
     xLogger * logger = NULL;
+    Stream * mSerial = &Serial;
     uint8_t deviceAddress = 1;
   public:
     uint8_t* getValueAddress(byte Command, word ModbusAddress);
@@ -64,6 +65,7 @@ class ModbusPoll {
   
     ModbusPoll(uint8_t _deviceAddress = 1);
     void SetLogger(xLogger * _logger);
+    void SetSerial(Stream * _serial);
     void SetDeviceAddress(uint8_t _deviceAddress);
     int AddModbusDiap(byte Command, word StartDiap, word LengthDiap);
     int getModbusDiapLength();

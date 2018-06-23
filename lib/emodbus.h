@@ -12,6 +12,11 @@
 #define htons(x) ( ((x)<< 8 & 0xFF00) | \
                    ((x)>> 8 & 0x00FF) )
 
+#define USE_SOFTWARE_SERIAL
+#ifdef USE_SOFTWARE_SERIAL
+#include <SoftwareSerial.h>
+#endif
+
 enum ModbusError {
   MBSuccess                    = 0x00,
   MBIllegalFunction            = 0x01,
@@ -49,13 +54,13 @@ class ModbusMaster {
     ModbusMaster();
 
     //init
-    void begin(HardwareSerial *serial, int SerialSpeed);
+    void begin(Stream *serial, int SerialSpeed);
     //callbacks
     void idle(mbCallback);
     void preTransmission(mbCallback);
     void postTransmission(mbCallback);
 
-    HardwareSerial *_serial;                                     // reference to serial port object
+    Stream *_serial;                                // reference to serial port object
     uint16_t ku16MBResponseTimeout          = 2000; // Modbus timeout [milliseconds]
 
     // master function that conducts Modbus transactions

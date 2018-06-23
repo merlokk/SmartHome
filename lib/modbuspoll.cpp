@@ -203,6 +203,9 @@ ModbusPoll::ModbusPoll(uint8_t _deviceAddress) {
 void ModbusPoll::SetLogger(xLogger * _logger) {
   logger = _logger;
 }
+void ModbusPoll::SetSerial(Stream * _serial) {
+  mSerial = _serial;
+};
 
 void ModbusPoll::SetDeviceAddress(uint8_t _deviceAddress) {
   deviceAddress = _deviceAddress;
@@ -375,7 +378,7 @@ void ModbusPoll::getValue(String &str, byte Command, word ModbusAddress, byte va
 
 void ModbusPoll::Connect() {
   // Initialize modbus communication settings etc...
-  modbusNode.begin(&Serial, SERIAL_BAUD);
+  modbusNode.begin(mSerial, SERIAL_BAUD);
   modbusNode.ku16MBResponseTimeout = MODBUS_POLL_TIMEOUT;
   DEBUG_PRINTLN(F("ModbusPoll connected to com port."));
 }
