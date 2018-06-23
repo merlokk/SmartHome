@@ -187,10 +187,10 @@ const mqttMapConfigS senseair_s8[] = {
   {"CO2",          POLL_INPUT_REGISTERS, 0x03, MDB_WORD},
 
   // versions
-  {"SensorTypeID", POLL_INPUT_REGISTERS, 0x19, MDB_2BYTE_HEX},
-  {"MemoryMapVer", POLL_INPUT_REGISTERS, 0x1B, MDB_WORD},
-  {"FWVer",        POLL_INPUT_REGISTERS, 0x1C, MDB_WORD},
-  {"SensorID",     POLL_INPUT_REGISTERS, 0x1D, MDB_2BYTE_HEX}
+  {"System/SensorTypeID", POLL_INPUT_REGISTERS, 0x19, MDB_2BYTE_HEX},
+  {"System/MemoryMapVer", POLL_INPUT_REGISTERS, 0x1B, MDB_WORD},
+  {"System/FWVer",        POLL_INPUT_REGISTERS, 0x1C, MDB_WORD},
+  {"System/SensorID",     POLL_INPUT_REGISTERS, 0x1D, MDB_2BYTE_HEX}
 };
 
 ModbusPoll::ModbusPoll(uint8_t _deviceAddress) {
