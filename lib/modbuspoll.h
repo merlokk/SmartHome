@@ -56,6 +56,7 @@ class ModbusPoll {
     xLogger * logger = NULL;
     Stream * mSerial = &Serial;
     uint8_t deviceAddress = 1;
+    uint32_t sleepBetweenPolls = 0;
   public:
     uint8_t* getValueAddress(byte Command, word ModbusAddress);
   
@@ -67,12 +68,14 @@ class ModbusPoll {
     void SetLogger(xLogger * _logger);
     void SetSerial(Stream * _serial);
     void SetDeviceAddress(uint8_t _deviceAddress);
+    void SetSleepBetweenPolls(uint32_t _sleep);
     int AddModbusDiap(byte Command, word StartDiap, word LengthDiap);
     int getModbusDiapLength();
     void getStrModbusConfig(String &str);
     void ModbusSetup(const char *deviceType);
     void Connect();
     void Poll(byte Command);
+    void PollAddress(uint16_t Address);
 
     uint16_t getWordValue(byte Command, word ModbusAddress);
     void setWordValue(uint16_t value, byte Command, word ModbusAddress);

@@ -211,6 +211,11 @@ void ModbusPoll::SetDeviceAddress(uint8_t _deviceAddress) {
   deviceAddress = _deviceAddress;
 }
 
+void ModbusPoll::SetSleepBetweenPolls(uint32_t _sleep) {
+  sleepBetweenPolls = _sleep;
+}
+
+
 template <typename... Args>
 void ModbusPoll::DEBUG_PRINTLN(Args... args) {
 #ifdef MODBUSPOLL_DEBUG
@@ -452,8 +457,9 @@ void ModbusPoll::ModbusSetup(const char *deviceType) {
 
   // senseair s8
   if (strncmp(deviceType, "s8", 5) == 0) {
-    AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x04);
-    AddModbusDiap(POLL_INPUT_REGISTERS, 0x019, 0x06);
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x000, 0x04); // co2
+    AddModbusDiap(POLL_INPUT_REGISTERS, 0x019, 0x06); // status
+//    sleepBetweenPolls = 500; // in ms. sensor dont reply on subsequent queries
 
     mapConfig = senseair_s8;
     mapConfigLen = sizeof(senseair_s8) / sizeof(mqttMapConfigS);
@@ -482,6 +488,38 @@ void ModbusPoll::Poll(byte Command) {
     } else {
       break;
     }
+
+    if(sleepBetweenPolls) {
+      delay(sleepBetweenPolls);
+    }
   }
 }
+
+void ModbusPoll::PollAddress(uint16_t Address) {
+  Connected = false;
+  DEBUG_PRINTLN(SF("ModbusPoll poll address: ") + String(Address));
+
+  for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
+    if (modbusArray[i].Command &&
+        (Address >= modbusArray[i].StartDiap && Address < (modbusArray[i].StartDiap + modbusArray[i].LengthDiap)) ){
+      uint8_t res = modbusNode.ModbusMasterTransaction(deviceAddress, modbusArray[i].Command, modbusArray[i].StartDiap, modbusArray[i].LengthDiap, modbusArray[i].Address);
+      if (res != MBSuccess) {
+        // debug output error here
+        String s;
+        strModbusError(s, res);
+        DEBUG_PRINTLN(llError, SF("ModbusPoll (address) modbus (c") +
+          String(modbusArray[i].Command) + SF(" ") + String(modbusArray[i].StartDiap) + SF("[") + String(modbusArray[i].LengthDiap) +
+          SF("]) poll error: ") + s);
+      }
+      Connected = (res == 0);
+    } else {
+      break;
+    }
+
+    if(sleepBetweenPolls) {
+      delay(sleepBetweenPolls);
+    }
+  }
+}
+
 
