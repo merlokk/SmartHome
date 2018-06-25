@@ -495,13 +495,14 @@ void ModbusPoll::Poll(byte Command) {
   }
 }
 
-void ModbusPoll::PollAddress(uint16_t Address) {
+void ModbusPoll::PollAddress(word ModbusAddress) {
   Connected = false;
-  DEBUG_PRINTLN(SF("ModbusPoll poll address: ") + String(Address));
+  DEBUG_PRINTLN(SF("ModbusPoll poll address: ") + String(ModbusAddress));
 
   for (int i = 0; i < MAX_MODBUS_DIAP; i++) {
     if (modbusArray[i].Command &&
-        (Address >= modbusArray[i].StartDiap && Address < (modbusArray[i].StartDiap + modbusArray[i].LengthDiap)) ){
+        ((ModbusAddress >= modbusArray[i].StartDiap) && (ModbusAddress < (modbusArray[i].StartDiap + modbusArray[i].LengthDiap))) ){
+      DEBUG_PRINTLN("modbus...");
       uint8_t res = modbusNode.ModbusMasterTransaction(deviceAddress, modbusArray[i].Command, modbusArray[i].StartDiap, modbusArray[i].LengthDiap, modbusArray[i].Address);
       if (res != MBSuccess) {
         // debug output error here

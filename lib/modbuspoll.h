@@ -75,7 +75,7 @@ class ModbusPoll {
     void ModbusSetup(const char *deviceType);
     void Connect();
     void Poll(byte Command);
-    void PollAddress(uint16_t Address);
+    void PollAddress(uint16_t Addr);
 
     uint16_t getWordValue(byte Command, word ModbusAddress);
     void setWordValue(uint16_t value, byte Command, word ModbusAddress);
