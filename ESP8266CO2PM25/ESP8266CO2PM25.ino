@@ -17,6 +17,8 @@
 #include <ESP8266WiFi.h>        // https://github.com/esp8266/Arduino
 #include <xlogger.h>            // logger https://github.com/merlokk/xlogger
 #include <SoftwareSerial.h>
+#include <Wire.h>
+#include <ClosedCube_HDC1080.h> // https://github.com/closedcube/ClosedCube_HDC1080_Arduino
 // my libraries
 #include <etools.h>
 #include <pitimer.h>     // timers
@@ -36,11 +38,13 @@
 #define               MQTT_DEFAULT_TOPIC "MesUnit"
 
 // poll
-#define MILLIS_TO_POLL          2*1000       //max time to wait for poll input registers (regular poll)
-#define MILLIS_TO_POLL_HOLD_REG 15*60*1000    //max time to wait for poll all
+#define MILLIS_TO_POLL          5*1000       //max time to wait for poll input registers (regular poll)
+#define MILLIS_TO_POLL_HOLD_REG 15*60*1000    //max time to wait for poll all 15*60
+#define MILLIS_TO_MES           5*1000       //max time to measurements
 // timers
 #define TID_POLL                0x0001        // timer UID for regular poll 
 #define TID_HOLD_REG            0x0002        // timer UID for poll all the registers
+#define TID_MES                 0x0003        // timer UID for measurements
 
 // LEDs and pins
 #define PIN_PGM  0      // programming pin and jumper
@@ -53,6 +57,8 @@
 SoftwareSerial mSerial1(13, 15); // RX, TX (13,15)
 ModbusPoll       eastron;
 piTimer          ptimer;
+ClosedCube_HDC1080 hdc1080;
+char HDCSerial[12] = {0};
 
 ///////////////////////////////////////////////////////////////////////////
 //   Setup() and loop()
@@ -70,6 +76,7 @@ void setup() {
   //timer
   ptimer.Add(TID_POLL, MILLIS_TO_POLL);
   ptimer.Add(TID_HOLD_REG, MILLIS_TO_POLL_HOLD_REG);
+  ptimer.Add(TID_MES, MILLIS_TO_MES);
 
   // LED init
   pinMode(LED1, OUTPUT);    
@@ -90,11 +97,33 @@ void setup() {
   DEBUG_PRINTLN(F("Modbus config:"));
   DEBUG_PRINTLN(str);
 
+  // hdc1080
+  Wire.begin(4, 5); // (SDA, SCL)
+  hdc1080.begin(0x40);
+
+  uint16_t HDC1080MID = hdc1080.readManufacturerId();
+  if (HDC1080MID != 0x0000 && HDC1080MID != 0xFFFF) {
+    // sensor online
+    DEBUG_PRINTLN(SF("HDC1080 manufacturer ID=0x") + String(HDC1080MID, HEX)); // 0x5449 ID of Texas Instruments
+    DEBUG_PRINTLN(SF("HDC1080 device ID=0x") + String(hdc1080.readDeviceId(), HEX)); // 0x1050 ID of the device
+    HDC1080_SerialNumber sernum = hdc1080.readSerialNumber();
+    sprintf(HDCSerial, "%02X-%04X-%04X", sernum.serialFirst, sernum.serialMid, sernum.serialLast);
+    DEBUG_PRINTLN(SF("HDC1080 Serial Number=") + String(HDCSerial));
+
+ //   hdc1080.heatUp(10);
+ //   hdc1080.setResolution(HDC1080_RESOLUTION_11BIT, HDC1080_RESOLUTION_11BIT);
+  } else {
+    DEBUG_PRINTLN(SF("HDC1080 sensor offline"));
+  }
+
   // set password in work mode
   if (params[F("device_passwd")].length() > 0)
     logger.setPassword(params[F("device_passwd")].c_str());
 
   ticker.detach();
+
+  delay(2000); // start sensors
+  
   digitalWrite(LED1, LEDOFF);
 }
 
@@ -109,10 +138,17 @@ void loop() {
   if (ptimer.isArmed(TID_POLL)) {
     // modbus poll function
     if (ptimer.isArmed(TID_HOLD_REG)) {
-      eastron.Poll(POLL_ALL);
+      if (eastron.getWordValue(POLL_INPUT_REGISTERS, 0x1e) == 0) {
+        eastron.PollAddress(0x19);
+      }
       ptimer.Reset(TID_HOLD_REG);
     } else {
-      eastron.Poll(POLL_INPUT_REGISTERS);
+      // it needs because time from time seanseair s8 returns timeout.
+      for(int i = 0; i < 4; i++) {
+        eastron.PollAddress(0x00);
+        if(eastron.Connected) break;
+        delay(100);
+      }
     };
 
     yield();
@@ -137,6 +173,34 @@ void loop() {
   
     ptimer.Reset(TID_POLL);
   }
+
+  // HDC 1080
+  if (ptimer.isArmed(TID_MES)) {
+    hdc1080.setResolution(HDC1080_RESOLUTION_11BIT, HDC1080_RESOLUTION_11BIT);
+
+    HDC1080_Registers reg = hdc1080.readRegister();
+    DEBUG_PRINT("Heater: ");
+    DEBUG_PRINT(reg.Heater, BIN);
+    DEBUG_PRINTLN(" (0=Disabled, 1=Enabled)");
+    mqtt.PublishState("Heater", String(reg.Heater));
+
+ /*   if (reg.Heater) {
+      DEBUG_PRINTLN("Try to clear heating state...");
+      reg.Heater = 0;
+      hdc1080.writeRegister(reg);
+    }*/
+
+    double Temp = hdc1080.readTemperature();
+    double Hum = hdc1080.readHumidity();
+    DEBUG_PRINTLN("T=" + String(Temp) + "C, RH=" + String(Hum) + "%");
+    if (Temp < 120) { // if no error
+      mqtt.PublishState("Temperature", String(Temp));
+      mqtt.PublishState("Humidity", String(Hum));
+    }
+
+    ptimer.Reset(TID_MES);
+  }
+ 
   
   digitalWrite(LED2, LEDOFF);
   delay(100);
