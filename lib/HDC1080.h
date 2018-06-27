@@ -24,13 +24,9 @@
 
 // poll
 #define MILLIS_TO_POLL          10*1000       // max time to wait for poll
-#define MILLIS_TO_SET_TIME      10*60*60*1000 // settime interval 12 hours
-#define MILLIS_TIMEOUT          700           // AZ response timeout
 
 // timers
 #define TID_POLL                0x0001        // timer UID for poll
-#define TID_SET_TIME            0x0002        // timer UID for set time
-#define TID_TIMEOUT             0x0003        // timer UID for response timeout
 
 class hdc1080 {
 public:

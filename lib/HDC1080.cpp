@@ -55,8 +55,6 @@ void hdc1080::SensorInit(){
 
 void hdc1080::begin(xLogger *_logger) {
   atimer.Add(TID_POLL, MILLIS_TO_POLL);
-  atimer.Add(TID_SET_TIME, MILLIS_TO_SET_TIME);
-  atimer.Add(TID_TIMEOUT, MILLIS_TIMEOUT);
 
   SetLogger(_logger);
 
