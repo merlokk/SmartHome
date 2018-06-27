@@ -14,6 +14,7 @@
 #include <etools.h>
 #include <xlogger.h>            // logger https://github.com/merlokk/xlogger
 
+#include <Wire.h>
 #include <ClosedCube_HDC1080.h> // original: https://github.com/closedcube/ClosedCube_HDC1080_Arduino
                                 // with error handling fix: https://github.com/merlokk/ClosedCube_HDC1080_Arduino
 
@@ -33,7 +34,7 @@ class hdc1080 {
 public:
   hdc1080();
 
-  void begin();
+  void begin(xLogger *_logger);
   void handle();
   void SetLogger(xLogger * _logger);
 
@@ -47,8 +48,13 @@ private:
   xLogger *logger = NULL;
   piTimer atimer;
 
+  ClosedCube_HDC1080 hdc;
+
+  bool aConnected = false;
   // string ID
   String TextIDs;
+  // readed registers
+  HDC1080_Registers reg;
 
   // decoded measurements
   float Temperature;
@@ -56,6 +62,10 @@ private:
 
   void ProcessIDs();
   void ProcessTH();
+
+  template <typename... Args>
+  void DEBUG_PRINTLN(Args... args);
+};
 
 template <typename... Args>
 void hdc1080::DEBUG_PRINTLN(Args... args) {
