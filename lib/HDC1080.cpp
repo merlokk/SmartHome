@@ -4,6 +4,25 @@ hdc1080::hdc1080() {
   TextIDs = SF("n/a");
 }
 
+uint8_t hdc1080::Reset() {
+  uint8_t err = hdc.GetLastError();
+  reg = hdc.readRegister();
+  err = hdc.GetLastError();
+  if (err) return err;
+
+  reg.SoftwareReset = 1;
+
+  hdc.writeRegister(reg);
+  err = hdc.GetLastError();
+  if (err) return err;
+
+  delay(20);
+
+  reg = hdc.readRegister();
+  err = hdc.GetLastError();
+  if (err) return err;
+}
+
 void hdc1080::begin(xLogger *_logger) {
   atimer.Add(TID_POLL, MILLIS_TO_POLL);
   atimer.Add(TID_SET_TIME, MILLIS_TO_SET_TIME);

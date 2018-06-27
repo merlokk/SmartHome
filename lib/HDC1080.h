@@ -37,6 +37,7 @@ public:
   void begin(xLogger *_logger);
   void handle();
   void SetLogger(xLogger * _logger);
+  uint8_t Reset();
 
   bool Connected();
 
