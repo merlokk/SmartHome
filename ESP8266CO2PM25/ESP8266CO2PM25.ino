@@ -38,9 +38,9 @@
 #define               MQTT_DEFAULT_TOPIC "MesUnit"
 
 // poll
-#define MILLIS_TO_POLL          5*1000       //max time to wait for poll input registers (regular poll)
-#define MILLIS_TO_POLL_HOLD_REG 15*60*1000    //max time to wait for poll all 15*60
-#define MILLIS_TO_MES           5*1000       //max time to measurements
+#define MILLIS_TO_POLL          10*1000       //max time to wait for poll input registers (regular poll)
+#define MILLIS_TO_POLL_HOLD_REG 10*60*1000    //max time to wait for poll all 15*60
+#define MILLIS_TO_MES           10*1000       //max time to measurements
 // timers
 #define TID_POLL                0x0001        // timer UID for regular poll 
 #define TID_HOLD_REG            0x0002        // timer UID for poll all the registers
@@ -101,8 +101,10 @@ void setup() {
   Wire.begin(4, 5); // (SDA, SCL)
   hdc1080.begin(0x40);
 
+  hdc1080.GetLastError(); 
   uint16_t HDC1080MID = hdc1080.readManufacturerId();
-  if (HDC1080MID != 0x0000 && HDC1080MID != 0xFFFF) {
+  uint8_t err = hdc1080.GetLastError(); 
+  if (!err && HDC1080MID != 0x0000 && HDC1080MID != 0xFFFF) {
     // sensor online
     DEBUG_PRINTLN(SF("HDC1080 manufacturer ID=0x") + String(HDC1080MID, HEX)); // 0x5449 ID of Texas Instruments
     DEBUG_PRINTLN(SF("HDC1080 device ID=0x") + String(hdc1080.readDeviceId(), HEX)); // 0x1050 ID of the device
@@ -110,10 +112,10 @@ void setup() {
     sprintf(HDCSerial, "%02X-%04X-%04X", sernum.serialFirst, sernum.serialMid, sernum.serialLast);
     DEBUG_PRINTLN(SF("HDC1080 Serial Number=") + String(HDCSerial));
 
- //   hdc1080.heatUp(10);
- //   hdc1080.setResolution(HDC1080_RESOLUTION_11BIT, HDC1080_RESOLUTION_11BIT);
+ //   hdc1080.heatUp(10); // heat by every start
+    hdc1080.setResolution(HDC1080_RESOLUTION_11BIT, HDC1080_RESOLUTION_11BIT);
   } else {
-    DEBUG_PRINTLN(SF("HDC1080 sensor offline"));
+    DEBUG_PRINTLN(SF("HDC1080 sensor offline. error:") + String(err));
   }
 
   // set password in work mode
@@ -176,12 +178,8 @@ void loop() {
 
   // HDC 1080
   if (ptimer.isArmed(TID_MES)) {
-    hdc1080.setResolution(HDC1080_RESOLUTION_11BIT, HDC1080_RESOLUTION_11BIT);
-
     HDC1080_Registers reg = hdc1080.readRegister();
-    DEBUG_PRINT("Heater: ");
-    DEBUG_PRINT(reg.Heater, BIN);
-    DEBUG_PRINTLN(" (0=Disabled, 1=Enabled)");
+    DEBUG_PRINTLN(SF("Heater: ") + String(reg.Heater, BIN));
     mqtt.PublishState("Heater", String(reg.Heater));
 
  /*   if (reg.Heater) {
@@ -192,10 +190,15 @@ void loop() {
 
     double Temp = hdc1080.readTemperature();
     double Hum = hdc1080.readHumidity();
-    DEBUG_PRINTLN("T=" + String(Temp) + "C, RH=" + String(Hum) + "%");
-    if (Temp < 120) { // if no error
-      mqtt.PublishState("Temperature", String(Temp));
-      mqtt.PublishState("Humidity", String(Hum));
+    uint8_t err = hdc1080.GetLastError(); 
+    if (!err) {
+      DEBUG_PRINTLN(SF("T=") + String(Temp) + SF("C, RH=") + String(Hum) + "%");
+      mqtt.PublishState(SF("Temperature"), String(Temp));
+      mqtt.PublishState(SF("Humidity"), String(Hum));
+      mqtt.PublishState(SF("THConnected"), SF("ON"));
+    } else {
+      mqtt.PublishState(SF("THConnected"), SF("OFF"));
+      DEBUG_PRINTLN("HDC1080 I2C error: " + String(err));
     }
 
     ptimer.Reset(TID_MES);
