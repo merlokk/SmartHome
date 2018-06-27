@@ -18,8 +18,9 @@
 #include <xlogger.h>            // logger https://github.com/merlokk/xlogger
 #include <SoftwareSerial.h>
 #include <Wire.h>
-#include <ClosedCube_HDC1080.h> // https://github.com/closedcube/ClosedCube_HDC1080_Arduino
+
 // my libraries
+#include <HDC1080.h>
 #include <etools.h>
 #include <pitimer.h>     // timers
 #include <modbuspoll.h>
@@ -57,8 +58,7 @@
 SoftwareSerial mSerial1(13, 15); // RX, TX (13,15)
 ModbusPoll       eastron;
 piTimer          ptimer;
-ClosedCube_HDC1080 hdc1080;
-char HDCSerial[12] = {0};
+hdc1080          hdc;
 
 ///////////////////////////////////////////////////////////////////////////
 //   Setup() and loop()
@@ -99,24 +99,8 @@ void setup() {
 
   // hdc1080
   Wire.begin(4, 5); // (SDA, SCL)
-  hdc1080.begin(0x40);
-
-  hdc1080.GetLastError(); 
-  uint16_t HDC1080MID = hdc1080.readManufacturerId();
-  uint8_t err = hdc1080.GetLastError(); 
-  if (!err && HDC1080MID != 0x0000 && HDC1080MID != 0xFFFF) {
-    // sensor online
-    DEBUG_PRINTLN(SF("HDC1080 manufacturer ID=0x") + String(HDC1080MID, HEX)); // 0x5449 ID of Texas Instruments
-    DEBUG_PRINTLN(SF("HDC1080 device ID=0x") + String(hdc1080.readDeviceId(), HEX)); // 0x1050 ID of the device
-    HDC1080_SerialNumber sernum = hdc1080.readSerialNumber();
-    sprintf(HDCSerial, "%02X-%04X-%04X", sernum.serialFirst, sernum.serialMid, sernum.serialLast);
-    DEBUG_PRINTLN(SF("HDC1080 Serial Number=") + String(HDCSerial));
-
- //   hdc1080.heatUp(10); // heat by every start
-    hdc1080.setResolution(HDC1080_RESOLUTION_11BIT, HDC1080_RESOLUTION_11BIT);
-  } else {
-    DEBUG_PRINTLN(SF("HDC1080 sensor offline. error:") + String(err));
-  }
+  hdc.begin(&logger);
+  hdc.SetMQTT(&mqtt, SF("THConnected"), SF("Temperature"), SF("Humidity"), SF("Heater"));
 
   // set password in work mode
   if (params[F("device_passwd")].length() > 0)
@@ -177,33 +161,7 @@ void loop() {
   }
 
   // HDC 1080
-  if (ptimer.isArmed(TID_MES)) {
-    HDC1080_Registers reg = hdc1080.readRegister();
-    DEBUG_PRINTLN(SF("Heater: ") + String(reg.Heater, BIN));
-    mqtt.PublishState("Heater", String(reg.Heater));
-
- /*   if (reg.Heater) {
-      DEBUG_PRINTLN("Try to clear heating state...");
-      reg.Heater = 0;
-      hdc1080.writeRegister(reg);
-    }*/
-
-    double Temp = hdc1080.readTemperature();
-    double Hum = hdc1080.readHumidity();
-    uint8_t err = hdc1080.GetLastError(); 
-    if (!err) {
-      DEBUG_PRINTLN(SF("T=") + String(Temp) + SF("C, RH=") + String(Hum) + "%");
-      mqtt.PublishState(SF("Temperature"), String(Temp));
-      mqtt.PublishState(SF("Humidity"), String(Hum));
-      mqtt.PublishState(SF("THConnected"), SF("ON"));
-    } else {
-      mqtt.PublishState(SF("THConnected"), SF("OFF"));
-      DEBUG_PRINTLN("HDC1080 I2C error: " + String(err));
-    }
-
-    ptimer.Reset(TID_MES);
-  }
- 
+  hdc.handle();
   
   digitalWrite(LED2, LEDOFF);
   delay(100);

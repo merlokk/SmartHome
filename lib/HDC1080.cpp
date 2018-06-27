@@ -37,9 +37,9 @@ void hdc1080::SensorInit(){
     char HDCSerial[12] = {0};
     HDC1080_SerialNumber sernum = hdc.readSerialNumber();
     sprintf(HDCSerial, "%02X-%04X-%04X", sernum.serialFirst, sernum.serialMid, sernum.serialLast);
-    TextIDs = SF("HDC1080: manufacturer ID=0x") + String(HDC1080MID, HEX) +  // 0x5449 ID of Texas Instruments
-        SF(" device ID=0x") + String(hdc.readDeviceId(), HEX) +              // 0x1050 ID of the device
-        SF(" serial number=") + String(HDCSerial);
+    TextIDs = SF("HDC1080: manufacturerID=0x") + String(HDC1080MID, HEX) +  // 0x5449 ID of Texas Instruments
+        SF(" deviceID=0x") + String(hdc.readDeviceId(), HEX) +              // 0x1050 ID of the device
+        SF(" serial=") + String(HDCSerial);
 
     DEBUG_PRINTLN(TextIDs);
 
@@ -68,8 +68,8 @@ void hdc1080::handle() {
   if (atimer.isArmed(TID_POLL)) {
     reg = hdc.readRegister();
     DEBUG_PRINTLN(SF("Heater: ") + String(reg.Heater, BIN));
-    if (amqtt){
-      amqtt->PublishState("Heater", String(reg.Heater));
+    if (amqtt && atopicHeater.length() > 0){
+      amqtt->PublishState(atopicHeater, String(reg.Heater));
     }
 
    /*   if (reg.Heater) {
@@ -81,20 +81,31 @@ void hdc1080::handle() {
     double Temp = hdc.readTemperature();
     double Hum = hdc.readHumidity();
     uint8_t err = hdc.GetLastError();
+    if (err == 100) {
+      DEBUG_PRINTLN(SF("Try to reset..."));
+      err = Reset();
+      if (err) {
+        DEBUG_PRINTLN(SF("Reset error: ") + String(err));
+      } else {
+        Temp = hdc.readTemperature();
+        Hum = hdc.readHumidity();
+        err = hdc.GetLastError();
+      }
+    }
     if (!err) {
       aConnected = true;
       Temperature = Temp;
       Humidity = Hum;
       DEBUG_PRINTLN(SF("T=") + String(Temp) + SF("C, RH=") + String(Hum) + "%");
       if (amqtt){
-        amqtt->PublishState(SF("Temperature"), String(Temp));
-        amqtt->PublishState(SF("Humidity"), String(Hum));
-        amqtt->PublishState(SF("THConnected"), SF("ON"));
+        amqtt->PublishState(atopicT, String(Temp));
+        amqtt->PublishState(atopicH, String(Hum));
+        amqtt->PublishState(atopicOnline, SF("ON"));
       }
     } else {
       aConnected = false;
       if (amqtt){
-        amqtt->PublishState(SF("THConnected"), SF("OFF"));
+        amqtt->PublishState(atopicOnline, SF("OFF"));
       }
       DEBUG_PRINTLN("HDC1080 I2C error: " + String(err));
     }
@@ -111,6 +122,11 @@ void hdc1080::SetLogger(xLogger *_logger) {
 
 void hdc1080::SetMQTT(xMQTT *_mqtt, String _topicOnline, String _topicT, String _topicH, String _topicHeater) {
   amqtt = _mqtt;
+
+  atopicOnline = _topicOnline;
+  atopicT = _topicT;
+  atopicH = _topicH;
+  atopicHeater = _topicHeater;
 }
 
 bool hdc1080::Connected() {

@@ -60,6 +60,11 @@ private:
   String TextIDs;
   // readed registers
   HDC1080_Registers reg;
+  //mqtt topics
+  String atopicOnline;
+  String atopicT;
+  String atopicH;
+  String atopicHeater;
 
   // decoded measurements
   float Temperature;
