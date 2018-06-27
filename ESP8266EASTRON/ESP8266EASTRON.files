@@ -1,3 +1,5 @@
+../lib/HDC1080.cpp
+../lib/HDC1080.h
 ../lib/autotimezone.cpp
 ../lib/autotimezone.h
 general.ino
