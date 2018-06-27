@@ -21,6 +21,8 @@ uint8_t hdc1080::Reset() {
   reg = hdc.readRegister();
   err = hdc.GetLastError();
   if (err) return err;
+
+  hdc.setResolution(HDC1080_RESOLUTION_11BIT, HDC1080_RESOLUTION_11BIT);
 }
 
 void hdc1080::begin(xLogger *_logger) {
