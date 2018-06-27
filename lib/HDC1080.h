@@ -61,7 +61,7 @@ private:
   float Temperature;
   float Humidity;
 
-  void ProcessIDs();
+  void SensorInit();
   void ProcessTH();
 
   template <typename... Args>

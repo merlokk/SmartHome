@@ -25,13 +25,7 @@ uint8_t hdc1080::Reset() {
   hdc.setResolution(HDC1080_RESOLUTION_11BIT, HDC1080_RESOLUTION_11BIT);
 }
 
-void hdc1080::begin(xLogger *_logger) {
-  atimer.Add(TID_POLL, MILLIS_TO_POLL);
-  atimer.Add(TID_SET_TIME, MILLIS_TO_SET_TIME);
-  atimer.Add(TID_TIMEOUT, MILLIS_TIMEOUT);
-
-  SetLogger(_logger);
-
+void hdc1080::SensorInit(){
   // default address hdc1080 - 0x40
   hdc.begin(0x40);
 
@@ -49,7 +43,7 @@ void hdc1080::begin(xLogger *_logger) {
 
     DEBUG_PRINTLN(TextIDs);
 
- //   hdc1080.heatUp(10); // heat by every start
+ //   hdc1080.heatUp(10); // heating every start -- not cool. needs to have test....
     hdc.setResolution(HDC1080_RESOLUTION_11BIT, HDC1080_RESOLUTION_11BIT);
     aConnected = true;
   } else {
@@ -57,6 +51,16 @@ void hdc1080::begin(xLogger *_logger) {
     DEBUG_PRINTLN(SF("HDC1080 sensor offline. error:") + String(err));
     aConnected = false;
   }
+}
+
+void hdc1080::begin(xLogger *_logger) {
+  atimer.Add(TID_POLL, MILLIS_TO_POLL);
+  atimer.Add(TID_SET_TIME, MILLIS_TO_SET_TIME);
+  atimer.Add(TID_TIMEOUT, MILLIS_TIMEOUT);
+
+  SetLogger(_logger);
+
+  SensorInit();
 }
 
 void hdc1080::handle() {
