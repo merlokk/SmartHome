@@ -1,3 +1,5 @@
+../lib/BME280.cpp
+../lib/BME280.h
 ../lib/HDC1080.cpp
 ../lib/HDC1080.h
 ../lib/autotimezone.cpp
