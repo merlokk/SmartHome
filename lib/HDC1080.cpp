@@ -68,7 +68,9 @@ void hdc1080::handle() {
   if (atimer.isArmed(TID_POLL)) {
     reg = hdc.readRegister();
     DEBUG_PRINTLN(SF("Heater: ") + String(reg.Heater, BIN));
-//    mqtt.PublishState("Heater", String(reg.Heater));
+    if (amqtt){
+      amqtt->PublishState("Heater", String(reg.Heater));
+    }
 
    /*   if (reg.Heater) {
         DEBUG_PRINTLN("Try to clear heating state...");
@@ -84,12 +86,16 @@ void hdc1080::handle() {
       Temperature = Temp;
       Humidity = Hum;
       DEBUG_PRINTLN(SF("T=") + String(Temp) + SF("C, RH=") + String(Hum) + "%");
- //     mqtt.PublishState(SF("Temperature"), String(Temp));
- //     mqtt.PublishState(SF("Humidity"), String(Hum));
- //     mqtt.PublishState(SF("THConnected"), SF("ON"));
+      if (amqtt){
+        amqtt->PublishState(SF("Temperature"), String(Temp));
+        amqtt->PublishState(SF("Humidity"), String(Hum));
+        amqtt->PublishState(SF("THConnected"), SF("ON"));
+      }
     } else {
       aConnected = false;
-  //    mqtt.PublishState(SF("THConnected"), SF("OFF"));
+      if (amqtt){
+        amqtt->PublishState(SF("THConnected"), SF("OFF"));
+      }
       DEBUG_PRINTLN("HDC1080 I2C error: " + String(err));
     }
 
@@ -101,6 +107,10 @@ void hdc1080::handle() {
 
 void hdc1080::SetLogger(xLogger *_logger) {
   logger = _logger;
+}
+
+void hdc1080::SetMQTT(xMQTT *_mqtt, String _topicOnline, String _topicT, String _topicH, String _topicHeater) {
+  amqtt = _mqtt;
 }
 
 bool hdc1080::Connected() {

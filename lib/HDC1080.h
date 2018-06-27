@@ -14,6 +14,8 @@
 #include <etools.h>
 #include <xlogger.h>            // logger https://github.com/merlokk/xlogger
 
+#include <xmqtt.h>
+
 #include <Wire.h>
 #include <ClosedCube_HDC1080.h> // original: https://github.com/closedcube/ClosedCube_HDC1080_Arduino
                                 // with error handling fix: https://github.com/merlokk/ClosedCube_HDC1080_Arduino
@@ -37,6 +39,7 @@ public:
   void begin(xLogger *_logger);
   void handle();
   void SetLogger(xLogger * _logger);
+  void SetMQTT(xMQTT *_mqtt, String _topicOnline, String _topicT, String _topicH, String _topicHeater);
   uint8_t Reset();
 
   bool Connected();
@@ -48,6 +51,7 @@ public:
 private:
   xLogger *logger = NULL;
   piTimer atimer;
+  xMQTT *amqtt = NULL;
 
   ClosedCube_HDC1080 hdc;
 
@@ -62,7 +66,6 @@ private:
   float Humidity;
 
   void SensorInit();
-  void ProcessTH();
 
   template <typename... Args>
   void DEBUG_PRINTLN(Args... args);
