@@ -34,7 +34,7 @@ void hdc1080::SensorInit(){
   uint8_t err = hdc.GetLastError();
   if (!err && HDC1080MID != 0x0000 && HDC1080MID != 0xFFFF) {
     // sensor online
-    char HDCSerial[12] = {0};
+    char HDCSerial[13] = {0};
     HDC1080_SerialNumber sernum = hdc.readSerialNumber();
     sprintf(HDCSerial, "%02X-%04X-%04X", sernum.serialFirst, sernum.serialMid, sernum.serialLast);
     TextIDs = SF("HDC1080: manufacturerID=0x") + String(HDC1080MID, HEX) +  // 0x5449 ID of Texas Instruments
