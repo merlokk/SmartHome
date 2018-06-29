@@ -5,7 +5,8 @@ hdc1080::hdc1080() {
 }
 
 uint8_t hdc1080::Reset() {
-  uint8_t err = hdc.GetLastError();
+  uint8_t err;
+  hdc.GetLastError();
   reg = hdc.readRegister();
   err = hdc.GetLastError();
   if (err) return err;
