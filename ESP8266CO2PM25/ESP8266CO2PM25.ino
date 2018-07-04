@@ -106,7 +106,7 @@ void setup() {
 
   // BME280 i2c
   bme.begin(&logger);
-  bme.SetMQTT(&mqtt, SF("THConnected"), SF("Temperature"), SF("Humidity"), SF("Pressure"));
+  bme.SetMQTT(&mqtt, SF("TH2Connected"), SF("Temperature2"), SF("Humidity2"), SF("Pressure2"));
 
   // set password in work mode
   if (params[F("device_passwd")].length() > 0)
