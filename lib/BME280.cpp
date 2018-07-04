@@ -5,50 +5,32 @@ bme280::bme280() {
 }
 
 uint8_t bme280::Reset() {
-  uint8_t err = hdc.GetLastError();
-  reg = hdc.readRegister();
-  err = hdc.GetLastError();
+  uint8_t err = bme.reset();
   if (err) return err;
 
-  reg.SoftwareReset = 1;
-
-  hdc.writeRegister(reg);
-  err = hdc.GetLastError();
-  if (err) return err;
-
-  delay(20);
-
-  reg = hdc.readRegister();
-  err = hdc.GetLastError();
-  if (err) return err;
-
-  hdc.setResolution(HDC1080_RESOLUTION_11BIT, HDC1080_RESOLUTION_11BIT);
+//  bme.setResolution(HDC1080_RESOLUTION_11BIT, HDC1080_RESOLUTION_11BIT);
 }
 
 void bme280::SensorInit(){
-  // default address hdc1080 - 0x40
-  hdc.begin(0x40);
+  // default address bme280 - 0x77, SDO=GND=>0x76
+  if (!bme.begin(0x77)) {
+    return;
+  };
 
-  hdc.GetLastError();
-  uint16_t HDC1080MID = hdc.readManufacturerId();
-  uint8_t err = hdc.GetLastError();
-  if (!err && HDC1080MID != 0x0000 && HDC1080MID != 0xFFFF) {
+  bme.getLastError();
+  uint8_t bme280ID = bme.readManufacturerId();
+  uint8_t err = bme.getLastError();
+  if (!err && bme280ID != 0x0000 && bme280ID != 0xFFFF) {
     // sensor online
-    char HDCSerial[12] = {0};
-    HDC1080_SerialNumber sernum = hdc.readSerialNumber();
-    sprintf(HDCSerial, "%02X-%04X-%04X", sernum.serialFirst, sernum.serialMid, sernum.serialLast);
-    TextIDs = SF("HDC1080: manufacturerID=0x") + String(HDC1080MID, HEX) +  // 0x5449 ID of Texas Instruments
-        SF(" deviceID=0x") + String(hdc.readDeviceId(), HEX) +              // 0x1050 ID of the device
-        SF(" serial=") + String(HDCSerial);
+    TextIDs = SF("BME280: manufacturerID=0x") + String(bme280ID, HEX);  // 0x60 BME280 ID
 
     DEBUG_PRINTLN(TextIDs);
 
- //   hdc1080.heatUp(10); // heating every start -- not cool. needs to have test....
-    hdc.setResolution(HDC1080_RESOLUTION_11BIT, HDC1080_RESOLUTION_11BIT);
+//    hdc.setResolution(HDC1080_RESOLUTION_11BIT, HDC1080_RESOLUTION_11BIT);
     aConnected = true;
   } else {
     TextIDs = SF("offline...");
-    DEBUG_PRINTLN(SF("HDC1080 sensor offline. error:") + String(err));
+    DEBUG_PRINTLN(SF("BME280 sensor offline. error:") + String(err));
     aConnected = false;
   }
 }
@@ -64,40 +46,24 @@ void bme280::begin(xLogger *_logger) {
 void bme280::handle() {
 
   if (atimer.isArmed(TID_POLL)) {
-    reg = hdc.readRegister();
-    DEBUG_PRINTLN(SF("Heater: ") + String(reg.Heater, BIN));
-    if (amqtt && atopicHeater.length() > 0){
-      amqtt->PublishState(atopicHeater, String(reg.Heater));
-    }
 
-   /*   if (reg.Heater) {
-        DEBUG_PRINTLN("Try to clear heating state...");
-        reg.Heater = 0;
-        hdc1080.writeRegister(reg);
-      }*/
+    uint8_t err;
+    bme.getLastError();
+    double Temp = bme.readTemperature();
+    double Hum = bme.readHumidity();
+    double Pre = bme.readPressure() / 100.0F;
+    err = bme.getLastError();
 
-    double Temp = hdc.readTemperature();
-    double Hum = hdc.readHumidity();
-    uint8_t err = hdc.GetLastError();
-    if (err == 100) {
-      DEBUG_PRINTLN(SF("Try to reset..."));
-      err = Reset();
-      if (err) {
-        DEBUG_PRINTLN(SF("Reset error: ") + String(err));
-      } else {
-        Temp = hdc.readTemperature();
-        Hum = hdc.readHumidity();
-        err = hdc.GetLastError();
-      }
-    }
     if (!err) {
       aConnected = true;
       Temperature = Temp;
       Humidity = Hum;
-      DEBUG_PRINTLN(SF("T=") + String(Temp) + SF("C, RH=") + String(Hum) + "%");
+      Pressure = Pre;
+      DEBUG_PRINTLN(SF("T=") + String(Temp) + SF("C, RH=") + String(Hum) + "% P=" + String(Pre));
       if (amqtt){
         amqtt->PublishState(atopicT, String(Temp));
         amqtt->PublishState(atopicH, String(Hum));
+        amqtt->PublishState(atopicP, String(Pre));
         amqtt->PublishState(atopicOnline, SF("ON"));
       }
     } else {
@@ -105,7 +71,7 @@ void bme280::handle() {
       if (amqtt){
         amqtt->PublishState(atopicOnline, SF("OFF"));
       }
-      DEBUG_PRINTLN("HDC1080 I2C error: " + String(err));
+      DEBUG_PRINTLN("BME280 I2C error: " + String(err));
     }
 
     atimer.Reset(TID_POLL);
@@ -118,13 +84,13 @@ void bme280::SetLogger(xLogger *_logger) {
   logger = _logger;
 }
 
-void bme280::SetMQTT(xMQTT *_mqtt, String _topicOnline, String _topicT, String _topicH, String _topicHeater) {
+void bme280::SetMQTT(xMQTT *_mqtt, String _topicOnline, String _topicT, String _topicH, String _topicP) {
   amqtt = _mqtt;
 
   atopicOnline = _topicOnline;
   atopicT = _topicT;
   atopicH = _topicH;
-  atopicHeater = _topicHeater;
+  atopicP = _topicP;
 }
 
 bool bme280::Connected() {
@@ -141,5 +107,9 @@ float bme280::GetTemperature() const {
 
 float bme280::GetHumidity() const {
   return Humidity;
+}
+
+float bme280::GetPressure() const {
+  return Pressure;
 }
 

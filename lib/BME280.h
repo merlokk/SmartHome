@@ -17,10 +17,10 @@
 #include <xmqtt.h>
 
 #include <Wire.h>
-#include <ClosedCube_HDC1080.h> // original: https://github.com/closedcube/ClosedCube_HDC1080_Arduino
-                                // with error handling fix: https://github.com/merlokk/ClosedCube_HDC1080_Arduino
+#include <Adafruit_BME280.h>    // original: https://github.com/adafruit/Adafruit_BME280_Library
+                                // with error handling fix: https://github.com/merlokk/Adafruit_BME280_Library
 
-#define HDC_DEBUG
+#define BME_DEBUG
 
 // poll
 #define MILLIS_TO_POLL          10*1000       // max time to wait for poll
@@ -35,7 +35,7 @@ public:
   void begin(xLogger *_logger);
   void handle();
   void SetLogger(xLogger * _logger);
-  void SetMQTT(xMQTT *_mqtt, String _topicOnline, String _topicT, String _topicH, String _topicHeater);
+  void SetMQTT(xMQTT *_mqtt, String _topicOnline, String _topicT, String _topicH, String _topicP);
   uint8_t Reset();
 
   bool Connected();
@@ -43,28 +43,29 @@ public:
   String GetTextIDs() const;
   float GetTemperature() const;
   float GetHumidity() const;
+  float GetPressure() const;
 
 private:
   xLogger *logger = NULL;
   piTimer atimer;
   xMQTT *amqtt = NULL;
 
-  ClosedCube_HDC1080 hdc;
+  Adafruit_BME280 bme; // I2C
 
   bool aConnected = false;
   // string ID
   String TextIDs;
-  // readed registers
-  HDC1080_Registers reg;
+
   //mqtt topics
   String atopicOnline;
   String atopicT;
   String atopicH;
-  String atopicHeater;
+  String atopicP;
 
   // decoded measurements
   float Temperature;
   float Humidity;
+  float Pressure;
 
   void SensorInit();
 
@@ -74,7 +75,7 @@ private:
 
 template <typename... Args>
 void bme280::DEBUG_PRINTLN(Args... args) {
-#ifdef HDC_DEBUG
+#ifdef BME_DEBUG
   if (logger) {
     logger->println(args...);
   }
