@@ -21,6 +21,7 @@
 
 // my libraries
 #include <HDC1080.h>
+#include <BME280.h>
 #include <etools.h>
 #include <pitimer.h>     // timers
 #include <modbuspoll.h>
@@ -59,6 +60,7 @@ SoftwareSerial mSerial1(13, 15); // RX, TX (13,15)
 ModbusPoll       eastron;
 piTimer          ptimer;
 hdc1080          hdc;
+bme280           bme;
 
 ///////////////////////////////////////////////////////////////////////////
 //   Setup() and loop()
@@ -101,6 +103,10 @@ void setup() {
   Wire.begin(4, 5); // (SDA, SCL)
   hdc.begin(&logger);
   hdc.SetMQTT(&mqtt, SF("THConnected"), SF("Temperature"), SF("Humidity"), SF("Heater"));
+
+  // BME280 i2c
+  bme.begin(&logger);
+  bme.SetMQTT(&mqtt, SF("THConnected"), SF("Temperature"), SF("Humidity"), SF("Pressure"));
 
   // set password in work mode
   if (params[F("device_passwd")].length() > 0)
@@ -162,6 +168,9 @@ void loop() {
 
   // HDC 1080
   hdc.handle();
+
+  // BME280
+  //bme.handle();
   
   digitalWrite(LED2, LEDOFF);
   delay(100);
