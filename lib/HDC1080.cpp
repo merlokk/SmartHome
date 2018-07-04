@@ -24,6 +24,7 @@ uint8_t hdc1080::Reset() {
   if (err) return err;
 
   hdc.setResolution(HDC1080_RESOLUTION_11BIT, HDC1080_RESOLUTION_11BIT);
+  return 0;
 }
 
 void hdc1080::SensorInit(){

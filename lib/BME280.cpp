@@ -9,6 +9,7 @@ uint8_t bme280::Reset() {
   if (err) return err;
 
 //  bme.setResolution(HDC1080_RESOLUTION_11BIT, HDC1080_RESOLUTION_11BIT);
+  return 0;
 }
 
 void bme280::SensorInit(){
