@@ -170,7 +170,7 @@ void loop() {
   hdc.handle();
 
   // BME280
-  //bme.handle();
+//  bme.handle();
   
   digitalWrite(LED2, LEDOFF);
   delay(100);

@@ -15,13 +15,14 @@ uint8_t bme280::Reset() {
 void bme280::SensorInit(){
   // default address bme280 - 0x77, SDO=GND=>0x76
   if (!bme.begin(0x77)) {
+    DEBUG_PRINTLN(SF("BME280 sensor offline."));
     return;
   };
 
   bme.getLastError();
   uint8_t bme280ID = bme.readManufacturerId();
   uint8_t err = bme.getLastError();
-  if (!err && bme280ID != 0x0000 && bme280ID != 0xFFFF) {
+  if (!err && bme280ID != 0x00 && bme280ID != 0xFF) {
     // sensor online
     TextIDs = SF("BME280: manufacturerID=0x") + String(bme280ID, HEX);  // 0x60 BME280 ID
 
