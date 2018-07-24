@@ -1,5 +1,7 @@
 ../../libraries/Adafruit_BME280_Library/Adafruit_BME280.cpp
 ../../libraries/Adafruit_BME280_Library/Adafruit_BME280.h
+../../libraries/ClosedCube_HDC1080/src/ClosedCube_HDC1080.cpp
+../../libraries/ClosedCube_HDC1080/src/ClosedCube_HDC1080.h
 ../lib/BME280.cpp
 ../lib/BME280.h
 ../lib/HDC1080.cpp
