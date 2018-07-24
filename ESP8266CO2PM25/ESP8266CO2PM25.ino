@@ -100,6 +100,7 @@ void setup() {
   DEBUG_PRINTLN(str);
 
   // hdc1080
+  Wire.pins(4, 5); // (SDA, SCL) changes default values
   Wire.begin(4, 5); // (SDA, SCL)
   hdc.begin(&logger);
   hdc.SetMQTT(&mqtt, SF("THConnected"), SF("Temperature"), SF("Humidity"), SF("Heater"));
@@ -170,7 +171,7 @@ void loop() {
   hdc.handle();
 
   // BME280
-//  bme.handle();
+  bme.handle();
   
   digitalWrite(LED2, LEDOFF);
   delay(100);
