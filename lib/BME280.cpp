@@ -13,8 +13,10 @@ uint8_t bme280::Reset() {
 }
 
 void bme280::SensorInit(){
+  aConnected = false;
+
   // default address bme280 - 0x77, SDO=GND=>0x76
-  if (!bme.begin(0x77)) {
+  if (!bme.begin(0x76)) {
     DEBUG_PRINTLN(SF("BME280 sensor offline."));
     return;
   };
@@ -28,12 +30,24 @@ void bme280::SensorInit(){
 
     DEBUG_PRINTLN(TextIDs);
 
-//    hdc.setResolution(HDC1080_RESOLUTION_11BIT, HDC1080_RESOLUTION_11BIT);
+
+    bme.setSampling(Adafruit_BME280::MODE_NORMAL,
+                    Adafruit_BME280::SAMPLING_X1, // temperature
+                    Adafruit_BME280::SAMPLING_X1, // pressure
+                    Adafruit_BME280::SAMPLING_X1, // humidity
+                    Adafruit_BME280::FILTER_OFF   );
+
+    err = bme.getLastError();
+    if (err) {
+      DEBUG_PRINTLN(SF("BME280 set sampling error: ") + String(err));
+      return;
+    }
+
+
     aConnected = true;
   } else {
     TextIDs = SF("offline...");
     DEBUG_PRINTLN(SF("BME280 sensor offline. error:") + String(err));
-    aConnected = false;
   }
 }
 
@@ -51,6 +65,14 @@ void bme280::handle() {
 
     uint8_t err;
     bme.getLastError();
+
+//    bme.takeForcedMeasurement();
+//    err = bme.getLastError();
+//    if (err) {
+//      DEBUG_PRINTLN(SF("BME280 cant take mes. error: ") + String(err));
+//      return;
+//    }
+
     double Temp = bme.readTemperature();
     double Hum = bme.readHumidity();
     double Pre = bme.readPressure() / 100.0F;
