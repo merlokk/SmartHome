@@ -6,8 +6,8 @@
  * (c) Oleg Moiseenko 2018
  */
 
-#ifndef BME280_H
-#define BME280_H
+#ifndef LIBBME280_H
+#define LIBBME280_H
 
 #include <Arduino.h>
 #include <pitimer.h>
@@ -82,4 +82,4 @@ void bme280::DEBUG_PRINTLN(Args... args) {
 #endif
 }
 
-#endif // BME280_H
+#endif // LIBBME280_H
