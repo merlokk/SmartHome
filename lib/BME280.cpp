@@ -31,7 +31,7 @@ void bme280::SensorInit(){
     DEBUG_PRINTLN(TextIDs);
 
 
-    bme.setSampling(Adafruit_BME280::MODE_NORMAL,
+    bme.setSampling(Adafruit_BME280::MODE_FORCED,
                     Adafruit_BME280::SAMPLING_X1, // temperature
                     Adafruit_BME280::SAMPLING_X1, // pressure
                     Adafruit_BME280::SAMPLING_X1, // humidity
@@ -66,12 +66,12 @@ void bme280::handle() {
     uint8_t err;
     bme.getLastError();
 
-//    bme.takeForcedMeasurement();
-//    err = bme.getLastError();
-//    if (err) {
-//      DEBUG_PRINTLN(SF("BME280 cant take mes. error: ") + String(err));
-//      return;
-//    }
+    bme.takeForcedMeasurement();
+    err = bme.getLastError();
+    if (err) {
+      DEBUG_PRINTLN(SF("BME280 cant take mes. error: ") + String(err));
+      return;
+    }
 
     double Temp = bme.readTemperature();
     double Hum = bme.readHumidity();
