@@ -30,7 +30,7 @@ class pmsx003 {
 public:
   pmsx003();
 
-  void begin(xLogger *_logger);
+  void begin(xLogger *_logger, Stream *_serial);
   void handle();
   void SetLogger(xLogger * _logger);
   void SetMQTT(xMQTT *_mqtt, String _topicOnline, String _topicPM1_0, String _topicPM2_5, String _topicPM10);
@@ -44,11 +44,15 @@ public:
   pms_meas_t *GetMeasurements();
 
 private:
+  Stream *aserial = NULL;
   xLogger *logger = NULL;
   piTimer atimer;
   xMQTT *amqtt = NULL;
 
   bool aConnected = false;
+
+  // string ID
+  String TextIDs;
 
   //mqtt topics
   String atopicOnline;
@@ -59,8 +63,8 @@ private:
   // decoded measurements
   pms_meas_t pms_meas;
 
-  void Standby(bool wakeup);
-  void SetupMode(bool activeMode);
+  void SetStandbyMode(bool wakeup);
+  void SetActiveMode(bool activeMode);
   void ManualMeasurement();
   void SensorInit();
 

@@ -63,7 +63,11 @@ ModbusPoll       eastron;
 piTimer          ptimer;
 hdc1080          hdc;
 bme280           bme;
+pmsx003          pms;
 
+///////////////////////////////////////////////////////////////////////////
+//   i2c
+///////////////////////////////////////////////////////////////////////////
 void i2cInit() {
   pinMode(SDAPIN, INPUT_PULLUP);
   pinMode(CLKPIN, INPUT_PULLUP);
@@ -140,7 +144,7 @@ void setup() {
   // eastron setup
   eastron.SetDeviceAddress(MODBUS_ADDRESS);
   eastron.SetLogger(&logger);
-  eastron.SetSerial(&mSerial1);
+  eastron.SetSerial(&Serial); //   WAS mSerial1!!!!!!!!!!!!!!
   DEBUG_PRINT(F("DeviceType: "));
   DEBUG_PRINTLN(params[F("device_type")]);
   eastron.ModbusSetup(params[F("device_type")].c_str());
@@ -160,6 +164,10 @@ void setup() {
   // BME280 i2c
   bme.begin(&logger);
   bme.SetMQTT(&mqtt, SF("TH2Connected"), SF("Temperature2"), SF("Humidity2"), SF("Pressure2"));
+
+  // pmsX003 serial mode
+  pms.begin(&logger);
+  pms.SetMQTT(&mqtt, SF("PMSConnected"), SF("PM1.0"), SF("PM2.5"), SF("PM10"));
 
   // set password in work mode
   if (params[F("device_passwd")].length() > 0)
