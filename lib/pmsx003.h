@@ -64,8 +64,8 @@ private:
   // decoded measurements
   pms_meas_t pms_meas;
 
-  void SetStandbyMode(bool wakeup);
-  void SetActiveMode(bool activeMode);
+  void SetSleepWakeupMode(bool wakeup);
+  void SetAutoSendMode(bool activeMode);
   void ManualMeasurement();
   void SensorInit();
 
