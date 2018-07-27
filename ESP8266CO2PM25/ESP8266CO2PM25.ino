@@ -192,7 +192,7 @@ void loop() {
       for(int i = 0; i < 4; i++) {
         eastron.PollAddress(0x00);
         if(eastron.Connected) break;
-        delay(100);
+        delay(150);
       }
     };
 
