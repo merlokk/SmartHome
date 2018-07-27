@@ -8,6 +8,8 @@
 ../lib/HDC1080.h
 ../lib/autotimezone.cpp
 ../lib/autotimezone.h
+../lib/pmsx003.cpp
+../lib/pmsx003.h
 general.ino
 general.h
 ../lib/az7798.cpp
