@@ -33,14 +33,15 @@ void pmsx003::SensorInit() {
   // initialize the sensor
   static_cast<SoftwareSerial*>(aserial)->begin(9600);
 
-  SetStandbyMode(true);
-  SetActiveMode(true);
+  SetSleepWakeupMode(true);
+  SetAutoSendMode(true);
 
   PmsInit();
 
   //pinMode(PIN_RST, INPUT_PULLUP);
   //pinMode(PIN_SET, INPUT_PULLUP);
 
+  TextIDs = SF("Plantower PMS sensor online. Version: ") + String("n/a");
   DEBUG_PRINTLN(TextIDs);
 
   return;
@@ -50,7 +51,7 @@ bool pmsx003::Connected() {
   return aConnected;
 }
 
-void pmsx003::SetStandbyMode(bool wakeup) {
+void pmsx003::SetSleepWakeupMode(bool wakeup) {
   uint8_t txbuf[8];
   int txlen = PmsCreateCmd(txbuf, sizeof(txbuf), PMS_CMD_ON_STANDBY, wakeup);
   aserial->write(txbuf, txlen);
@@ -58,7 +59,7 @@ void pmsx003::SetStandbyMode(bool wakeup) {
   return;
 }
 
-void pmsx003::SetActiveMode(bool activeMode) {
+void pmsx003::SetAutoSendMode(bool activeMode) {
   uint8_t txbuf[8];
   int txlen = PmsCreateCmd(txbuf, sizeof(txbuf), PMS_CMD_AUTO_MANUAL, activeMode);
   aserial->write(txbuf, txlen);
@@ -76,6 +77,18 @@ void pmsx003::ManualMeasurement() {
 
 void pmsx003::handle() {
 
+  if (atimer.isArmed(TID_POLL)) {
+
+
+
+
+
+
+    atimer.Reset(TID_POLL);
+    return;
+  }
+
+
   // read data from serial
   while (aserial->available()) {
       uint8_t c = aserial->read();
@@ -88,6 +101,7 @@ void pmsx003::handle() {
   //        pms_meas_sum.pm2_5 += pms_meas.concPM2_5_amb;
   //        pms_meas_sum.pm1_0 += pms_meas.concPM1_0_amb;
   //        pms_meas_count++;
+        DEBUG_PRINTLN("PMS values: PM1.0: PM2.5: PM10: ");
       }
   }
 

@@ -233,6 +233,9 @@ void loop() {
 
   // BME280
   bme.handle();
+
+  // pmsX003 
+  pms.handle();
   
   digitalWrite(LED2, LEDOFF);
   delay(100);
