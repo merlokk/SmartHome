@@ -2,6 +2,8 @@
 ../../libraries/Adafruit_BME280_Library/Adafruit_BME280.h
 ../../libraries/ClosedCube_HDC1080/src/ClosedCube_HDC1080.cpp
 ../../libraries/ClosedCube_HDC1080/src/ClosedCube_HDC1080.h
+../../libraries/pms7003_esp/pms7003.cpp
+../../libraries/pms7003_esp/pms7003.h
 ../lib/BME280.cpp
 ../lib/BME280.h
 ../lib/HDC1080.cpp
