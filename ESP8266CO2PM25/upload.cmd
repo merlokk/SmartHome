@@ -1,0 +1,1 @@
+python.exe C:\Users\oleg\AppData\Local\Arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/espota.py -i 192.168.55.12 -p 8266 -f C:\Users\oleg\AppData\Local\Temp\arduino_build_280899/ESP8266CO2PM25.ino.bin 
