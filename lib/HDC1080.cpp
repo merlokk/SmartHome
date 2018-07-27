@@ -93,6 +93,7 @@ void hdc1080::handle() {
       }
     }
     if (!err) {
+      Hum -= HUMIDITY_DELTA;
       aConnected = true;
       Temperature = Temp;
       Humidity = Hum;

@@ -22,6 +22,9 @@
 
 #define HDC_DEBUG
 
+// humidity correction coefficient
+#define HUMIDITY_DELTA          5
+
 // poll
 #define MILLIS_TO_POLL          10*1000       // max time to wait for poll
 
