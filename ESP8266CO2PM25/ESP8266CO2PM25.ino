@@ -22,6 +22,7 @@
 // my libraries
 #include <HDC1080.h>
 #include <BME280.h>
+#include <pmsx003.h>
 #include <etools.h>
 #include <pitimer.h>     // timers
 #include <modbuspoll.h>
@@ -166,7 +167,7 @@ void setup() {
   bme.SetMQTT(&mqtt, SF("TH2Connected"), SF("Temperature2"), SF("Humidity2"), SF("Pressure2"));
 
   // pmsX003 serial mode
-  pms.begin(&logger);
+  pms.begin(&logger, &mSerial1);
   pms.SetMQTT(&mqtt, SF("PMSConnected"), SF("PM1.0"), SF("PM2.5"), SF("PM10"));
 
   // set password in work mode

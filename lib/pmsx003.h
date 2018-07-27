@@ -10,6 +10,7 @@
 #define PMSX003_H
 
 #include <Arduino.h>
+#include <SoftwareSerial.h>
 #include <pitimer.h>
 #include <etools.h>
 #include <xlogger.h>            // logger https://github.com/merlokk/xlogger
