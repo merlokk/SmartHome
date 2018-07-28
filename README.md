@@ -29,4 +29,13 @@ ESP-14 info https://esp8266.ru/forum/threads/esp-14-chto-ehto.531/
 
 STM8 sensor reading part https://bitbucket.org/hrandib/esp-stm8-sensors
 
+### ESP8266CO2PM25
+Air quality monitor. [Code here](https://github.com/merlokk/SmartHome/tree/master/ESP8266CO2PM25)
 
+It measures parameters:
+* Humidity
+* Temperature
+* Pressure
+* CO2
+* PM1.0/PM2.5/PM10 dust
+* Light: Visible / UV / UV index
