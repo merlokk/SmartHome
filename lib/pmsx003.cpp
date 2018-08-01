@@ -1,5 +1,16 @@
 #include "pmsx003.h"
 
+struct tPMSVer {
+  uint8_t version;
+  char *name;
+};
+
+tPMSVer PMSVer[] = {
+  {0x80, "PMS5003"},
+  {0x91, "PMS7003"},
+  {0x97, "PMSA003"}
+};
+
 pmsx003::pmsx003() {
   TextIDs = SF("n/a");
 }
@@ -15,6 +26,14 @@ void pmsx003::SetMQTT(xMQTT *_mqtt, String _topicOnline, String _topicPM1_0, Str
   atopicPM1_0 = _topicPM1_0;
   atopicPM2_5 = _topicPM2_5;
   atopicPM10 = _topicPM10;
+}
+
+char *pmsx003::GetVersionName(uint8_t ver) {
+  for(int i = 0; i < 2; i++) {
+    if (PMSVer[i].version == ver)
+      return PMSVer[i].name;
+  }
+  return "n/a";
 }
 
 void pmsx003::begin(xLogger *_logger, Stream *_serial) {
@@ -57,7 +76,8 @@ void pmsx003::SensorInit() {
   //pinMode(PIN_SET, INPUT_PULLUP);
 
   if (res) {
-    TextIDs = SF("Plantower PMS sensor online. Version: 0x" + String(version, HEX));
+    TextIDs = SF("Plantower PMS sensor online. Version: 0x") + String(version, HEX) +
+        SF(" name: ") + String(GetVersionName(version));
   } else {
     TextIDs = SF("Plantower PMS sensor offline.");
   }

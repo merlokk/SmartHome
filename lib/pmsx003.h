@@ -73,6 +73,7 @@ private:
   void SensorInit();
 
   bool ReadPMSPacket();
+  char *GetVersionName(uint8_t ver);
 
   template <typename... Args>
   void DEBUG_PRINTLN(Args... args);
