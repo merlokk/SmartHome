@@ -36,6 +36,25 @@ char *pmsx003::GetVersionName(uint8_t ver) {
   return "n/a";
 }
 
+void pmsx003::PrintMeasurement(bool detailed) {
+  DEBUG_PRINTLN(SF("PMS ver: 0x") + String(pms_meas.version, 16) +
+                SF(" err: ") + String(pms_meas.errorCode) +
+                SF(" PM1.0: ") + String(pms_meas.concPM1_0_amb) +
+                SF(" PM2.5: ") +  String(pms_meas.concPM2_5_amb) +
+                SF(" PM10: ") + String(pms_meas.concPM10_0_amb));
+  if (detailed) {
+    DEBUG_PRINTLN(SF(" PM1.0: ") + String(pms_meas.concPM1_0_CF1) +
+                  SF(" PM2.5: ") +  String(pms_meas.concPM2_5_CF1) +
+                  SF(" PM10: ") + String(pms_meas.concPM10_0_CF1));
+    DEBUG_PRINTLN(SF(" raw0.3: ") + String(pms_meas.rawGt0_3um) +
+                  SF(" raw0.5: ") +  String(pms_meas.rawGt0_5um) +
+                  SF(" raw1.0: ") + String(pms_meas.rawGt1_0um) +
+                  SF(" raw2.5: ") + String(pms_meas.rawGt2_5um) +
+                  SF(" raw5.0: ") + String(pms_meas.rawGt5_0um) +
+                  SF(" raw10.0: ") + String(pms_meas.rawGt10_0um));
+  }
+}
+
 void pmsx003::begin(xLogger *_logger, Stream *_serial) {
   atimer.Add(TID_POLL, MILLIS_TO_POLL);
 
@@ -61,7 +80,6 @@ void pmsx003::SensorInit() {
 
   // sensor must send us 1st measurement
   if (ReadPMSPacket()) {
-    pms_meas_t pms_meas;
     PmsParse(&pms_meas);
     version = pms_meas.version;
     errorCode = pms_meas.errorCode;
@@ -162,31 +180,32 @@ void pmsx003::handle() {
 
   // read data
   while (ReadPMSPacket()) {
-    // parse it
-    pms_meas_t pms_meas;
+    // parse
     PmsParse(&pms_meas);
 
+    // logic
     errorCode = pms_meas.errorCode;
 
-    // sum it
-  //        pms_meas_sum.pm10 += pms_meas.concPM10_0_amb;
-  //        pms_meas_sum.pm2_5 += pms_meas.concPM2_5_amb;
-  //        pms_meas_sum.pm1_0 += pms_meas.concPM1_0_amb;
-  //        pms_meas_count++;
-    DEBUG_PRINTLN(SF("PMS ver: 0x") + String(pms_meas.version, 16) +
-                  SF(" err: ") + String(pms_meas.errorCode) +
-                  SF(" PM1.0: ") + String(pms_meas.concPM1_0_amb) +
-                  SF(" PM2.5: ") +  String(pms_meas.concPM2_5_amb) +
-                  SF(" PM10: ") + String(pms_meas.concPM10_0_amb));
-    DEBUG_PRINTLN(SF(" PM1.0: ") + String(pms_meas.concPM1_0_CF1) +
-                  SF(" PM2.5: ") +  String(pms_meas.concPM2_5_CF1) +
-                  SF(" PM10: ") + String(pms_meas.concPM10_0_CF1));
-    DEBUG_PRINTLN(SF(" raw0.3: ") + String(pms_meas.rawGt0_3um) +
-                  SF(" raw0.5: ") +  String(pms_meas.rawGt0_5um) +
-                  SF(" raw1.0: ") + String(pms_meas.rawGt1_0um) +
-                  SF(" raw2.5: ") + String(pms_meas.rawGt2_5um) +
-                  SF(" raw5.0: ") + String(pms_meas.rawGt5_0um) +
-                  SF(" raw10.0: ") + String(pms_meas.rawGt10_0um));
+    // log
+    PrintMeasurement(true);
+
+    aConnected = true;
+    // mqtt
+    if (amqtt){
+      amqtt->PublishState(atopicPM1_0, String(pms_meas.concPM1_0_amb));
+      amqtt->PublishState(atopicPM2_5, String(pms_meas.concPM2_5_amb));
+      amqtt->PublishState(atopicPM10, String(pms_meas.concPM10_0_amb));
+      amqtt->PublishState(atopicOnline, SF("ON"));
+
+      // publish raw states
+      amqtt->PublishState("raw0.3", String(pms_meas.rawGt0_3um));
+      amqtt->PublishState("raw0.5", String(pms_meas.rawGt0_5um));
+      amqtt->PublishState("raw1.0", String(pms_meas.rawGt1_0um));
+      amqtt->PublishState("raw2.5", String(pms_meas.rawGt2_5um));
+      amqtt->PublishState("raw5.0", String(pms_meas.rawGt5_0um));
+      amqtt->PublishState("raw10.0", String(pms_meas.rawGt10_0um));
+    }
+
   }
 
 }

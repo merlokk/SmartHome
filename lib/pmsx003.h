@@ -75,6 +75,7 @@ private:
 
   bool ReadPMSPacket();
   char *GetVersionName(uint8_t ver);
+  void PrintMeasurement(bool detailed);
 
   template <typename... Args>
   void DEBUG_PRINTLN(Args... args);
