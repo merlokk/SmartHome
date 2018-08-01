@@ -18,6 +18,7 @@
 #include <xmqtt.h>
 
 #include <pms7003.h>           // library here: https://github.com/bertrik/pms7003/tree/master/pms7003_esp
+                               // my version here: https://github.com/merlokk/pms7003
 
 #define PMS_DEBUG
 
