@@ -65,9 +65,11 @@ private:
   pms_meas_t pms_meas;
 
   void SetSleepWakeupMode(bool wakeup);
-  void SetAutoSendMode(bool activeMode);
+  bool SetAutoSendMode(bool activeMode);
   void ManualMeasurement();
   void SensorInit();
+
+  bool ReadPMSPacket();
 
   template <typename... Args>
   void DEBUG_PRINTLN(Args... args);
