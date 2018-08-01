@@ -39,7 +39,16 @@ void pmsx003::SensorInit() {
   // wakeup and reset
   SetSleepWakeupMode(true);
   delay(3000);
-  SetAutoSendMode(false);
+
+  // sensor must send us 1st measurement
+  if (ReadPMSPacket()) {
+    pms_meas_t pms_meas;
+    PmsParse(&pms_meas);
+    version = pms_meas.version;
+    errorCode = pms_meas.errorCode;
+  }
+
+  bool res = SetAutoSendMode(false);
   delay(100);
 
   while (aserial->available())  aserial->read();
@@ -47,7 +56,11 @@ void pmsx003::SensorInit() {
   //pinMode(PIN_RST, INPUT_PULLUP);
   //pinMode(PIN_SET, INPUT_PULLUP);
 
-  TextIDs = SF("Plantower PMS sensor online. Version: ") + String("n/a");
+  if (res) {
+    TextIDs = SF("Plantower PMS sensor online. Version: 0x" + String(version, HEX));
+  } else {
+    TextIDs = SF("Plantower PMS sensor offline.");
+  }
   DEBUG_PRINTLN(TextIDs);
 
   return;
@@ -66,6 +79,10 @@ bool pmsx003::ReadPMSPacket() {
 
 bool pmsx003::Connected() {
   return aConnected;
+}
+
+uint8_t pmsx003::getErrorCode() const {
+  return errorCode;
 }
 
 // when wakeup pms resets and first command can come in 3s. not earlier!
@@ -128,6 +145,9 @@ void pmsx003::handle() {
     // parse it
     pms_meas_t pms_meas;
     PmsParse(&pms_meas);
+
+    errorCode = pms_meas.errorCode;
+
     // sum it
   //        pms_meas_sum.pm10 += pms_meas.concPM10_0_amb;
   //        pms_meas_sum.pm2_5 += pms_meas.concPM2_5_amb;

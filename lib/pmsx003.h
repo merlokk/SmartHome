@@ -39,6 +39,7 @@ public:
 
   bool Connected();
 
+  uint8_t getErrorCode() const;
   uint16_t GetPM1_0() const;
   uint16_t GetPM2_5() const;
   uint16_t GetPM10() const;
@@ -52,6 +53,8 @@ private:
 
   bool aConnected = false;
 
+  uint8_t version = 0;
+  uint8_t errorCode = 0;
   // string ID
   String TextIDs;
 
