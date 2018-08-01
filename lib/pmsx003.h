@@ -60,6 +60,7 @@ private:
   piTimer atimer;
   xMQTT *amqtt = NULL;
   PMSQueryState state = pqInit;
+  uint32_t lastChangeState = 0;
 
   bool aConnected = false;
 

@@ -13,6 +13,7 @@ const tPMSVer PMSVer[] = {
 
 pmsx003::pmsx003() {
   state = pqInit;
+  lastChangeState = 0;
   TextIDs = SF("n/a");
 }
 
@@ -68,15 +69,19 @@ void pmsx003::begin(xLogger *_logger, Stream *_serial) {
 }
 
 void pmsx003::SensorInit() {
+  //pinMode(PIN_RST, INPUT_PULLUP);
+  //pinMode(PIN_SET, INPUT_PULLUP);
 
   // initialize the sensor
   static_cast<SoftwareSerial*>(aserial)->begin(9600);
 
   PmsInit();
   while (aserial->available())  aserial->read();
+  DEBUG_PRINTLN("PMS sensor is starting...");
 
   // wakeup and reset
   SetSleepWakeupMode(true);
+  lastChangeState = millis();
   delay(3000);
 
   // sensor must send us 1st measurement
@@ -90,9 +95,6 @@ void pmsx003::SensorInit() {
   delay(100);
 
   while (aserial->available())  aserial->read();
-
-  //pinMode(PIN_RST, INPUT_PULLUP);
-  //pinMode(PIN_SET, INPUT_PULLUP);
 
   if (res) {
     TextIDs = SF("Plantower PMS sensor online. Version: 0x") + String(version, HEX) +
@@ -167,46 +169,77 @@ void pmsx003::ManualMeasurement() {
 
 void pmsx003::handle() {
 
-  if (atimer.isArmed(TID_POLL)) {
+  // init
+  if ((state == pqInit) && (lastChangeState + 6000 < millis())) {
 
+    // wakeup and reset
+    SetSleepWakeupMode(true);
+    lastChangeState = millis();
+    aConnected = false;
+
+    return;
+  }
+
+  // work
+  if (((state == pqInvalidData) || (state == pqData)) && (atimer.isArmed(TID_POLL))) {
     DEBUG_PRINTLN("Manual mes...");
     ManualMeasurement(); // 40 ms to reply
-
-
-
 
     atimer.Reset(TID_POLL);
   }
 
-
   // read data
   while (ReadPMSPacket()) {
-    // parse
     PmsParse(&pms_meas);
 
-    // logic
     errorCode = pms_meas.errorCode;
-
-    // log
     PrintMeasurement(true);
 
-    aConnected = true;
-    // mqtt
-    if (amqtt){
-      amqtt->PublishState(atopicPM1_0, String(pms_meas.concPM1_0_amb));
-      amqtt->PublishState(atopicPM2_5, String(pms_meas.concPM2_5_amb));
-      amqtt->PublishState(atopicPM10, String(pms_meas.concPM10_0_amb));
-      amqtt->PublishState(atopicOnline, SF("ON"));
+    if (state == pqInit) {
+      version = pms_meas.version;
 
-      // publish raw states
-      amqtt->PublishState("raw0.3", String(pms_meas.rawGt0_3um));
-      amqtt->PublishState("raw0.5", String(pms_meas.rawGt0_5um));
-      amqtt->PublishState("raw1.0", String(pms_meas.rawGt1_0um));
-      amqtt->PublishState("raw2.5", String(pms_meas.rawGt2_5um));
-      amqtt->PublishState("raw5.0", String(pms_meas.rawGt5_0um));
-      amqtt->PublishState("raw10.0", String(pms_meas.rawGt10_0um));
+      bool res = SetAutoSendMode(false);
+      delay(100);
+
+      if (res) {
+        TextIDs = SF("Plantower PMS sensor online. Version: 0x") + String(version, HEX) +
+            SF(" name: ") + String(GetVersionName(version));
+      } else {
+        TextIDs = SF("Plantower PMS sensor offline.");
+      }
+      DEBUG_PRINTLN(TextIDs);
+
+      state = pqInvalidData;
+      lastChangeState = millis();
+
+      while (aserial->available())  aserial->read();
+      return;
     }
 
+    // invalid data timeout
+    if ((state == pqInvalidData) && (lastChangeState + 30000 < millis())) {
+      state = pqData;
+      lastChangeState = millis();
+    }
+
+    if (state == pqData) {
+      aConnected = true;
+      // mqtt
+      if (amqtt){
+        amqtt->PublishState(atopicPM1_0, String(pms_meas.concPM1_0_amb));
+        amqtt->PublishState(atopicPM2_5, String(pms_meas.concPM2_5_amb));
+        amqtt->PublishState(atopicPM10, String(pms_meas.concPM10_0_amb));
+        amqtt->PublishState(atopicOnline, SF("ON"));
+
+        // publish raw states
+        amqtt->PublishState("raw0.3", String(pms_meas.rawGt0_3um));
+        amqtt->PublishState("raw0.5", String(pms_meas.rawGt0_5um));
+        amqtt->PublishState("raw1.0", String(pms_meas.rawGt1_0um));
+        amqtt->PublishState("raw2.5", String(pms_meas.rawGt2_5um));
+        amqtt->PublishState("raw5.0", String(pms_meas.rawGt5_0um));
+        amqtt->PublishState("raw10.0", String(pms_meas.rawGt10_0um));
+      }
+    }
   }
 
 }
