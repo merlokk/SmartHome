@@ -5,13 +5,14 @@ struct tPMSVer {
   char *name;
 };
 
-tPMSVer PMSVer[] = {
+const tPMSVer PMSVer[] = {
   {0x80, "PMS5003"},
   {0x91, "PMS7003"},
   {0x97, "PMSA003"}
 };
 
 pmsx003::pmsx003() {
+  state = pqInit;
   TextIDs = SF("n/a");
 }
 
@@ -29,7 +30,7 @@ void pmsx003::SetMQTT(xMQTT *_mqtt, String _topicOnline, String _topicPM1_0, Str
 }
 
 char *pmsx003::GetVersionName(uint8_t ver) {
-  for(int i = 0; i < 2; i++) {
+  for(int i = 0; i < sizeof(PMSVer)/sizeof(tPMSVer); i++) {
     if (PMSVer[i].version == ver)
       return PMSVer[i].name;
   }
@@ -169,7 +170,7 @@ void pmsx003::handle() {
   if (atimer.isArmed(TID_POLL)) {
 
     DEBUG_PRINTLN("Manual mes...");
-    ManualMeasurement();
+    ManualMeasurement(); // 40 ms to reply
 
 
 

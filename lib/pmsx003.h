@@ -28,6 +28,14 @@
 // timers
 #define TID_POLL                0x0001        // timer UID for poll
 
+enum PMSQueryState {
+  pqInit          = 0x00,
+  pqInvalidData   = 0x01,
+  pqData          = 0x02,
+  pqSleep         = 0x03,
+  pqError         = 0x04
+};
+
 class pmsx003 {
 public:
   pmsx003();
@@ -51,6 +59,7 @@ private:
   xLogger *logger = NULL;
   piTimer atimer;
   xMQTT *amqtt = NULL;
+  PMSQueryState state = pqInit;
 
   bool aConnected = false;
 
