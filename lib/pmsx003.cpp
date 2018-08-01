@@ -36,7 +36,7 @@ void pmsx003::SensorInit() {
   PmsInit();
   while (aserial->available())  aserial->read();
 
-  // wakup and reset
+  // wakeup and reset
   SetSleepWakeupMode(true);
   delay(3000);
   SetAutoSendMode(false);
