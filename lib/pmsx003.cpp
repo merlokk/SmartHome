@@ -155,6 +155,10 @@ void pmsx003::handle() {
         lastChangeState = millis();
         aConnected = false;
 
+        if (amqtt){
+          amqtt->PublishState(atopicOnline, SF("OFF"));
+        }
+
         return;
       }
       break;
@@ -173,7 +177,7 @@ void pmsx003::handle() {
       // timeout
       if (lastDataArriived + 15000 < millis()) {
         if(aConnected)
-          amqtt->PublishState(atopicOnline, SF("ON"));
+          amqtt->PublishState(atopicOnline, SF("OFF"));
 
         aConnected = false;
       }
