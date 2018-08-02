@@ -14,6 +14,7 @@ const tPMSVer PMSVer[] = {
 pmsx003::pmsx003() {
   state = pqInit;
   lastChangeState = 0;
+  lastDataArriived = 0;
   TextIDs = SF("n/a");
 }
 
@@ -168,6 +169,15 @@ void pmsx003::handle() {
 
         atimer.Reset(TID_POLL);
       }
+
+      // timeout
+      if (lastDataArriived + 15000 < millis()) {
+        if(aConnected)
+          amqtt->PublishState(atopicOnline, SF("ON"));
+
+        aConnected = false;
+      }
+
       break;
 
     case pqSleep:
@@ -183,6 +193,7 @@ void pmsx003::handle() {
 
     errorCode = pms_meas.errorCode;
     PrintMeasurement(true);
+    lastDataArriived = millis();
 
     switch(state) {
       case pqInit:
@@ -214,6 +225,7 @@ void pmsx003::handle() {
           lastChangeState = millis();
         } else {
           DEBUG_PRINTLN(SF("PMS get valid data timeout (ms): ") + String(millis() - lastChangeState));
+          break;
         }
       case pqData:
         aConnected = true;

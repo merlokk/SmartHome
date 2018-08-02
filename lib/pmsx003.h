@@ -61,6 +61,7 @@ private:
   xMQTT *amqtt = NULL;
   PMSQueryState state = pqInit;
   uint32_t lastChangeState = 0;
+  uint32_t lastDataArriived = 0;
 
   bool aConnected = false;
 
