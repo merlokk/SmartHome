@@ -8,6 +8,7 @@
  * Plantower PMS5003, PMS7003, PMSA003 - particle concentration sensors
  * HDC1080 - temperature + humidity, 
  * BMP280 - pressure + temperature, 
+ * SI1145 - light sensor
  * 
  * original repository here https://github.com/merlokk/SmartHome/tree/master/ESP8266CO2PM25
  * (c) Oleg Moiseenko 2017
@@ -29,14 +30,14 @@
 #include <xparam.h>
 #include "general.h"
 
-#define               PROGRAM_VERSION   "0.01"
+#define               PROGRAM_VERSION   "0.02"
 
 #define               DEBUG                            // enable debugging
 #define               DEBUG_SERIAL      logger
 
 // device modbus address
 #define               MODBUS_ADDRESS    0xfe
-#define               CONNECTED_OBJ     eastron.Connected
+#define               CONNECTED_OBJ     modbus.Connected
 
 #define               MQTT_DEFAULT_TOPIC "MesUnit"
 
@@ -60,7 +61,7 @@
 
 // objects
 SoftwareSerial mSerial1(13, 15); // RX, TX (13,15)
-ModbusPoll       eastron;
+ModbusPoll       modbus;
 piTimer          ptimer;
 hdc1080          hdc;
 bme280           bme;
@@ -143,15 +144,15 @@ void setup() {
   digitalWrite(LED2, LEDOFF);
 
   // eastron setup
-  eastron.SetDeviceAddress(MODBUS_ADDRESS);
-  eastron.SetLogger(&logger);
-  eastron.SetSerial(&Serial); //   WAS mSerial1!!!!!!!!!!!!!!
+  modbus.SetDeviceAddress(MODBUS_ADDRESS);
+  modbus.SetLogger(&logger);
+  modbus.SetSerial(&Serial); //   WAS mSerial1!!!!!!!!!!!!!!
   DEBUG_PRINT(F("DeviceType: "));
   DEBUG_PRINTLN(params[F("device_type")]);
-  eastron.ModbusSetup(params[F("device_type")].c_str());
+  modbus.ModbusSetup(params[F("device_type")].c_str());
 
   String str;
-  eastron.getStrModbusConfig(str);
+  modbus.getStrModbusConfig(str);
   DEBUG_PRINTLN(F("Modbus config:"));
   DEBUG_PRINTLN(str);
 
@@ -192,15 +193,15 @@ void loop() {
   if (ptimer.isArmed(TID_POLL)) {
     // modbus poll function
     if (ptimer.isArmed(TID_HOLD_REG)) {
-      if (eastron.getWordValue(POLL_INPUT_REGISTERS, 0x1e) == 0) {
-        eastron.PollAddress(0x19);
+      if (modbus.getWordValue(POLL_INPUT_REGISTERS, 0x1e) == 0) {
+        modbus.PollAddress(0x19);
       }
       ptimer.Reset(TID_HOLD_REG);
     } else {
       // it needs because time from time seanseair s8 returns timeout.
       for(int i = 0; i < 4; i++) {
-        eastron.PollAddress(0x00);
-        if(eastron.Connected) break;
+        modbus.PollAddress(0x00);
+        if(modbus.Connected) break;
         delay(150);
       }
     };
@@ -212,15 +213,15 @@ void loop() {
     mqttPublishRegularState();
 
     // publish vars from configuration
-    if (eastron.mapConfigLen && eastron.mapConfig && eastron.Connected) {
+    if (modbus.mapConfigLen && modbus.mapConfig && modbus.Connected) {
       String str;
-      for(int i = 0; i < eastron.mapConfigLen; i++) {
-        eastron.getValue(
+      for(int i = 0; i < modbus.mapConfigLen; i++) {
+        modbus.getValue(
           str,
-          eastron.mapConfig[i].command,
-          eastron.mapConfig[i].modbusAddress,
-          eastron.mapConfig[i].valueType);
-        mqtt.PublishState(eastron.mapConfig[i].mqttTopicName, str);        
+          modbus.mapConfig[i].command,
+          modbus.mapConfig[i].modbusAddress,
+          modbus.mapConfig[i].valueType);
+        mqtt.PublishState(modbus.mapConfig[i].mqttTopicName, str);
       }    
     };
     mqtt.Commit();
