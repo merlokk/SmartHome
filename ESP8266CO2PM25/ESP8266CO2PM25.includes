@@ -1,0 +1,6 @@
+.
+../lib
+../../libraries/Adafruit_BME280_Library
+../../libraries/ClosedCube_HDC1080/src
+../../libraries/pms7003_esp
+../../libraries/XLogger
