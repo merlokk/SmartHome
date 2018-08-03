@@ -73,7 +73,11 @@ void pmsx003::SensorInit() {
   //pinMode(PIN_RST, INPUT_PULLUP);
   //pinMode(PIN_SET, INPUT_PULLUP);
 
+#ifdef PMS_USE_SOFTWARE_SERIAL
   static_cast<SoftwareSerial*>(aserial)->begin(9600);
+#else
+  static_cast<HardwareSerial*>(aserial)->begin(9600);
+#endif
 
   PmsInit();
   while (aserial->available())  aserial->read();

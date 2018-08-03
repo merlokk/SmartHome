@@ -10,7 +10,6 @@
 #define PMSX003_H
 
 #include <Arduino.h>
-#include <SoftwareSerial.h>
 #include <pitimer.h>
 #include <etools.h>
 #include <xlogger.h>            // logger https://github.com/merlokk/xlogger
@@ -21,6 +20,11 @@
                                // my version here: https://github.com/merlokk/pms7003
 
 #define PMS_DEBUG
+#define PMS_USE_SOFTWARE_SERIAL
+
+#ifdef PMS_USE_SOFTWARE_SERIAL
+#include <SoftwareSerial.h>
+#endif
 
 // poll
 #define MILLIS_TO_POLL          10*1000       // max time to wait for poll
