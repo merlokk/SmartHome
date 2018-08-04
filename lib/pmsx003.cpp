@@ -82,6 +82,7 @@ void pmsx003::SensorInit() {
   PmsInit();
   while (aserial->available())  aserial->read();
   DEBUG_PRINTLN("PMS sensor is starting...");
+  aConnected = false;
 
   return;
 }
@@ -121,7 +122,7 @@ bool pmsx003::SetAutoSendMode(bool activeMode) {
   int txlen = PmsCreateCmd(txbuf, sizeof(txbuf), PMS_CMD_AUTO_MANUAL, activeMode);
   aserial->write(txbuf, txlen);
 
-  delay(15);
+  delay(30);
 
   if (ReadPMSPacket()) {
     uint16_t res = PmsParse16();
@@ -150,6 +151,7 @@ void pmsx003::handle() {
 
   switch(state) {
     // init
+    case pqStarting:
     case pqInit:
       if (lastChangeState + 6000 < millis()) {
 
@@ -165,6 +167,7 @@ void pmsx003::handle() {
 
         // clear serial
         while (aserial->available())  aserial->read();
+        state = pqInit;
 
         return;
       }
@@ -207,6 +210,8 @@ void pmsx003::handle() {
     lastDataArriived = millis();
 
     switch(state) {
+      case pqStarting:
+        break;
       case pqInit:
         version = pms_meas.version;
 
