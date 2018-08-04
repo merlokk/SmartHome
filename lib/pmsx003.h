@@ -20,7 +20,7 @@
                                // my version here: https://github.com/merlokk/pms7003
 
 #define PMS_DEBUG
-#define PMS_USE_SOFTWARE_SERIAL
+//#define PMS_USE_SOFTWARE_SERIAL
 
 #ifdef PMS_USE_SOFTWARE_SERIAL
 #include <SoftwareSerial.h>

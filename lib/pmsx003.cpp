@@ -163,6 +163,9 @@ void pmsx003::handle() {
           amqtt->PublishState(atopicOnline, SF("OFF"));
         }
 
+        // clear serial
+        while (aserial->available())  aserial->read();
+
         return;
       }
       break;
@@ -208,11 +211,16 @@ void pmsx003::handle() {
         version = pms_meas.version;
 
         // configure PMS send mode
+        delay(20);
         if (SetAutoSendMode(false)) {
           TextIDs = SF("Plantower PMS sensor is online. Version: 0x") + String(version, HEX) +
               SF(" name: ") + String(GetVersionName(version));
         } else {
           TextIDs = SF("Plantower PMS sensor is offline.");
+          DEBUG_PRINTLN(TextIDs);
+
+          while (aserial->available())  aserial->read();
+          return;
         }
         DEBUG_PRINTLN(TextIDs);
         delay(100);

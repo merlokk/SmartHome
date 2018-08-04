@@ -146,7 +146,7 @@ void setup() {
   // eastron setup
   modbus.SetDeviceAddress(MODBUS_ADDRESS);
   modbus.SetLogger(&logger);
-  modbus.SetSerial(&Serial); //   WAS mSerial1!!!!!!!!!!!!!!
+  modbus.SetSerial(&mSerial1); 
   DEBUG_PRINT(F("DeviceType: "));
   DEBUG_PRINTLN(params[F("device_type")]);
   modbus.ModbusSetup(params[F("device_type")].c_str());
@@ -168,7 +168,7 @@ void setup() {
   bme.SetMQTT(&mqtt, SF("TH2Connected"), SF("Temperature2"), SF("Humidity2"), SF("Pressure2"));
 
   // pmsX003 serial mode
-  pms.begin(&logger, &mSerial1);
+  pms.begin(&logger, &Serial);
   pms.SetMQTT(&mqtt, SF("PMSConnected"), SF("PM1.0"), SF("PM2.5"), SF("PM10"));
 
   // set password in work mode
