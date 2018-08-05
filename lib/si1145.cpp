@@ -54,7 +54,9 @@ void si1145::handle() {
 
     double visible = si.readVisible();
     double ir = si.readIR();
-    double uv = si.readUV();
+    double uv = si.readUV() / 100; // the index is multiplied by 100
+    double ref = si.readPS2();
+    double temp = si.readPS3();
     err = si.getLastError();
 
     if (!err) {
@@ -62,7 +64,14 @@ void si1145::handle() {
       aVisible = visible;
       aIR = ir;
       aUV = uv;
-      DEBUG_PRINTLN(SF("Visible=") + String(visible) + SF(", IR=") + String(ir) + " UVindx=" + String(uv));
+      DEBUG_PRINTLN(SF("SI1145 Visible=") + String(visible) + SF(" IR=") + String(ir) + SF(" UVindx=") + String(uv) +
+                    SF(" Temp=") + String(temp) + SF(" ref=") + String(ref));
+      ir = ir - ref;
+      if (ir < 0) ir = 0;
+
+      visible = visible - ref;
+      if (visible < 0) visible = 0;
+
       if (amqtt){
         amqtt->PublishState(atopicVisible, String(visible));
         amqtt->PublishState(atopicIR, String(ir));
