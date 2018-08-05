@@ -62,7 +62,7 @@ void si1145::handle() {
       aVisible = visible;
       aIR = ir;
       aUV = uv;
-      DEBUG_PRINTLN(SF("T=") + String(visible) + SF("C, RH=") + String(ir) + "% P=" + String(uv));
+      DEBUG_PRINTLN(SF("Visible=") + String(visible) + SF(", IR=") + String(ir) + " UVindx=" + String(uv));
       if (amqtt){
         amqtt->PublishState(atopicVisible, String(visible));
         amqtt->PublishState(atopicIR, String(ir));
