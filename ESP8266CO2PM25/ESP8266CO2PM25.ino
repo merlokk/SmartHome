@@ -23,6 +23,7 @@
 // my libraries
 #include <HDC1080.h>
 #include <BME280.h>
+#include <si1145.h>
 #include <pmsx003.h>
 #include <etools.h>
 #include <pitimer.h>     // timers
@@ -65,6 +66,7 @@ ModbusPoll       modbus;
 piTimer          ptimer;
 hdc1080          hdc;
 bme280           bme;
+si1145           si;
 pmsx003          pms;
 
 ///////////////////////////////////////////////////////////////////////////
@@ -167,6 +169,10 @@ void setup() {
   bme.begin(&logger);
   bme.SetMQTT(&mqtt, SF("TH2Connected"), SF("Temperature2"), SF("Humidity2"), SF("Pressure2"));
 
+  // si1145 i2c
+  si.begin(&logger);
+  si.SetMQTT(&mqtt, SF("LightConnected"), SF("Visible"), SF("IR"), SF("UV"));
+
   // pmsX003 serial mode
   pms.begin(&logger, &Serial);
   pms.SetMQTT(&mqtt, SF("PMSConnected"), SF("PM1.0"), SF("PM2.5"), SF("PM10"));
@@ -234,6 +240,9 @@ void loop() {
 
   // BME280
   bme.handle();
+
+  // si1145
+  si.handle();
 
   // pmsX003 
   pms.handle();
