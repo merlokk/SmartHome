@@ -9,6 +9,12 @@
 #ifndef LIBSI1145_H
 #define LIBSI1145_H
 
+/*  Ideas:
+  https://github.com/HGrabas/SI1145/blob/master/SI1145.cpp
+  https://github.com/ArticCynda/OpenObservatory/blob/master/firmware-v3.2/si1145/SI114X.cpp
+  https://github.com/torvalds/linux/blob/master/drivers/iio/light/si1145.c
+*/
+
 #include <Arduino.h>
 #include <pitimer.h>
 #include <etools.h>
@@ -23,7 +29,7 @@
 #define SI_DEBUG
 
 // poll
-#define MILLIS_TO_POLL          10*1000       // max time to wait for poll
+#define MILLIS_TO_POLL          5*1000       // max time to wait for poll
 
 // timers
 #define TID_POLL                0x0001        // timer UID for poll
@@ -45,6 +51,7 @@ public:
   float GetIR() const;
   float GetUV() const;
 
+  uint16_t CalcGain(int signal);
 private:
   xLogger *logger = NULL;
   piTimer atimer;

@@ -14,7 +14,7 @@ uint8_t si1145::Reset() {
 void si1145::SensorInit(){
   aConnected = false;
 
-  if (!si.begin()) {
+  if (!si.begin(false)) {
     DEBUG_PRINTLN(SF("Si1145 sensor init error. last error:") + String(si.getLastError()));
     return;
   };
@@ -45,12 +45,80 @@ void si1145::begin(xLogger *_logger) {
   SensorInit();
 }
 
+uint16_t si1145::CalcGain(int signal) {
+  uint16_t gain = 0x8000; // high + x1
+
+  if(signal < 0) signal = 0;
+  DEBUG_PRINTLN(SF("signal=") + String(signal));
+
+  uint16_t g = gain;
+  while(true) {
+    float margin = (32767. * 0.6) / ((float)(1 << (g & 0x0007)) * ((g & 0xFF00)?1.:14.5));
+    //DEBUG_PRINTLN(SF("gain=0x") + String(g, HEX) + SF(" margin=") + String(margin));
+    if(signal < margin)
+      gain = g;
+
+    // iterator
+    g++;
+    if ((g & 0xFF) > 0x07){
+      if (g & 0xFF00) {
+        g = 0x0003; // low + x8
+      } else {
+         break;
+      }
+    }
+  }
+
+  return gain;
+}
+
 void si1145::handle() {
 
   if (atimer.isArmed(TID_POLL)) {
+    uint16_t gainVis = 0x8000;
+    uint16_t gainIR = 0x8000;
+    si.getLastError();
+
+    si.setVisibleGain(gainVis);
+    si.setIRGain(gainIR);
+    uint8_t merr = si.takeForcedMeasurement();
+    if (merr || si.getLastError()) {
+      DEBUG_PRINTLN(SF("SI1145 error get data for gain calculation. err:") + String(merr, HEX));
+    } else {
+      int gvis = si.readVisible() - si.getADCOffset();
+      int gir = si.readIR() - si.getADCOffset();
+      gainVis = CalcGain(gvis);
+      gainIR = CalcGain(gir);
+      DEBUG_PRINTLN(SF("vis=") + String(gvis) + SF(" ir=") + String(gir) +
+                    SF(" gain Vis=0x") + String(gainVis, HEX) + SF(" Ir=0x") + String(gainIR, HEX));
+    }
+
+    si.setVisibleGain(gainVis);
+    si.setIRGain(gainIR);
+
+
 
     uint8_t err;
     si.getLastError();
+
+    uint8_t meserr = si.takeForcedMeasurement();
+    if(meserr)
+      DEBUG_PRINTLN(SF("SI1145 take measurement error:0x") + String(meserr, HEX));
+
+    err = si.getLastError();
+
+    switch(meserr) {
+    case 0x80:  // Invalid command
+    case 0x88:  // PS1 overflow
+    case 0x89:  // PS2 overflow
+    case 0x8A:  // PS3 overflow
+    case 0x8C:  // VIS overflow
+    case 0x8D:  // IR overflow
+    case 0x8E:  // AUX overflow
+      break;
+    default:
+      break;
+    }
 
     double visible = si.readVisible();
     double ir = si.readIR();
@@ -66,15 +134,25 @@ void si1145::handle() {
       aUV = uv;
       DEBUG_PRINTLN(SF("SI1145 Visible=") + String(visible) + SF(" IR=") + String(ir) + SF(" UVindx=") + String(uv) +
                     SF(" Temp=") + String(temp) + SF(" ref=") + String(ref));
-      ir = ir - ref;
+      ir = ir - si.getADCOffset();
       if (ir < 0) ir = 0;
 
-      visible = visible - ref;
+      visible = visible - si.getADCOffset();
       if (visible < 0) visible = 0;
 
+      float lux = (5.41f * visible) / si.calcGain(gainVis) + (-0.08f * ir) / si.calcGain(gainIR);
+      if (lux < 0)
+        lux = 0.0;
+      float luxir = ir / (si.calcGain(gainIR) * 2.44f);
+      if (lux < 0)
+        lux = 0.0;
+
+      DEBUG_PRINTLN(SF("Real Visible=") + String(visible / si.calcGain(gainVis)) + SF(" IR=") + String(ir / si.calcGain(gainIR)) +
+                    SF(" lux=") + String(lux) + SF(" luxir=") + String(luxir));
+
       if (amqtt){
-        amqtt->PublishState(atopicVisible, String(visible));
-        amqtt->PublishState(atopicIR, String(ir));
+        amqtt->PublishState(atopicVisible, String(lux));
+        amqtt->PublishState(atopicIR, String(luxir));
         amqtt->PublishState(atopicUV, String(uv));
         amqtt->PublishState(atopicOnline, SF("ON"));
       }
