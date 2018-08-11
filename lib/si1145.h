@@ -51,7 +51,7 @@ public:
   float GetIR() const;
   float GetUV() const;
 
-  uint16_t CalcGain(int signal);
+  uint16_t calcOptimalGainFromSignal(int signal);
 private:
   xLogger *logger = NULL;
   piTimer atimer;

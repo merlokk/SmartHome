@@ -21,6 +21,8 @@ void si1145::SensorInit(){
 
   si.getLastError();
   uint8_t siID = si.readPartId();
+  si.setMeassureChannels(SI1145_PARAM_CHLIST_ENUV | SI1145_PARAM_CHLIST_ENALSIR | SI1145_PARAM_CHLIST_ENALSVIS |
+                         SI1145_PARAM_CHLIST_ENPS2 | SI1145_PARAM_CHLIST_ENPS3);
   uint8_t err = si.getLastError();
   if (!err && siID != 0x00 && siID != 0xFF) {
     // sensor online
@@ -45,33 +47,6 @@ void si1145::begin(xLogger *_logger) {
   SensorInit();
 }
 
-uint16_t si1145::CalcGain(int signal) {
-  uint16_t gain = 0x8000; // high + x1
-
-  if(signal < 0) signal = 0;
-  DEBUG_PRINTLN(SF("signal=") + String(signal));
-
-  uint16_t g = gain;
-  while(true) {
-    float margin = (32767. * 0.6) / ((float)(1 << (g & 0x0007)) * ((g & 0xFF00)?1.:14.5));
-    //DEBUG_PRINTLN(SF("gain=0x") + String(g, HEX) + SF(" margin=") + String(margin));
-    if(signal < margin)
-      gain = g;
-
-    // iterator
-    g++;
-    if ((g & 0xFF) > 0x07){
-      if (g & 0xFF00) {
-        g = 0x0003; // low + x8
-      } else {
-         break;
-      }
-    }
-  }
-
-  return gain;
-}
-
 void si1145::handle() {
 
   if (atimer.isArmed(TID_POLL)) {
@@ -87,8 +62,8 @@ void si1145::handle() {
     } else {
       int gvis = si.readVisible() - si.getADCOffset();
       int gir = si.readIR() - si.getADCOffset();
-      gainVis = CalcGain(gvis);
-      gainIR = CalcGain(gir);
+      gainVis = si.calcOptimalGainFromSignal(gvis);
+      gainIR = si.calcOptimalGainFromSignal(gir);
       DEBUG_PRINTLN(SF("vis=") + String(gvis) + SF(" ir=") + String(gir) +
                     SF(" gain Vis=0x") + String(gainVis, HEX) + SF(" Ir=0x") + String(gainIR, HEX));
     }
