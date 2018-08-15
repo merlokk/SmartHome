@@ -47,9 +47,10 @@ void si1145::begin(xLogger *_logger) {
   SensorInit();
 }
 
-bool si1145::ExecMeasurementCycle(uint16_t *gainVis, uint16_t *gainIR) {
+bool si1145::ExecMeasurementCycle(uint16_t *gainVis, uint16_t *gainIR, double *uv) {
   *gainVis = 0x8000;
   *gainIR = 0x8000;
+  *uv = 0;
   si.getLastError();
 
 
@@ -67,6 +68,11 @@ bool si1145::ExecMeasurementCycle(uint16_t *gainVis, uint16_t *gainIR) {
     DEBUG_PRINTLN(SF("vis=") + String(gvis) + SF(" ir=") + String(gir) +
                   SF(" gain Vis=0x") + String(*gainVis, HEX) + SF(" Ir=0x") + String(*gainIR, HEX));
   }
+
+  // from datasheet:
+  // To enable UV reading, set the EN_UV bit in CHLIST, and configure UCOEF [0:3] to the default values of 0x7B,
+  // 0x6B, 0x01, and 0x00. Also, set the VIS_RANGE and IR_RANGE bits
+  *uv = si.readUV() / 100.; // the index is multiplied by 100
 
   uint8_t err;
   si.getLastError();
@@ -126,12 +132,12 @@ void si1145::handle() {
   if (atimer.isArmed(TID_POLL)) {
     uint16_t gainVis = 0x8000;
     uint16_t gainIR = 0x8000;
+    double uv = 0; // calc UV in ExecMeasurementCycle() according to the datasheet
 
     // if we can do measurement (dont have i2c error)
-    if (ExecMeasurementCycle(&gainVis, &gainIR)) {
+    if (ExecMeasurementCycle(&gainVis, &gainIR, &uv)) {
       double visible = si.readVisible();
       double ir = si.readIR();
-      double uv = si.readUV() / 100.; // the index is multiplied by 100
       double ref = si.readPS2();
       double temp = si.readPS3();
       uint8_t err = si.getLastError();

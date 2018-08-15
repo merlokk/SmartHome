@@ -75,7 +75,7 @@ private:
   float aUV;
 
   void SensorInit();
-  bool ExecMeasurementCycle(uint16_t *gainVis, uint16_t *gainIR);
+  bool ExecMeasurementCycle(uint16_t *gainVis, uint16_t *gainIR, double *uv);
 
   template <typename... Args>
   void DEBUG_PRINTLN(Args... args);
