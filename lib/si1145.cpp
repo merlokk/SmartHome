@@ -72,9 +72,11 @@ bool si1145::ExecMeasurementCycle(uint16_t *gainVis, uint16_t *gainIR) {
   si.getLastError();
 
   // cycle while not error
-  bool repeat = false;
+  bool repeat = true;
   while (repeat) {
     repeat = false;
+    si.setVisibleGain(*gainVis);
+    si.setIRGain(*gainIR);
     uint8_t meserr = si.takeForcedMeasurement();
     if(meserr)
       DEBUG_PRINTLN(SF("SI1145 take measurement error:0x") + String(meserr, HEX));
@@ -116,9 +118,6 @@ bool si1145::ExecMeasurementCycle(uint16_t *gainVis, uint16_t *gainIR) {
     }
   }
 
-  si.setVisibleGain(*gainVis);
-  si.setIRGain(*gainIR);
-
   return true;
 }
 
@@ -130,9 +129,10 @@ void si1145::handle() {
 
     // if we can do measurement (dont have i2c error)
     if (ExecMeasurementCycle(&gainVis, &gainIR)) {
+      DEBUG_PRINTLN(SF(">>>gain Vis=0x") + String(gainVis, HEX) + SF(" Ir=0x") + String(gainIR, HEX));
       double visible = si.readVisible();
       double ir = si.readIR();
-      double uv = si.readUV() / 100; // the index is multiplied by 100
+      double uv = si.readUV() / 100.; // the index is multiplied by 100
       double ref = si.readPS2();
       double temp = si.readPS3();
       uint8_t err = si.getLastError();
