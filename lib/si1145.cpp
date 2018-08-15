@@ -129,7 +129,6 @@ void si1145::handle() {
 
     // if we can do measurement (dont have i2c error)
     if (ExecMeasurementCycle(&gainVis, &gainIR)) {
-      DEBUG_PRINTLN(SF(">>>gain Vis=0x") + String(gainVis, HEX) + SF(" Ir=0x") + String(gainIR, HEX));
       double visible = si.readVisible();
       double ir = si.readIR();
       double uv = si.readUV() / 100.; // the index is multiplied by 100
