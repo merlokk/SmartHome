@@ -21,6 +21,7 @@ void si1145::SensorInit(){
 
   si.getLastError();
   uint8_t siID = si.readPartId();
+  SI114X_CAL_S *siCalibParam = si.getCalibrationParameters();
   si.setMeassureChannels(SI1145_PARAM_CHLIST_ENUV | SI1145_PARAM_CHLIST_ENALSIR | SI1145_PARAM_CHLIST_ENALSVIS |
                          SI1145_PARAM_CHLIST_ENPS2 | SI1145_PARAM_CHLIST_ENPS3);
   uint8_t err = si.getLastError();
@@ -31,6 +32,23 @@ void si1145::SensorInit(){
         SF(" seqID=0x") + String(si.readSeqId(), HEX);      // 0x08
 
     DEBUG_PRINTLN(TextIDs);
+
+    if (siCalibParam) {
+      DEBUG_PRINTLN(SF("Calibration parameters:") +
+                    SF(" adcrange=") + String(FX20_TO_FLT(siCalibParam->adcrange_ratio)) +
+                    SF(" vispd=") + String(FX20_TO_FLT(siCalibParam->vispd_correction)) +
+                    SF(" irpd=") + String(FX20_TO_FLT(siCalibParam->irpd_correction)) +
+                    SF(" irsize=") + String(FX20_TO_FLT(siCalibParam->irsize_ratio)) +
+                    SF(" ledi=") + String(FX20_TO_FLT(siCalibParam->ledi_ratio)) );
+      if (siCalibParam->ucoef_p)
+        DEBUG_PRINTLN(
+               SF("ucoef_p[0]=") + String(siCalibParam->ucoef_p[0], 16) +
+               SF(" [1]=") + String(siCalibParam->ucoef_p[1], 16) +
+               SF(" [2]=") + String(siCalibParam->ucoef_p[2], 16) +
+               SF(" [3]=") + String(siCalibParam->ucoef_p[3], 16) );
+    } else {
+      DEBUG_PRINTLN(SF("Calibration parameters is empty! Used default calibration values."));
+    }
 
     aConnected = true;
   } else {
