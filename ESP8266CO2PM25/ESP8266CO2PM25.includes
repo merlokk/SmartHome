@@ -5,3 +5,4 @@
 ../../libraries/pms7003_esp
 ../../libraries/XLogger
 ../../libraries/Adafruit_SI1145_Library
+../../libraries/Adafruit_SI1145_Library/examples/si1145lux

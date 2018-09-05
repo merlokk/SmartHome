@@ -2,6 +2,7 @@
 ../../libraries/Adafruit_BME280_Library/Adafruit_BME280.h
 ../../libraries/Adafruit_SI1145_Library/Adafruit_SI1145.cpp
 ../../libraries/Adafruit_SI1145_Library/Adafruit_SI1145.h
+../../libraries/Adafruit_SI1145_Library/examples/si1145lux/si1145lux.ino
 ../../libraries/ClosedCube_HDC1080/src/ClosedCube_HDC1080.cpp
 ../../libraries/ClosedCube_HDC1080/src/ClosedCube_HDC1080.h
 ../../libraries/XLogger/xlogger.cpp

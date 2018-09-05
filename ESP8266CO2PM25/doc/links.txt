@@ -19,3 +19,9 @@ https://github.com/less-smog/ESP8266-AirQuality/tree/master/src/sensors
 https://github.com/avaldebe/AQmon
 https://arduino.stackexchange.com/questions/47554/checksum-is-wrong-air-quality-monitoring-station-pms5003-bme280-code-review/47558
 http://www.instructables.com/id/AtmoScan/
+
+lux measurement:
+BH1750
+GUVA-12 (UV)
+TSL2561 
+TSL2591
