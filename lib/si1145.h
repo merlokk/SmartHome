@@ -29,7 +29,7 @@
 #define SI_DEBUG
 
 // poll
-#define MILLIS_TO_POLL          5*1000       // max time to wait for poll
+#define MILLIS_TO_POLL          10*1000       // max time to wait for poll
 
 // timers
 #define TID_POLL                0x0001        // timer UID for poll
